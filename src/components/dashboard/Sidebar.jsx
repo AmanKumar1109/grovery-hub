@@ -16,7 +16,7 @@ const navItems = [
 
 export default function Sidebar() {
   const { currentUser, userProfile, logout } = useAuth();
-  const userName = userProfile?.fullName || currentUser?.displayName || 'Saiful Talukdar';
+  const userName = userProfile?.fullName || currentUser?.displayName || 'User';
 
   return (
     <aside className="hidden md:flex flex-col w-64 bg-white/80 backdrop-blur-xl border border-slate-200/80 shadow-xl rounded-3xl p-5 sticky top-8 z-20 flex-shrink-0">

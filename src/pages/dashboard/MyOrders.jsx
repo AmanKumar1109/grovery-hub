@@ -5,13 +5,14 @@ import EmptyState from '../../components/dashboard/EmptyState';
 import gsap from 'gsap';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../firebase';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 
 export default function MyOrders() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingOrderId, setCancellingOrderId] = useState(null);
   const containerRef = useRef(null);
   const { currentUser } = useAuth();
 
@@ -54,6 +55,22 @@ export default function MyOrders() {
 
     return () => unsubscribe();
   }, [currentUser]);
+
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+    
+    setCancellingOrderId(orderId);
+    try {
+      const orderRef = doc(db, 'orders', orderId);
+      await updateDoc(orderRef, { status: 'cancelled' });
+      // No need to update local state since onSnapshot will handle it automatically
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+      alert("Failed to cancel order. Please try again.");
+    } finally {
+      setCancellingOrderId(null);
+    }
+  };
 
   const formatDate = (timestamp) => {
     if (!timestamp) return 'Just now';
@@ -196,13 +213,27 @@ export default function MyOrders() {
 
                 <div className="flex flex-wrap items-center gap-3">
                   {order.status !== 'Delivered' && order.status !== 'Cancelled' && (
-                    <Link 
-                      to={`/dashboard/track-order/${order.id}`} 
-                      className="flex-1 min-w-[140px] py-3 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs rounded-2xl transition-all shadow-md shadow-amber-300/40 flex items-center justify-center gap-2"
-                    >
-                      <Clock className="w-4 h-4 stroke-[2.5]" />
-                      <span>Track Live Delivery</span>
-                    </Link>
+                    <>
+                      <Link 
+                        to={`/dashboard/track-order/${order.id}`} 
+                        className="flex-1 min-w-[140px] py-3 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs rounded-2xl transition-all shadow-md shadow-amber-300/40 flex items-center justify-center gap-2"
+                      >
+                        <Clock className="w-4 h-4 stroke-[2.5]" />
+                        <span>Track Live Delivery</span>
+                      </Link>
+                      <button 
+                        onClick={() => handleCancelOrder(order.id)}
+                        disabled={cancellingOrderId === order.id}
+                        className="flex-1 min-w-[130px] py-3 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs rounded-2xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {cancellingOrderId === order.id ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Cancelling...</span>
+                          </>
+                        ) : "Cancel Order"}
+                      </button>
+                    </>
                   )}
                   {order.status === 'Delivered' && (
                     <button className="flex-1 min-w-[130px] py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer">

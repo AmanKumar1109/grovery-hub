@@ -178,7 +178,7 @@ export default function SavedAddresses() {
                     <div className="flex-1 min-w-0">
                       <h3 className="text-lg font-black text-slate-900">{address.type}</h3>
                       <p className="text-xs font-bold text-slate-600 mt-0.5">
-                        {userProfile?.fullName || 'Saiful Talukdar'}
+                        {userProfile?.fullName || 'User'}
                       </p>
                     </div>
                   </div>
