@@ -1,12 +1,47 @@
 import React from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import HomePage from './pages/HomePage';
+import CatalogPage from './pages/CatalogPage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import DashboardLayout from './components/dashboard/DashboardLayout';
+import DashboardHome from './pages/dashboard/DashboardHome';
+import MyOrders from './pages/dashboard/MyOrders';
+import TrackOrder from './pages/dashboard/TrackOrder';
+import Wishlist from './pages/dashboard/Wishlist';
+import SavedAddresses from './pages/dashboard/SavedAddresses';
+import Profile from './pages/dashboard/Profile';
+import Settings from './pages/dashboard/Settings';
 
 function App() {
   return (
-    <Routes>
-      <Route path="/" element={<HomePage />} />
-    </Routes>
+    <AuthProvider>
+      <CartProvider>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/catalog" element={<CatalogPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          
+          {/* Dashboard Nested Routes */}
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<DashboardHome />} />
+            <Route path="orders" element={<MyOrders />} />
+            <Route path="track-order/:id" element={<TrackOrder />} />
+            <Route path="track-order" element={<TrackOrder />} />
+            <Route path="wishlist" element={<Wishlist />} />
+            <Route path="addresses" element={<SavedAddresses />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+
+          <Route path="/complete-profile" element={<Navigate to="/dashboard/profile" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </CartProvider>
+    </AuthProvider>
   );
 }
 

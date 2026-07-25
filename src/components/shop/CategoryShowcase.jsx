@@ -1,0 +1,68 @@
+import React from 'react';
+import { Sparkles, Carrot, Apple, Milk, Croissant, Coffee, Cookie, Drumstick, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+export const categoriesList = [
+  { id: 'all', name: 'All Products', icon: Sparkles, count: '12+ Items' },
+  { id: 'Fresh Vegetables', name: 'Fresh Vegetables', icon: Carrot, count: '3 Items' },
+  { id: 'Organic Fruits', name: 'Organic Fruits', icon: Apple, count: '2 Items' },
+  { id: 'Dairy & Eggs', name: 'Dairy & Eggs', icon: Milk, count: '2 Items' },
+  { id: 'Bakery & Bread', name: 'Bakery & Bread', icon: Croissant, count: '1 Item' },
+  { id: 'Beverages & Juices', name: 'Beverages & Juices', icon: Coffee, count: '1 Item' },
+  { id: 'Snacks & Munchies', name: 'Snacks & Munchies', icon: Cookie, count: '2 Items' },
+  { id: 'Meat & Seafood', name: 'Meat & Seafood', icon: Drumstick, count: '1 Item' },
+];
+
+export default function CategoryShowcase({ selectedCategory, onSelectCategory }) {
+  return (
+    <div className="w-full py-4 space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+        <div>
+          <span className="text-xs font-black text-amber-500 uppercase tracking-widest">Explore Categories</span>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-0.5">
+            Shop Fresh Organic Produce 🥦
+          </h2>
+        </div>
+
+        {/* Explore More Button */}
+        <Link
+          to="/catalog"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-extrabold text-xs rounded-2xl shadow-md shadow-amber-300/40 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer self-start sm:self-auto group"
+        >
+          <span>Explore More Catalog</span>
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </Link>
+      </div>
+
+      {/* Category Pills Slider */}
+      <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2 snap-x">
+        {categoriesList.map((cat) => {
+          const Icon = cat.icon;
+          const isActive = selectedCategory === cat.id;
+
+          return (
+            <button
+              key={cat.id}
+              onClick={() => onSelectCategory(cat.id)}
+              className={`snap-start flex items-center gap-3 px-5 py-3 rounded-2xl font-extrabold text-xs whitespace-nowrap transition-all duration-200 cursor-pointer flex-shrink-0 ${
+                isActive
+                  ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-300/40 scale-100'
+                  : 'bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-100 hover:border-amber-300 scale-95 hover:scale-100'
+              }`}
+            >
+              <div className={`p-1.5 rounded-xl ${isActive ? 'bg-slate-950/10' : 'bg-amber-50 text-amber-600'}`}>
+                <Icon className="w-4 h-4" />
+              </div>
+              <div className="text-left">
+                <p className="leading-none">{cat.name}</p>
+                <p className={`text-[10px] font-semibold mt-0.5 ${isActive ? 'text-slate-900/70' : 'text-slate-400'}`}>
+                  {cat.count}
+                </p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

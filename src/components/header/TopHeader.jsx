@@ -1,11 +1,21 @@
-import React, { useEffect, useRef } from 'react';
-import { ShoppingBag, Heart, ChevronDown } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { ShoppingBag, Heart, ChevronDown, LayoutDashboard, ShoppingCart, User, MapPin, Settings, LogOut, Menu, X, Home, Store, LogIn } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import SearchBar from '../ui/SearchBar';
 import userAvatar from '../../assets/images/user-avatar.png';
+import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import gsap from 'gsap';
 
 export default function TopHeader() {
   const headerRef = useRef(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const { currentUser, userProfile, logout } = useAuth();
+  const { cartCount, setIsCartOpen } = useCart();
+  const navigate = useNavigate();
 
   useEffect(() => {
     gsap.fromTo(
@@ -15,72 +25,310 @@ export default function TopHeader() {
     );
   }, []);
 
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Prevent scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
+  const userName = userProfile?.fullName || currentUser?.displayName || 'Grocery Member';
+
+  const navLinks = [
+    { name: 'Home', path: '/', icon: Home },
+    { name: 'Shop Items', path: '/#shop', icon: Store },
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+    { name: 'My Orders', path: '/dashboard/orders', icon: ShoppingCart },
+    { name: 'Wishlist', path: '/dashboard/wishlist', icon: Heart },
+    { name: 'Saved Addresses', path: '/dashboard/addresses', icon: MapPin },
+    { name: 'Profile Details', path: '/dashboard/profile', icon: User },
+    { name: 'Settings', path: '/dashboard/settings', icon: Settings },
+  ];
+
   return (
     <div
       ref={headerRef}
-      className="flex items-center justify-between px-4 sm:px-8 lg:px-12 py-4 border-b border-gray-100 bg-white w-full"
+      className="flex items-center justify-between px-4 sm:px-8 lg:px-12 py-3.5 sm:py-4 border-b border-gray-100 bg-white w-full relative z-30"
     >
-      {/* Brand Logo */}
-      <div className="flex items-center gap-2.5 cursor-pointer select-none group">
-        <div className="w-10 h-10 bg-amber-400 rounded-xl flex items-center justify-center shadow-md shadow-amber-200 group-hover:scale-105 transition-transform duration-200">
-          <svg
-            className="w-6 h-6 text-white fill-current"
-            viewBox="0 0 24 24"
-          >
-            <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zm-9-1a2 2 0 0 1 4 0v1h-4V6zm8 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v10z" />
-          </svg>
-        </div>
-        <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-gray-900">
-          The <span className="text-emerald-700">Grocery</span> Hub
-        </span>
+      {/* Left: 3-Lines Hamburger Menu Button (Mobile/Tablet) & Brand Logo */}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          aria-label="Toggle Mobile Menu"
+          onClick={() => setMobileMenuOpen(true)}
+          className="lg:hidden p-2 rounded-xl bg-slate-100 hover:bg-amber-400 text-slate-800 hover:text-slate-950 transition-colors cursor-pointer"
+        >
+          <Menu className="w-5 h-5 stroke-[2.5]" />
+        </button>
+
+        {/* Brand Logo */}
+        <Link to="/" className="flex items-center gap-2.5 cursor-pointer select-none group">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 bg-amber-400 rounded-xl flex items-center justify-center shadow-md shadow-amber-200 group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
+            <svg
+              className="w-5 h-5 sm:w-6 sm:h-6 text-white fill-current"
+              viewBox="0 0 24 24"
+            >
+              <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zm-9-1a2 2 0 0 1 4 0v1h-4V6zm8 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v10z" />
+            </svg>
+          </div>
+          <span className="text-lg sm:text-2xl font-extrabold tracking-tight text-gray-900">
+            The <span className="text-emerald-700">Grocery</span> Hub
+          </span>
+        </Link>
       </div>
 
-      {/* Search Bar */}
-      <SearchBar />
+      {/* Center: Search Bar (Desktop) */}
+      <div className="hidden lg:block flex-1 max-w-xl mx-6">
+        <SearchBar />
+      </div>
 
-      {/* Action Items & User Profile */}
-      <div className="flex items-center gap-4">
+      {/* Right: Action Items & User Profile / Login */}
+      <div className="flex items-center gap-2 sm:gap-4">
         {/* Shopping Cart Button */}
         <button
           type="button"
           aria-label="Shopping Cart"
-          className="relative p-2.5 rounded-full bg-gray-100/80 hover:bg-gray-200/80 text-gray-700 transition-colors"
+          onClick={() => setIsCartOpen(true)}
+          className="relative p-2.5 rounded-full bg-gray-100/80 hover:bg-amber-100 text-gray-700 hover:text-amber-800 transition-colors cursor-pointer"
         >
-          <ShoppingBag className="w-5 h-5 text-gray-700" />
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-            0
-          </span>
-        </button>
-
-        {/* Wishlist Heart Button */}
-        <button
-          type="button"
-          aria-label="Wishlist"
-          className="p-2.5 rounded-full bg-gray-100/80 hover:bg-gray-200/80 text-gray-700 transition-colors"
-        >
-          <Heart className="w-5 h-5 text-gray-700" />
-        </button>
-
-        {/* User Account Info */}
-        <div className="flex items-center gap-3 pl-2 cursor-pointer group">
-          <img
-            src={userAvatar}
-            alt="Saiful Talukdar"
-            className="w-10 h-10 rounded-full object-cover border-2 border-amber-300 shadow-sm"
-          />
-          <div className="hidden sm:flex flex-col text-left">
-            <span className="text-[11px] text-gray-400 font-medium leading-none">
-              Welcome!
+          <ShoppingBag className="w-5 h-5" />
+          {cartCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 text-[10px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border-2 border-white shadow-sm animate-pulse">
+              {cartCount}
             </span>
-            <div className="flex items-center gap-1 mt-0.5">
-              <span className="text-xs font-bold text-gray-800 group-hover:text-amber-600 transition-colors">
-                Saiful Talukdar
-              </span>
-              <ChevronDown className="w-3 h-3 text-gray-500" />
-            </div>
+          )}
+        </button>
+
+        {/* Wishlist Heart Button (Desktop) */}
+        <Link
+          to="/dashboard/wishlist"
+          aria-label="Wishlist"
+          className="hidden sm:flex p-2.5 rounded-full bg-gray-100/80 hover:bg-pink-100 text-gray-700 hover:text-pink-600 transition-colors"
+        >
+          <Heart className="w-5 h-5" />
+        </Link>
+
+        {/* Conditional Render: User Account Profile Dropdown IF LOGGED IN, else Login/Sign Up Button */}
+        {currentUser ? (
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2 cursor-pointer group focus:outline-none"
+            >
+              <img
+                src={userAvatar}
+                alt={userName}
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-amber-400 shadow-sm group-hover:border-amber-500 transition-colors"
+              />
+              <div className="hidden md:flex flex-col text-left">
+                <span className="text-[11px] text-gray-400 font-medium leading-none">
+                  Welcome!
+                </span>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="text-xs font-bold text-gray-800 group-hover:text-amber-600 transition-colors truncate max-w-[110px]">
+                    {userName}
+                  </span>
+                  <ChevronDown className={`w-3 h-3 text-gray-500 transition-transform duration-200 ${dropdownOpen ? 'rotate-180 text-amber-600' : ''}`} />
+                </div>
+              </div>
+            </button>
+
+            {/* Interactive Profile Dropdown Menu */}
+            {dropdownOpen && (
+              <div className="absolute right-0 mt-3 w-56 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Account</p>
+                  <p className="text-sm font-extrabold text-slate-900 truncate">{userName}</p>
+                  <p className="text-xs text-slate-500 truncate">{currentUser.email}</p>
+                </div>
+
+                <div className="py-1">
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+                  >
+                    <LayoutDashboard className="w-4 h-4 text-amber-500" />
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/dashboard/orders"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                  >
+                    <ShoppingCart className="w-4 h-4 text-emerald-600" />
+                    My Orders
+                  </Link>
+                  <Link
+                    to="/dashboard/wishlist"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-pink-50 hover:text-pink-600 transition-colors"
+                  >
+                    <Heart className="w-4 h-4 text-pink-500" />
+                    Wishlist
+                  </Link>
+                  <Link
+                    to="/dashboard/addresses"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
+                  >
+                    <MapPin className="w-4 h-4 text-amber-600" />
+                    Saved Addresses
+                  </Link>
+                  <Link
+                    to="/dashboard/profile"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                  >
+                    <User className="w-4 h-4 text-emerald-600" />
+                    Profile Details
+                  </Link>
+                  <Link
+                    to="/dashboard/settings"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                  >
+                    <Settings className="w-4 h-4 text-slate-500" />
+                    Settings
+                  </Link>
+                </div>
+
+                <div className="border-t border-slate-100 pt-1">
+                  <button
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      logout();
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-red-500 hover:bg-red-50 transition-colors text-left cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
+        ) : (
+          <Link
+            to="/login"
+            className="flex items-center gap-2 px-4 py-2.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-extrabold text-xs rounded-full shadow-md shadow-amber-300/40 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
+          >
+            <LogIn className="w-4 h-4 stroke-[2.5]" />
+            <span>Login / Sign Up</span>
+          </Link>
+        )}
       </div>
+
+      {/* Full Screen React Portal for Mobile Menu Drawer */}
+      {mobileMenuOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] flex">
+            {/* Backdrop overlay */}
+            <div
+              className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
+              onClick={() => setMobileMenuOpen(false)}
+            ></div>
+
+            {/* Mobile Drawer Panel */}
+            <div className="relative w-4/5 max-w-xs bg-white h-full shadow-2xl p-5 flex flex-col justify-between z-10 animate-in slide-in-from-left duration-300 overflow-y-auto">
+              <div className="space-y-6">
+                {/* Mobile Menu Top Bar */}
+                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 bg-amber-400 rounded-xl flex items-center justify-center text-slate-950 font-black shadow-sm">
+                      🌿
+                    </div>
+                    <span className="font-extrabold text-slate-900 text-sm">Navigation Menu</span>
+                  </div>
+                  <button
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Mobile Search Input */}
+                <div className="w-full">
+                  <SearchBar />
+                </div>
+
+                {/* Navigation Items */}
+                <div className="space-y-1">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 px-3 mb-2">
+                    Quick Navigation
+                  </p>
+                  {navLinks.map((link) => {
+                    const Icon = link.icon;
+                    return (
+                      <Link
+                        key={link.name}
+                        to={link.path}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3.5 px-3.5 py-3 rounded-2xl font-extrabold text-xs text-slate-700 hover:bg-amber-400 hover:text-slate-950 transition-all"
+                      >
+                        <Icon className="w-4 h-4 text-amber-500 stroke-[2.2]" />
+                        <span>{link.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Mobile Account Footer */}
+              <div className="pt-4 border-t border-slate-100 space-y-3">
+                {currentUser ? (
+                  <>
+                    <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/60">
+                      <img src={userAvatar} alt={userName} className="w-10 h-10 rounded-full object-cover border border-amber-400 shadow-xs" />
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-slate-900 truncate">{userName}</p>
+                        <p className="text-[10px] text-emerald-700 font-extrabold">Verified Member 🌿</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        logout();
+                      }}
+                      className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl font-extrabold text-xs text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout Account
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full flex items-center justify-center gap-2 py-3 bg-amber-400 text-slate-950 font-extrabold text-xs rounded-2xl shadow-md cursor-pointer"
+                  >
+                    <LogIn className="w-4 h-4 stroke-[2.5]" />
+                    <span>Login / Sign Up</span>
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

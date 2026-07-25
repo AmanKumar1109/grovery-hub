@@ -22,8 +22,8 @@ export default function HeroVisual() {
   }, []);
 
   return (
-    <div className="relative flex-1 min-h-[440px] lg:min-h-[580px] flex items-end justify-center overflow-visible">
-      {/* Slanted Dark Green Polygon Backdrop */}
+    <div className="relative flex-1 min-h-[440px] sm:min-h-[480px] lg:min-h-[580px] flex items-end justify-center overflow-visible">
+      {/* Tilted Dark Green Slanted Polygon Backdrop */}
       <div
         ref={backdropRef}
         className="absolute inset-0 bg-[#3b5e11] z-0"
@@ -49,15 +49,15 @@ export default function HeroVisual() {
       {/* Floating Delivery Badge overlay */}
       <FloatingDeliveryBadge />
 
-      {/* Hero Character Image - GSAP Slide & Reveal */}
+      {/* Hero Character Image - Slanted Overlay */}
       <div
         ref={farmerRef}
-        className="relative z-10 w-full max-w-md lg:max-w-lg xl:max-w-xl h-full flex items-end justify-center pt-6 -translate-x-16 sm:-translate-x-28 lg:-translate-x-36"
+        className="relative z-10 w-full max-w-md lg:max-w-lg xl:max-w-xl h-full flex items-end justify-center pt-6 -translate-x-12 sm:-translate-x-24 lg:-translate-x-36"
       >
         <img
           src={farmerImg}
           alt="The Grocery Hub Fresh Farmer"
-          className="w-auto h-[480px] sm:h-[540px] lg:h-[600px] object-contain object-bottom transition-all duration-300 hover:scale-[1.02] filter drop-shadow-[0_0_2px_rgba(255,255,255,0.9)] drop-shadow-[0_25px_35px_rgba(0,0,0,0.38)]"
+          className="w-auto h-[440px] sm:h-[520px] lg:h-[600px] object-contain object-bottom transition-all duration-300 hover:scale-[1.02] filter drop-shadow-[0_0_2px_rgba(255,255,255,0.9)] drop-shadow-[0_25px_35px_rgba(0,0,0,0.38)]"
         />
       </div>
     </div>
