@@ -3,6 +3,7 @@ import Header from '../components/header/Header';
 import Footer from '../components/shop/Footer';
 import CartDrawer from '../components/shop/CartDrawer';
 import ProductCard from '../components/shop/ProductCard';
+import ProductSkeleton from '../components/shop/ProductSkeleton';
 import { useCart } from '../context/CartContext';
 import { Search, SlidersHorizontal, Package, Check, Filter, ChevronDown, ChevronUp, X } from 'lucide-react';
 
@@ -166,9 +167,10 @@ export default function CatalogPage() {
 
         {/* Catalog Products Grid: 2 columns on Mobile (grid-cols-2), 3 on Tablet, 4 on Desktop */}
         {isLoadingProducts ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <div className="w-12 h-12 border-4 border-slate-200 border-t-amber-500 rounded-full animate-spin"></div>
-            <p className="text-sm font-bold text-slate-500">Loading catalog items...</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            {[...Array(12)].map((_, index) => (
+              <ProductSkeleton key={index} />
+            ))}
           </div>
         ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Package, Clock, CheckCircle2, XCircle, Search, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import EmptyState from '../../components/dashboard/EmptyState';
+import OrderSkeleton from '../../components/dashboard/OrderSkeleton';
 import gsap from 'gsap';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../firebase';
@@ -164,9 +165,10 @@ export default function MyOrders() {
       {/* Order Cards List */}
       <div className="space-y-4">
         {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center space-y-4">
-            <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
-            <p className="text-sm font-bold text-slate-500">Loading your orders...</p>
+          <div>
+            {[...Array(3)].map((_, i) => (
+              <OrderSkeleton key={i} />
+            ))}
           </div>
         ) : filteredOrders.length > 0 ? (
           filteredOrders.map(order => {
