@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { db } from '../firebase';
+import { collection, onSnapshot } from 'firebase/firestore';
 
 const CartContext = createContext(null);
 
@@ -15,6 +17,7 @@ export const initialProducts = [
     badge: '25% OFF',
     isOrganic: true,
     isHalal: true,
+    inStock: true,
     image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&q=80&w=400',
   },
   {
@@ -29,6 +32,7 @@ export const initialProducts = [
     badge: 'Trending',
     isOrganic: true,
     isHalal: true,
+    inStock: true,
     image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&q=80&w=400',
   },
   {
@@ -43,6 +47,7 @@ export const initialProducts = [
     badge: 'Fresh Today',
     isOrganic: true,
     isHalal: true,
+    inStock: true,
     image: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?auto=format&fit=crop&q=80&w=400',
   },
   {
@@ -57,6 +62,7 @@ export const initialProducts = [
     badge: 'Bestseller',
     isOrganic: false,
     isHalal: true,
+    inStock: true,
     image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=400',
   },
   {
@@ -71,6 +77,7 @@ export const initialProducts = [
     badge: 'Farm Direct',
     isOrganic: true,
     isHalal: true,
+    inStock: true,
     image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&q=80&w=400',
   },
   {
@@ -85,6 +92,7 @@ export const initialProducts = [
     badge: '100% Pure',
     isOrganic: true,
     isHalal: true,
+    inStock: true,
     image: 'https://images.unsplash.com/photo-1613478223719-2ab802602423?auto=format&fit=crop&q=80&w=400',
   },
   {
@@ -99,6 +107,7 @@ export const initialProducts = [
     badge: '18% OFF',
     isOrganic: true,
     isHalal: true,
+    inStock: true,
     image: 'https://images.unsplash.com/photo-1590004953392-5aba2e72269a?auto=format&fit=crop&q=80&w=400',
   },
   {
@@ -113,67 +122,84 @@ export const initialProducts = [
     badge: 'Organic',
     isOrganic: true,
     isHalal: true,
+    inStock: true,
     image: 'https://images.unsplash.com/photo-1516448620398-c5f44bf9f441?auto=format&fit=crop&q=80&w=400',
-  },
-  {
-    id: 'prod-9',
-    name: 'Organic Cavendish Bananas',
-    category: 'Organic Fruits',
-    price: 50,
-    originalPrice: 60,
-    unit: '1 Dozen',
-    rating: 4.7,
-    reviews: 190,
-    badge: 'Sweet & Fresh',
-    isOrganic: true,
-    isHalal: true,
-    image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?auto=format&fit=crop&q=80&w=400',
-  },
-  {
-    id: 'prod-10',
-    name: 'Fresh Tender Chicken Breast (Skinless)',
-    category: 'Meat & Seafood',
-    price: 280,
-    originalPrice: 320,
-    unit: '500g Pack',
-    rating: 4.9,
-    reviews: 410,
-    badge: 'Halal Certified',
-    isOrganic: false,
-    isHalal: true,
-    image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=400',
-  },
-  {
-    id: 'prod-11',
-    name: 'Himalayan Organic Honey',
-    category: 'Snacks & Munchies',
-    price: 299,
-    originalPrice: 350,
-    unit: '500g Glass Jar',
-    rating: 4.9,
-    reviews: 145,
-    badge: 'Raw & Unrefined',
-    isOrganic: true,
-    isHalal: true,
-    image: 'https://images.unsplash.com/photo-1587049352847-81a56d773cae?auto=format&fit=crop&q=80&w=400',
-  },
-  {
-    id: 'prod-12',
-    name: 'Organic Green Bell Peppers (Capsicum)',
-    category: 'Fresh Vegetables',
-    price: 40,
-    originalPrice: 50,
-    unit: '500g',
-    rating: 4.6,
-    reviews: 78,
-    badge: 'Crunchy Fresh',
-    isOrganic: true,
-    isHalal: true,
-    image: 'https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?auto=format&fit=crop&q=80&w=400',
   },
 ];
 
 export function CartProvider({ children }) {
+  const [products, setProducts] = useState(initialProducts);
+  const [dbCategories, setDbCategories] = useState([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+
+  // Subscribe to real-time Firestore items & categories
+  useEffect(() => {
+    const unsubItems = onSnapshot(collection(db, 'items'), (snap) => {
+      if (!snap.empty) {
+        const loaded = snap.docs
+          .map((d) => {
+            const data = d.data();
+            return {
+              id: d.id,
+              name: data.name || 'Grocery Item',
+              category: data.category || 'General',
+              price: parseFloat(data.price) || 0,
+              originalPrice: data.originalPrice ? parseFloat(data.originalPrice) : Math.round((parseFloat(data.price) || 0) * 1.2),
+              unit: data.unit || '1 Pack',
+              rating: parseFloat(data.rating) || 4.8,
+              reviews: data.reviews || 120,
+              badge: data.badge || (data.inStock === false ? 'Out of Stock' : ''),
+              isOrganic: data.isOrganic !== undefined ? data.isOrganic : true,
+              isHalal: data.isHalal !== undefined ? data.isHalal : true,
+              inStock: data.inStock !== false,
+              isVisible: data.isVisible !== false,
+              image: data.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&auto=format&fit=crop&q=80'
+            };
+          })
+          .filter((item) => item.isVisible);
+        setProducts(loaded);
+      }
+      setIsLoadingProducts(false);
+    });
+
+    const unsubCat = onSnapshot(collection(db, 'categories'), (snap) => {
+      const loadedCats = snap.docs.map(d => d.data().name || d.id);
+      setDbCategories(loadedCats);
+    });
+
+    return () => {
+      unsubItems();
+      unsubCat();
+    };
+  }, []);
+
+  // Compute dynamic categories list with product counts
+  const categoriesList = useMemo(() => {
+    const catCounts = {};
+    products.forEach(p => {
+      if (p.category) {
+        catCounts[p.category] = (catCounts[p.category] || 0) + 1;
+      }
+    });
+
+    const allCategoryNames = Array.from(new Set([...dbCategories, ...Object.keys(catCounts)]));
+
+    const list = [
+      { id: 'all', name: 'All Products', count: `${products.length} Items` }
+    ];
+
+    allCategoryNames.forEach(catName => {
+      const count = catCounts[catName] || 0;
+      list.push({
+        id: catName,
+        name: catName,
+        count: `${count} Item${count === 1 ? '' : 's'}`
+      });
+    });
+
+    return list;
+  }, [products, dbCategories]);
+
   // Ultra-fast state management with localStorage persistence (starts empty by default)
   const [cartItems, setCartItems] = useState(() => {
     try {
@@ -202,6 +228,10 @@ export function CartProvider({ children }) {
   };
 
   const addToCart = (product) => {
+    if (product.inStock === false) {
+      showToast(`Sorry, "${product.name}" is currently Out of Stock! ⚠️`);
+      return;
+    }
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
@@ -247,6 +277,9 @@ export function CartProvider({ children }) {
   return (
     <CartContext.Provider
       value={{
+        products,
+        categoriesList,
+        isLoadingProducts,
         cartItems,
         cartCount,
         cartTotal,
@@ -272,3 +305,4 @@ export function useCart() {
   }
   return context;
 }
+

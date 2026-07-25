@@ -3,28 +3,23 @@ import Header from '../components/header/Header';
 import Footer from '../components/shop/Footer';
 import CartDrawer from '../components/shop/CartDrawer';
 import ProductCard from '../components/shop/ProductCard';
-import { initialProducts, useCart } from '../context/CartContext';
-import { categoriesList } from '../components/shop/CategoryShowcase';
+import { useCart } from '../context/CartContext';
 import { Search, SlidersHorizontal, Package, Check, Filter, ChevronDown, ChevronUp, X } from 'lucide-react';
 
 export default function CatalogPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
-  const [onlyOrganic, setOnlyOrganic] = useState(false);
-  const [onlyHalal, setOnlyHalal] = useState(false);
   const [onlyDiscounted, setOnlyDiscounted] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const { toastMessage } = useCart();
+  const { products, categoriesList, toastMessage } = useCart();
 
-  const filteredProducts = initialProducts
+  const filteredProducts = (products || [])
     .filter((prod) => {
       const matchesCategory = selectedCategory === 'all' || prod.category === selectedCategory;
       const matchesSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesOrganic = !onlyOrganic || prod.isOrganic;
-      const matchesHalal = !onlyHalal || prod.isHalal;
       const matchesDiscount = !onlyDiscounted || (prod.originalPrice > prod.price);
-      return matchesCategory && matchesSearch && matchesOrganic && matchesHalal && matchesDiscount;
+      return matchesCategory && matchesSearch && matchesDiscount;
     })
     .sort((a, b) => {
       if (sortBy === 'price-low') return a.price - b.price;
@@ -35,8 +30,6 @@ export default function CatalogPage() {
 
   const activeFiltersCount =
     (selectedCategory !== 'all' ? 1 : 0) +
-    (onlyOrganic ? 1 : 0) +
-    (onlyHalal ? 1 : 0) +
     (onlyDiscounted ? 1 : 0);
 
   return (
@@ -126,8 +119,6 @@ export default function CatalogPage() {
                   <button
                     onClick={() => {
                       setSelectedCategory('all');
-                      setOnlyOrganic(false);
-                      setOnlyHalal(false);
                       setOnlyDiscounted(false);
                     }}
                     className="text-xs font-extrabold text-amber-600 hover:text-amber-700 underline cursor-pointer flex items-center gap-1"
@@ -162,26 +153,6 @@ export default function CatalogPage() {
                 <label className="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-slate-700 select-none">
                   <input
                     type="checkbox"
-                    checked={onlyOrganic}
-                    onChange={(e) => setOnlyOrganic(e.target.checked)}
-                    className="w-4 h-4 rounded-md accent-amber-400 cursor-pointer"
-                  />
-                  <span>🌿 100% Organic Certified</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-slate-700 select-none">
-                  <input
-                    type="checkbox"
-                    checked={onlyHalal}
-                    onChange={(e) => setOnlyHalal(e.target.checked)}
-                    className="w-4 h-4 rounded-md accent-amber-400 cursor-pointer"
-                  />
-                  <span>✨ Halal Certified</span>
-                </label>
-
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-slate-700 select-none">
-                  <input
-                    type="checkbox"
                     checked={onlyDiscounted}
                     onChange={(e) => setOnlyDiscounted(e.target.checked)}
                     className="w-4 h-4 rounded-md accent-amber-400 cursor-pointer"
@@ -210,8 +181,6 @@ export default function CatalogPage() {
             <button
               onClick={() => {
                 setSelectedCategory('all');
-                setOnlyOrganic(false);
-                setOnlyHalal(false);
                 setOnlyDiscounted(false);
                 setSearchQuery('');
               }}

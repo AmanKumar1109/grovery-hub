@@ -10,7 +10,7 @@ const trustFeatures = [
   },
   {
     icon: ShieldCheck,
-    title: '100% Organic & Halal',
+    title: '100% Quality Guaranteed',
     description: 'Certified farm fresh produce inspected daily for quality and purity.',
     badgeColor: 'bg-emerald-100 text-emerald-800',
   },

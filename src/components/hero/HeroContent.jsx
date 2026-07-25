@@ -36,7 +36,7 @@ export default function HeroContent() {
           <div className="w-3 h-[3px] bg-amber-400 rounded-full"></div>
         </div>
         <div className="text-xs lg:text-sm font-bold tracking-tight">
-          <span className="text-gray-900 mr-1.5">Halal Products</span>
+          <span className="text-gray-900 mr-1.5">Fresh Grocery</span>
           <span className="text-red-600 font-extrabold">Online Delivery Shop</span>
         </div>
       </div>

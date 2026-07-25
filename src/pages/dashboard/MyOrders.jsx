@@ -5,7 +5,7 @@ import EmptyState from '../../components/dashboard/EmptyState';
 import gsap from 'gsap';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 export default function MyOrders() {
   const [activeTab, setActiveTab] = useState('all');
@@ -16,39 +16,43 @@ export default function MyOrders() {
   const { currentUser } = useAuth();
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      if (!currentUser) return;
-      setLoading(true);
-      try {
-        const q = query(
-          collection(db, 'orders'),
-          where('userId', '==', currentUser.uid)
-        );
-        const querySnapshot = await getDocs(q);
-        const fetchedOrders = [];
-        querySnapshot.forEach((doc) => {
-          fetchedOrders.push({ id: doc.id, ...doc.data() });
-        });
-        
-        fetchedOrders.sort((a, b) => {
-          const getTime = (dateObj) => {
-            if (!dateObj) return 0;
-            if (typeof dateObj.toMillis === 'function') return dateObj.toMillis();
-            if (dateObj.seconds) return dateObj.seconds * 1000;
-            if (typeof dateObj === 'string' || dateObj instanceof Date) return new Date(dateObj).getTime();
-            return 0;
-          };
-          return getTime(b.createdAt) - getTime(a.createdAt);
-        });
+    if (!currentUser) {
+      setLoading(false);
+      return;
+    }
 
-        setOrders(fetchedOrders);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOrders();
+    setLoading(true);
+    const q = query(
+      collection(db, 'orders'),
+      where('userId', '==', currentUser.uid)
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const fetchedOrders = [];
+      querySnapshot.forEach((doc) => {
+        fetchedOrders.push({ id: doc.id, ...doc.data() });
+      });
+      
+      const getTimeMs = (val) => {
+        if (!val) return 0;
+        if (typeof val === 'string') return new Date(val).getTime() || 0;
+        if (typeof val.toMillis === 'function') return val.toMillis();
+        if (typeof val.seconds === 'number') return val.seconds * 1000;
+        if (typeof val === 'number') return val;
+        if (val instanceof Date) return val.getTime();
+        return 0;
+      };
+
+      fetchedOrders.sort((a, b) => getTimeMs(b.createdAt || b.updatedAt) - getTimeMs(a.createdAt || a.updatedAt));
+
+      setOrders(fetchedOrders);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error subscribing to orders:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [currentUser]);
 
   const formatDate = (timestamp) => {
@@ -70,8 +74,12 @@ export default function MyOrders() {
   };
 
   useEffect(() => {
+    if (!containerRef.current) return;
+    const cards = containerRef.current.querySelectorAll('.order-card');
+    if (cards.length === 0) return;
+
     const ctx = gsap.context(() => {
-      gsap.from('.order-card', {
+      gsap.from(cards, {
         y: 20,
         opacity: 0,
         duration: 0.5,
@@ -82,7 +90,7 @@ export default function MyOrders() {
     }, containerRef);
 
     return () => ctx.revert();
-  }, [activeTab]);
+  }, [activeTab, orders.length, loading]);
 
   const filteredOrders = orders.filter(order => {
     const matchesTab = activeTab === 'all' || order.status === activeTab;
@@ -187,20 +195,21 @@ export default function MyOrders() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
-                  {order.status === 'active' && (
+                  {order.status !== 'Delivered' && order.status !== 'Cancelled' && (
                     <Link 
                       to={`/dashboard/track-order/${order.id}`} 
-                      className="flex-1 min-w-[130px] py-3 bg-emerald-600 hover:bg-emerald-700 text-white text-center font-extrabold text-xs rounded-2xl transition-all shadow-md shadow-emerald-600/20"
+                      className="flex-1 min-w-[140px] py-3 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs rounded-2xl transition-all shadow-md shadow-amber-300/40 flex items-center justify-center gap-2"
                     >
-                      Track Delivery
+                      <Clock className="w-4 h-4 stroke-[2.5]" />
+                      <span>Track Live Delivery</span>
                     </Link>
                   )}
-                  {order.status === 'delivered' && (
-                    <button className="flex-1 min-w-[130px] py-3 bg-amber-400 hover:bg-amber-500 text-slate-950 text-center font-extrabold text-xs rounded-2xl transition-all shadow-md shadow-amber-400/30 cursor-pointer">
-                      Reorder Now
+                  {order.status === 'Delivered' && (
+                    <button className="flex-1 min-w-[130px] py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer">
+                      Reorder Items
                     </button>
                   )}
-                  <button className="flex-1 min-w-[130px] py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-center font-bold text-xs rounded-2xl transition-colors cursor-pointer">
+                  <button className="flex-1 min-w-[130px] py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-2xl transition-colors cursor-pointer">
                     View Invoice
                   </button>
                 </div>

@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import CategoryShowcase from './CategoryShowcase';
 import ProductCard from './ProductCard';
-import { initialProducts } from '../../context/CartContext';
+import { useCart } from '../../context/CartContext';
 import { Search, SlidersHorizontal, Package } from 'lucide-react';
 
 export default function ShopSection() {
+  const { products } = useCart();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
 
-  const filteredProducts = initialProducts
+  const filteredProducts = (products || [])
     .filter((prod) => {
       const matchesCategory = selectedCategory === 'all' || prod.category === selectedCategory;
       const matchesSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase());

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft } from 'lucide-react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export default function CheckoutPage() {
@@ -20,21 +20,25 @@ export default function CheckoutPage() {
     city: '',
     state: '',
     pincode: '',
+    tag: 'Home'
   });
 
-  const addresses = userProfile?.addresses || [];
-  const hasAddress = addresses.length > 0;
-  
-  const [activeAddressId, setActiveAddressId] = useState(userProfile?.primaryAddressId || (addresses.length > 0 ? addresses[0].id : null));
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [activeAddressId, setActiveAddressId] = useState(null);
 
-  // Sync activeAddressId if addresses load late
   useEffect(() => {
-    if (addresses.length > 0 && !activeAddressId) {
-      setActiveAddressId(userProfile?.primaryAddressId || addresses[0].id);
+    if (userProfile?.addresses && userProfile.addresses.length > 0) {
+      if (!activeAddressId) {
+        setActiveAddressId(userProfile.addresses[0].id);
+      }
+    } else {
+      setShowAddressForm(true);
     }
-  }, [addresses, userProfile?.primaryAddressId]);
+  }, [userProfile, activeAddressId]);
 
+  const addresses = userProfile?.addresses || [];
   const activeAddress = addresses.find(a => a.id === activeAddressId) || addresses[0];
+  const hasAddress = Boolean(activeAddress);
 
   useEffect(() => {
     if (!currentUser) {
@@ -52,11 +56,12 @@ export default function CheckoutPage() {
   const handleSaveAddress = async (e) => {
     e.preventDefault();
     if (!addressForm.street || !addressForm.city || !addressForm.pincode) {
-      showToast('Please fill in all required address fields.');
+      showToast('Please fill out all required address fields.');
       return;
     }
+
     setIsProcessing(true);
-    const newId = await addAddress({ ...addressForm, type: 'Home' });
+    const newId = await addAddress(addressForm);
     setIsProcessing(false);
     if (newId) {
       setActiveAddressId(newId);
@@ -65,22 +70,59 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
-    if (!hasAddress) {
-      showToast('Please provide a delivery address first.');
+    if (!hasAddress || isProcessing) {
+      if (!hasAddress) showToast('Please provide a delivery address first.');
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      await addDoc(collection(db, 'orders'), {
-        userId: currentUser.uid,
-        items: cartItems,
-        totalAmount: cartTotal,
-        status: 'active',
-        createdAt: serverTimestamp(),
-        deliveryAddress: activeAddress,
-        paymentMethod: 'Cash on Delivery'
+      const orderNum = Math.floor(1000 + Math.random() * 9000);
+      const orderId = `ORD-${orderNum}`;
+      const timestamp = new Date().toISOString();
+
+      const phone = (activeAddress && activeAddress.phone) || (userProfile && userProfile.phone) || (currentUser && currentUser.phoneNumber) || '+91 9876543210';
+      const custName = (userProfile && userProfile.fullName) || (currentUser && (currentUser.displayName || currentUser.email)) || (activeAddress && activeAddress.name) || 'Customer';
+      const addrStr = activeAddress
+        ? `${activeAddress.street || ''}, ${activeAddress.locality ? activeAddress.locality + ', ' : ''}${activeAddress.city || ''} ${activeAddress.pincode || ''}`.replace(/,\s*,/g, ',').trim()
+        : 'Store Pickup';
+
+      const safeDeliveryAddress = activeAddress ? {
+        id: activeAddress.id || 'ADDR-1',
+        street: activeAddress.street || '',
+        locality: activeAddress.locality || '',
+        city: activeAddress.city || '',
+        state: activeAddress.state || '',
+        pincode: activeAddress.pincode || '',
+        tag: activeAddress.tag || activeAddress.type || 'Home',
+        phone: phone
+      } : { street: 'Store Pickup' };
+
+      await setDoc(doc(db, 'orders', orderId), {
+        id: orderId,
+        orderId: orderId,
+        userId: currentUser ? currentUser.uid : 'guest',
+        customerName: custName,
+        customerPhone: phone,
+        address: addrStr,
+        deliveryAddress: addrStr,
+        deliveryAddressObject: safeDeliveryAddress,
+        items: cartItems.map(item => ({
+          id: item.id || `ITEM-${Math.floor(Math.random() * 1000)}`,
+          name: item.name || 'Grocery Item',
+          qty: item.quantity || 1,
+          quantity: item.quantity || 1,
+          price: item.price || 0,
+          image: item.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&auto=format&fit=crop&q=80'
+        })),
+        totalAmount: cartTotal || 0,
+        status: 'Order Received',
+        isCurrent: true,
+        paymentMethod: 'Cash on Delivery',
+        paymentStatus: 'Pending (COD)',
+        createdAt: timestamp,
+        updatedAt: timestamp
       });
 
       clearCart();

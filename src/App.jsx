@@ -33,6 +33,7 @@ function App() {
             <Route path="orders" element={<MyOrders />} />
             <Route path="track-order/:id" element={<TrackOrder />} />
             <Route path="track-order" element={<TrackOrder />} />
+            <Route path="track/:id" element={<TrackOrder />} />
             <Route path="wishlist" element={<Wishlist />} />
             <Route path="addresses" element={<SavedAddresses />} />
             <Route path="profile" element={<Profile />} />

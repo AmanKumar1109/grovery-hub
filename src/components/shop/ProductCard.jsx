@@ -23,12 +23,16 @@ export default function ProductCard({ product }) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
 
-          {/* Discount Badge */}
-          {product.badge && (
+          {/* Discount / Stock Badge */}
+          {product.inStock === false ? (
+            <span className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 py-0.5 sm:px-3 sm:py-1 bg-rose-600 text-white font-black text-[9px] sm:text-[11px] rounded-full shadow-md">
+              Out of Stock
+            </span>
+          ) : product.badge ? (
             <span className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 py-0.5 sm:px-3 sm:py-1 bg-amber-400 text-slate-950 font-black text-[9px] sm:text-[11px] rounded-full shadow-md">
               {product.badge}
             </span>
-          )}
+          ) : null}
 
           {/* Wishlist Heart Toggle */}
           <button
@@ -49,20 +53,6 @@ export default function ProductCard({ product }) {
           >
             <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isWishlisted ? 'fill-pink-500 stroke-pink-500' : ''}`} />
           </button>
-        </div>
-
-        {/* Badges info */}
-        <div className="flex items-center gap-1 sm:gap-2 mb-1 flex-wrap">
-          {product.isOrganic && (
-            <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 text-[9px] sm:text-[10px] font-extrabold rounded-md border border-emerald-200/60">
-              🌿 Organic
-            </span>
-          )}
-          {product.isHalal && (
-            <span className="px-1.5 py-0.5 bg-amber-50 text-amber-800 text-[9px] sm:text-[10px] font-extrabold rounded-md border border-amber-200/60">
-              ✨ Halal
-            </span>
-          )}
         </div>
 
         {/* Rating & Title */}
@@ -88,7 +78,15 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {quantityInCart > 0 ? (
+        {product.inStock === false ? (
+          <button
+            type="button"
+            disabled
+            className="w-full py-2 sm:py-3 bg-slate-200 text-slate-500 font-extrabold text-[11px] sm:text-xs rounded-xl sm:rounded-2xl flex items-center justify-center gap-1.5 cursor-not-allowed opacity-75"
+          >
+            Out of Stock
+          </button>
+        ) : quantityInCart > 0 ? (
           <div className="flex items-center gap-2">
             <div className="flex-1 flex items-center justify-between bg-amber-400 text-slate-950 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-md shadow-amber-300/30">
               <button

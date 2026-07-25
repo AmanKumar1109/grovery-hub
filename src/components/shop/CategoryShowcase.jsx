@@ -1,8 +1,22 @@
 import React from 'react';
-import { Sparkles, Carrot, Apple, Milk, Croissant, Coffee, Cookie, Drumstick, ArrowRight } from 'lucide-react';
+import { Sparkles, Carrot, Apple, Milk, Croissant, Coffee, Cookie, Drumstick, Package, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
 
-export const categoriesList = [
+const getCategoryIcon = (categoryName) => {
+  const lower = (categoryName || '').toLowerCase();
+  if (lower === 'all' || lower.includes('all')) return Sparkles;
+  if (lower.includes('veg')) return Carrot;
+  if (lower.includes('fruit')) return Apple;
+  if (lower.includes('dairy') || lower.includes('milk') || lower.includes('egg')) return Milk;
+  if (lower.includes('bake') || lower.includes('bread')) return Croissant;
+  if (lower.includes('beverag') || lower.includes('drink') || lower.includes('juice') || lower.includes('coffee')) return Coffee;
+  if (lower.includes('snack') || lower.includes('munch')) return Cookie;
+  if (lower.includes('meat') || lower.includes('sea') || lower.includes('chicken') || lower.includes('burger')) return Drumstick;
+  return Package;
+};
+
+export const initialCategoriesList = [
   { id: 'all', name: 'All Products', icon: Sparkles, count: '12+ Items' },
   { id: 'Fresh Vegetables', name: 'Fresh Vegetables', icon: Carrot, count: '3 Items' },
   { id: 'Organic Fruits', name: 'Organic Fruits', icon: Apple, count: '2 Items' },
@@ -14,6 +28,9 @@ export const categoriesList = [
 ];
 
 export default function CategoryShowcase({ selectedCategory, onSelectCategory }) {
+  const { categoriesList: dynamicCategories } = useCart();
+  const listToRender = dynamicCategories && dynamicCategories.length > 0 ? dynamicCategories : initialCategoriesList;
+
   return (
     <div className="w-full py-4 space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
@@ -36,8 +53,8 @@ export default function CategoryShowcase({ selectedCategory, onSelectCategory })
 
       {/* Category Pills Slider */}
       <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-2 snap-x">
-        {categoriesList.map((cat) => {
-          const Icon = cat.icon;
+        {listToRender.map((cat) => {
+          const Icon = cat.icon || getCategoryIcon(cat.name);
           const isActive = selectedCategory === cat.id;
 
           return (
@@ -66,3 +83,4 @@ export default function CategoryShowcase({ selectedCategory, onSelectCategory })
     </div>
   );
 }
+

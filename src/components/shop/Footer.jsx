@@ -49,13 +49,13 @@ export default function Footer() {
             </div>
 
             <p className="text-xs font-medium text-slate-400 leading-relaxed max-w-sm">
-              Your premier online shop for 100% Halal certified, farm-fresh organic vegetables, fruits, dairy, and everyday household essentials delivered in 15 minutes.
+              Your premier online shop for farm-fresh vegetables, fruits, dairy, and everyday household essentials delivered in 15 minutes.
             </p>
 
             <div className="space-y-2 text-xs font-bold text-slate-400">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-amber-400" />
-                <span>42 Organic Way, Green Park Zone, Mumbai 400001</span>
+                <span>42 Grocery Way, Green Park Zone, Mumbai 400001</span>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-amber-400" />
@@ -85,10 +85,10 @@ export default function Footer() {
             <h4 className="text-xs font-black text-white uppercase tracking-wider">Categories</h4>
             <ul className="space-y-2 text-xs font-semibold text-slate-400">
               <li><a href="#shop" className="hover:text-amber-400 transition-colors">Fresh Vegetables</a></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Organic Fruits</a></li>
+              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Fresh Fruits</a></li>
               <li><a href="#shop" className="hover:text-amber-400 transition-colors">Dairy & Fresh Milk</a></li>
               <li><a href="#shop" className="hover:text-amber-400 transition-colors">Bakery & Breads</a></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Halal Chicken & Meat</a></li>
+              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Meat & Seafood</a></li>
             </ul>
           </div>
 
@@ -98,7 +98,7 @@ export default function Footer() {
             <ul className="space-y-2 text-xs font-semibold text-slate-400">
               <li><Link to="/dashboard/settings" className="hover:text-amber-400 transition-colors">Help Center & FAQ</Link></li>
               <li><a href="#shop" className="hover:text-amber-400 transition-colors">15-Min Delivery Policy</a></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Organic Certifications</a></li>
+              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Quality Standards</a></li>
               <li><a href="#shop" className="hover:text-amber-400 transition-colors">Refund & Returns</a></li>
               <li><a href="#shop" className="hover:text-amber-400 transition-colors">Terms of Service</a></li>
             </ul>
@@ -111,7 +111,7 @@ export default function Footer() {
           <div className="flex items-center gap-2">
             <span>Built with</span>
             <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
-            <span>for Organic & Halal Grocery Shoppers</span>
+            <span>for Everyday Grocery Shoppers</span>
           </div>
         </div>
       </div>
