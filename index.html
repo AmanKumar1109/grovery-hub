@@ -1,13 +1,59 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" style="background-color: #ffffff;">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>grocery-hub</title>
+    <title>The Grocery Hub - Fresh Organic Groceries Delivered in 15 Mins</title>
+    
+    <!-- Preconnect for Fast Font and Asset Loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://images.unsplash.com" />
+
+    <style>
+      html, body {
+        background-color: #ffffff !important;
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      #app-loader {
+        position: fixed;
+        inset: 0;
+        background-color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      .spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid #fef3c7;
+        border-top-color: #f59e0b;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
   </head>
-  <body>
-    <div id="root"></div>
+  <body style="background-color: #ffffff;">
+    <div id="root">
+      <!-- Instant HTML Splash Screen while JS loads -->
+      <div id="app-loader">
+        <div style="width: 56px; height: 56px; background-color: #fbbf24; border-radius: 16px; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(251,191,36,0.3); margin-bottom: 16px;">
+          <svg style="width: 32px; height: 32px; fill: white;" viewBox="0 0 24 24">
+            <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zm-9-1a2 2 0 0 1 4 0v1h-4V6zm8 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v10z" />
+          </svg>
+        </div>
+        <div class="spinner"></div>
+        <p style="margin-top: 14px; font-weight: 800; font-size: 13px; color: #0f172a; letter-spacing: -0.2px;">The Grocery Hub</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

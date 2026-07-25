@@ -16,7 +16,7 @@ export function AuthProvider({ children }) {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Listen to Firebase auth state changes
+  // Listen to Firebase auth state changes in the background without blocking initial app render
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
@@ -28,7 +28,6 @@ export function AuthProvider({ children }) {
           if (userDocSnap.exists()) {
             setUserProfile(userDocSnap.data());
           } else {
-            // Default profile structure if doc doesn't exist yet
             const initialData = {
               fullName: user.displayName || 'Grocery Member',
               email: user.email,
@@ -41,7 +40,7 @@ export function AuthProvider({ children }) {
             await setDoc(userDocRef, initialData);
           }
         } catch (err) {
-          console.warn('Firestore profile fetch error (using memory state):', err);
+          console.warn('Firestore profile fetch error:', err);
           setUserProfile((prev) => prev || {
             fullName: user.displayName || 'Grocery Member',
             email: user.email,
@@ -156,7 +155,7 @@ export function AuthProvider({ children }) {
         deleteAddress,
       }}
     >
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }

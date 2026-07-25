@@ -3,6 +3,7 @@
 
 :root {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: #ffffff;
 }
 
 /* Hide all scrollbars globally across Chrome, Safari, Edge, Firefox */
@@ -18,14 +19,14 @@
   background: transparent !important;
 }
 
-/* Background canvas textures and utilities */
-body {
-  background-color: #e2e8f0;
-  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-  background-size: 24px 24px;
+/* Fresh Clean White Background - No Grey Flash */
+html, body {
+  background-color: #ffffff !important;
   color: #1f2937;
   overflow-x: hidden;
   min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
 /* Utility to hide scrollbars on specific containers */

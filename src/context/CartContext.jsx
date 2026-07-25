@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const CartContext = createContext(null);
 
@@ -174,12 +174,27 @@ export const initialProducts = [
 ];
 
 export function CartProvider({ children }) {
-  const [cartItems, setCartItems] = useState([
-    { ...initialProducts[0], quantity: 1 },
-    { ...initialProducts[2], quantity: 1 },
-  ]);
+  // Ultra-fast state management with localStorage persistence (starts empty by default)
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem('grocery_cart_items');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+
+  // Persist cart to localStorage on state changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('grocery_cart_items', JSON.stringify(cartItems));
+    } catch (e) {
+      console.warn('Failed to persist cart items to localStorage:', e);
+    }
+  }, [cartItems]);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -217,6 +232,15 @@ export function CartProvider({ children }) {
     setCartItems((prev) => prev.filter((item) => item.id !== productId));
   };
 
+  const clearCart = () => {
+    setCartItems([]);
+    try {
+      localStorage.removeItem('grocery_cart_items');
+    } catch (e) {
+      console.warn(e);
+    }
+  };
+
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const cartTotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
@@ -231,6 +255,8 @@ export function CartProvider({ children }) {
         addToCart,
         updateQuantity,
         removeFromCart,
+        clearCart,
+        showToast,
         toastMessage,
       }}
     >
