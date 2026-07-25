@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import CatalogPage from './pages/CatalogPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import CheckoutPage from './pages/CheckoutPage';
 import DashboardLayout from './components/dashboard/DashboardLayout';
 import DashboardHome from './pages/dashboard/DashboardHome';
 import MyOrders from './pages/dashboard/MyOrders';
@@ -24,6 +25,7 @@ function App() {
           <Route path="/catalog" element={<CatalogPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
           
           {/* Dashboard Nested Routes */}
           <Route path="/dashboard" element={<DashboardLayout />}>

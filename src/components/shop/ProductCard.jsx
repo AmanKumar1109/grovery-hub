@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Heart, ShoppingBag, Star, Plus, Minus } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { useAuth } from '../../context/AuthContext';
 
 export default function ProductCard({ product }) {
-  const { cartItems, addToCart, updateQuantity } = useCart();
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const { cartItems, addToCart, updateQuantity, showToast, setIsCartOpen } = useCart();
+  const { currentUser, userProfile, toggleWishlist } = useAuth();
+  
+  const isWishlisted = userProfile?.wishlist?.some(item => item.id === product.id) || false;
 
   const cartItem = cartItems.find((item) => item.id === product.id);
   const quantityInCart = cartItem ? cartItem.quantity : 0;
@@ -30,7 +33,15 @@ export default function ProductCard({ product }) {
           {/* Wishlist Heart Toggle */}
           <button
             type="button"
-            onClick={() => setIsWishlisted(!isWishlisted)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!currentUser) {
+                showToast('Please sign in to save items to your wishlist!');
+                return;
+              }
+              toggleWishlist(product);
+            }}
             className={`absolute top-2 right-2 sm:top-3 sm:right-3 w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-white/90 backdrop-blur-md flex items-center justify-center transition-all shadow-sm active:scale-95 cursor-pointer ${
               isWishlisted ? 'text-pink-600 scale-110' : 'text-slate-400 hover:text-pink-500'
             }`}
@@ -78,19 +89,28 @@ export default function ProductCard({ product }) {
         </div>
 
         {quantityInCart > 0 ? (
-          <div className="flex items-center justify-between bg-amber-400 text-slate-950 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-md shadow-amber-300/30">
-            <button
-              onClick={() => updateQuantity(product.id, -1)}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-slate-950/10 hover:bg-slate-950/20 text-slate-950 flex items-center justify-center font-black transition-colors cursor-pointer"
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex items-center justify-between bg-amber-400 text-slate-950 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-md shadow-amber-300/30">
+              <button
+                onClick={() => updateQuantity(product.id, -1)}
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-slate-950/10 hover:bg-slate-950/20 text-slate-950 flex items-center justify-center font-black transition-colors cursor-pointer"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <span className="font-black text-xs sm:text-sm px-1 sm:px-3 truncate">{quantityInCart}</span>
+              <button
+                onClick={() => updateQuantity(product.id, 1)}
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-slate-950/10 hover:bg-slate-950/20 text-slate-950 flex items-center justify-center font-black transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="w-9 h-9 sm:w-11 sm:h-11 bg-slate-900 text-white flex items-center justify-center rounded-xl sm:rounded-2xl shadow-md cursor-pointer hover:bg-slate-800 active:scale-95 transition-all"
+              title="View Cart"
             >
-              <Minus className="w-3.5 h-3.5" />
-            </button>
-            <span className="font-black text-xs sm:text-sm px-1 sm:px-3 truncate">{quantityInCart} added</span>
-            <button
-              onClick={() => updateQuantity(product.id, 1)}
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-slate-950/10 hover:bg-slate-950/20 text-slate-950 flex items-center justify-center font-black transition-colors cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
+              <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </div>
         ) : (

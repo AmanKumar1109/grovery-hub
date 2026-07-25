@@ -1,32 +1,27 @@
-import React from 'react';
-import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
 export default function CartDrawer() {
-  const { isCartOpen, setIsCartOpen, cartItems, cartTotal, updateQuantity, removeFromCart, showToast } = useCart();
+  const { isCartOpen, setIsCartOpen, cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, showToast } = useCart();
   const { currentUser, userProfile } = useAuth();
   const navigate = useNavigate();
 
-  if (!isCartOpen) return null;
+  if (!isCartOpen) {
+    return null;
+  }
 
   const handleCheckout = () => {
-    setIsCartOpen(false);
-
     if (!currentUser) {
       showToast('Please sign in to complete your checkout!');
       navigate('/login');
+      setIsCartOpen(false);
       return;
     }
-
-    if (!userProfile?.address?.street || !userProfile?.address?.city) {
-      showToast('📍 Please fill in your primary delivery address first!');
-      navigate('/dashboard/profile');
-      return;
-    }
-
-    navigate('/dashboard/orders');
+    
+    setIsCartOpen(false);
+    navigate('/checkout');
   };
 
   return (

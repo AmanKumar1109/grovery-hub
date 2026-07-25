@@ -1,19 +1,73 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Package, Clock, CheckCircle2, XCircle, Search } from 'lucide-react';
+import { Package, Clock, CheckCircle2, XCircle, Search, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import EmptyState from '../../components/dashboard/EmptyState';
 import gsap from 'gsap';
-
-const mockOrders = [
-  { id: 'ORD-84321', status: 'active', date: 'Today, 2:30 PM', items: 5, amount: 450, expected: 'Today, 4:00 PM', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=150' },
-  { id: 'ORD-84319', status: 'delivered', date: 'Yesterday, 10:15 AM', items: 12, amount: 1240, deliveredAt: 'Yesterday, 11:30 AM', image: 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?auto=format&fit=crop&q=80&w=150' },
-  { id: 'ORD-84290', status: 'cancelled', date: 'Mon, 18 Jul', items: 3, amount: 210, cancelledReason: 'Items out of stock', image: 'https://images.unsplash.com/photo-1596199050105-6d5d32222916?auto=format&fit=crop&q=80&w=150' }
-];
+import { useAuth } from '../../context/AuthContext';
+import { db } from '../../firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export default function MyOrders() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const containerRef = useRef(null);
+  const { currentUser } = useAuth();
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!currentUser) return;
+      setLoading(true);
+      try {
+        const q = query(
+          collection(db, 'orders'),
+          where('userId', '==', currentUser.uid)
+        );
+        const querySnapshot = await getDocs(q);
+        const fetchedOrders = [];
+        querySnapshot.forEach((doc) => {
+          fetchedOrders.push({ id: doc.id, ...doc.data() });
+        });
+        
+        fetchedOrders.sort((a, b) => {
+          const getTime = (dateObj) => {
+            if (!dateObj) return 0;
+            if (typeof dateObj.toMillis === 'function') return dateObj.toMillis();
+            if (dateObj.seconds) return dateObj.seconds * 1000;
+            if (typeof dateObj === 'string' || dateObj instanceof Date) return new Date(dateObj).getTime();
+            return 0;
+          };
+          return getTime(b.createdAt) - getTime(a.createdAt);
+        });
+
+        setOrders(fetchedOrders);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchOrders();
+  }, [currentUser]);
+
+  const formatDate = (timestamp) => {
+    if (!timestamp) return 'Just now';
+    let date;
+    if (typeof timestamp.toDate === 'function') {
+      date = timestamp.toDate();
+    } else if (timestamp.seconds) {
+      date = new Date(timestamp.seconds * 1000);
+    } else {
+      date = new Date(timestamp);
+    }
+    return date.toLocaleDateString('en-US', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -30,7 +84,7 @@ export default function MyOrders() {
     return () => ctx.revert();
   }, [activeTab]);
 
-  const filteredOrders = mockOrders.filter(order => {
+  const filteredOrders = orders.filter(order => {
     const matchesTab = activeTab === 'all' || order.status === activeTab;
     const matchesSearch = order.id.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
@@ -84,10 +138,21 @@ export default function MyOrders() {
 
       {/* Order Cards List */}
       <div className="space-y-4">
-        {filteredOrders.length > 0 ? (
+        {loading ? (
+          <div className="py-20 flex flex-col items-center justify-center space-y-4">
+            <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
+            <p className="text-sm font-bold text-slate-500">Loading your orders...</p>
+          </div>
+        ) : filteredOrders.length > 0 ? (
           filteredOrders.map(order => {
             const statusConfig = getStatusConfig(order.status);
             const StatusIcon = statusConfig.icon;
+            
+            // Extract some display data from the real order
+            const itemCount = order.items?.reduce((sum, item) => sum + (item.quantity || 1), 0) || 0;
+            const orderAmount = order.totalAmount || order.amount || 0; // fallback to .amount for older data
+            const orderDate = formatDate(order.createdAt);
+            const orderImage = order.items?.[0]?.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=150';
             
             return (
               <div key={order.id} className="order-card bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all">
@@ -97,12 +162,12 @@ export default function MyOrders() {
                       <StatusIcon className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-black text-slate-900">{order.id}</p>
-                      <p className="text-xs font-bold text-slate-400">{order.date}</p>
+                      <p className="text-sm font-black text-slate-900">#{order.id.slice(0, 8).toUpperCase()}</p>
+                      <p className="text-xs font-bold text-slate-400">{orderDate}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-black text-slate-900">₹{order.amount.toFixed(2)}</p>
+                    <p className="text-lg font-black text-slate-900">₹{orderAmount.toFixed(2)}</p>
                     <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-extrabold ${statusConfig.bg} ${statusConfig.color}`}>
                       {statusConfig.label}
                     </span>
@@ -111,11 +176,13 @@ export default function MyOrders() {
 
                 <div className="flex items-center gap-4 mb-5">
                   <div className="w-16 h-16 rounded-2xl bg-slate-100 flex-shrink-0 overflow-hidden border border-slate-200/60">
-                    <img src={order.image} alt="Order items" className="w-full h-full object-cover" />
+                    <img src={orderImage} alt="Order items" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-extrabold text-slate-900 line-clamp-1">Fresh Farm Produce & Grocery Essentials</h4>
-                    <p className="text-xs font-bold text-slate-500 mt-1">{order.items} Items • Payment Verified</p>
+                    <h4 className="font-extrabold text-slate-900 line-clamp-1">
+                      {order.items?.length > 1 ? `${order.items[0].name} and ${order.items.length - 1} more items` : order.items?.[0]?.name || 'Grocery Essentials'}
+                    </h4>
+                    <p className="text-xs font-bold text-slate-500 mt-1">{itemCount} Items • Payment Verified</p>
                   </div>
                 </div>
 

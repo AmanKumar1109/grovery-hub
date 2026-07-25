@@ -9,12 +9,6 @@ export default function Profile() {
 
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [street, setStreet] = useState('');
-  const [locality, setLocality] = useState('');
-  const [city, setCity] = useState('');
-  const [state, setState] = useState('');
-  const [pincode, setPincode] = useState('');
-  const [addressType, setAddressType] = useState('Home');
 
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -24,12 +18,6 @@ export default function Profile() {
     if (userProfile || currentUser) {
       setFullName(userProfile?.fullName || currentUser?.displayName || '');
       setPhone(userProfile?.phone || '');
-      setStreet(userProfile?.address?.street || '');
-      setLocality(userProfile?.address?.locality || '');
-      setCity(userProfile?.address?.city || '');
-      setState(userProfile?.address?.state || '');
-      setPincode(userProfile?.address?.pincode || '');
-      setAddressType(userProfile?.addressType || 'Home');
     }
   }, [userProfile, currentUser]);
 
@@ -58,14 +46,8 @@ export default function Profile() {
       await completeProfile({
         fullName: fullName.trim(),
         phone: phone.trim(),
-        street: street.trim(),
-        locality: locality.trim(),
-        city: city.trim(),
-        state: state.trim(),
-        pincode: pincode.trim(),
-        addressType
       });
-      setMessage('Profile and address details saved successfully!');
+      setMessage('Profile details saved successfully!');
     } catch (err) {
       console.error(err);
       setError('Failed to update profile. ' + (err.message || ''));
@@ -175,88 +157,17 @@ export default function Profile() {
           <div className="pt-6 border-t border-slate-100">
             <h3 className="text-base font-extrabold text-slate-900 mb-4 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-amber-500" />
-              Primary Delivery Location
+              Delivery Addresses
             </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="form-group md:col-span-2 space-y-1">
-                <label className="text-xs font-bold text-slate-600 pl-1">Street Address / House No.</label>
-                <input 
-                  type="text"
-                  placeholder="House/Flat No, Building, Street"
-                  value={street}
-                  onChange={(e) => setStreet(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-400/20 outline-none font-bold text-slate-900 text-xs sm:text-sm"
-                />
+            
+            <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200 flex items-center justify-between">
+              <div>
+                <p className="font-bold text-slate-900 text-sm">Manage your addresses</p>
+                <p className="text-xs text-slate-500 mt-1">Add, update, or remove delivery locations.</p>
               </div>
-
-              <div className="form-group space-y-1">
-                <label className="text-xs font-bold text-slate-600 pl-1">Locality / Landmark</label>
-                <input 
-                  type="text"
-                  placeholder="Locality or landmark"
-                  value={locality}
-                  onChange={(e) => setLocality(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-400/20 outline-none font-bold text-slate-900 text-xs sm:text-sm"
-                />
-              </div>
-
-              <div className="form-group space-y-1">
-                <label className="text-xs font-bold text-slate-600 pl-1">City</label>
-                <input 
-                  type="text"
-                  placeholder="City"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-400/20 outline-none font-bold text-slate-900 text-xs sm:text-sm"
-                />
-              </div>
-
-              <div className="form-group space-y-1">
-                <label className="text-xs font-bold text-slate-600 pl-1">State</label>
-                <input 
-                  type="text"
-                  placeholder="State"
-                  value={state}
-                  onChange={(e) => setState(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-400/20 outline-none font-bold text-slate-900 text-xs sm:text-sm"
-                />
-              </div>
-
-              <div className="form-group space-y-1">
-                <label className="text-xs font-bold text-slate-600 pl-1">Pincode</label>
-                <input 
-                  type="text"
-                  placeholder="Pincode"
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-400/20 outline-none font-bold text-slate-900 text-xs sm:text-sm"
-                />
-              </div>
-
-              <div className="form-group md:col-span-2 space-y-2 pt-2">
-                <label className="text-xs font-bold text-slate-600 pl-1">Address Label</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {['Home', 'Office', 'Other'].map((type) => {
-                    const Icon = type === 'Home' ? Home : type === 'Office' ? Briefcase : Tag;
-                    const isActive = addressType === type;
-                    return (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setAddressType(type)}
-                        className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 font-extrabold text-xs transition-all cursor-pointer ${
-                          isActive 
-                            ? 'border-amber-400 bg-amber-50 text-slate-950 shadow-sm' 
-                            : 'border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100'
-                        }`}
-                      >
-                        <Icon className="w-4 h-4 text-amber-600" /> {type}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <a href="/dashboard/addresses" className="px-5 py-2.5 bg-white border border-slate-200 hover:border-amber-400 text-slate-900 font-extrabold text-xs rounded-xl shadow-sm transition-all">
+                Manage Addresses
+              </a>
             </div>
           </div>
 
