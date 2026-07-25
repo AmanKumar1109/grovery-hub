@@ -128,7 +128,7 @@ export const initialProducts = [
 ];
 
 export function CartProvider({ children }) {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState([]);
   const [dbCategories, setDbCategories] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 

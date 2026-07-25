@@ -12,7 +12,7 @@ export default function CatalogPage() {
   const [sortBy, setSortBy] = useState('featured');
   const [onlyDiscounted, setOnlyDiscounted] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const { products, categoriesList, toastMessage } = useCart();
+  const { toastMessage, products, isLoadingProducts, categoriesList } = useCart();
 
   const filteredProducts = (products || [])
     .filter((prod) => {
@@ -165,7 +165,12 @@ export default function CatalogPage() {
         </div>
 
         {/* Catalog Products Grid: 2 columns on Mobile (grid-cols-2), 3 on Tablet, 4 on Desktop */}
-        {filteredProducts.length > 0 ? (
+        {isLoadingProducts ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-4">
+            <div className="w-12 h-12 border-4 border-slate-200 border-t-amber-500 rounded-full animate-spin"></div>
+            <p className="text-sm font-bold text-slate-500">Loading catalog items...</p>
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
