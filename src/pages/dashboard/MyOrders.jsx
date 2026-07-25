@@ -174,6 +174,7 @@ export default function MyOrders() {
           filteredOrders.map(order => {
             const statusConfig = getStatusConfig(order.status);
             const StatusIcon = statusConfig.icon;
+            const isCancelled = order.status?.toLowerCase() === 'cancelled';
             
             // Extract some display data from the real order
             const itemCount = order.items?.reduce((sum, item) => sum + (item.quantity || 1), 0) || 0;
@@ -182,7 +183,11 @@ export default function MyOrders() {
             const orderImage = order.items?.[0]?.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=150';
             
             return (
-              <div key={order.id} className="order-card bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all">
+              <div key={order.id} className={`order-card backdrop-blur-xl border rounded-3xl p-5 sm:p-6 transition-all ${
+                  isCancelled 
+                    ? 'bg-red-50/30 border-red-100/50 opacity-60 grayscale-[0.4]' 
+                    : 'bg-white/90 border-slate-200/80 shadow-sm hover:shadow-md'
+                }`}>
                 <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
                   <div className="flex items-center gap-3">
                     <div className={`p-2.5 rounded-xl ${statusConfig.bg} ${statusConfig.color}`}>
@@ -213,8 +218,8 @@ export default function MyOrders() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                  {order.status !== 'Delivered' && order.status !== 'Cancelled' && (
+                <div className="flex flex-wrap items-center gap-3 mt-5 pt-5 border-t border-slate-100/80">
+                  {!isCancelled && order.status !== 'Delivered' && (
                     <>
                       <Link 
                         to={`/dashboard/track-order/${order.id}`} 
