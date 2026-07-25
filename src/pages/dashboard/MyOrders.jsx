@@ -14,6 +14,7 @@ export default function MyOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [cancellingOrderId, setCancellingOrderId] = useState(null);
+  const [orderToCancel, setOrderToCancel] = useState(null);
   const containerRef = useRef(null);
   const { currentUser } = useAuth();
 
@@ -58,8 +59,6 @@ export default function MyOrders() {
   }, [currentUser]);
 
   const handleCancelOrder = async (orderId) => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
-    
     setCancellingOrderId(orderId);
     try {
       const orderRef = doc(db, 'orders', orderId);
@@ -70,6 +69,7 @@ export default function MyOrders() {
       alert("Failed to cancel order. Please try again.");
     } finally {
       setCancellingOrderId(null);
+      setOrderToCancel(null);
     }
   };
 
@@ -224,7 +224,7 @@ export default function MyOrders() {
                         <span>Track Live Delivery</span>
                       </Link>
                       <button 
-                        onClick={() => handleCancelOrder(order.id)}
+                        onClick={() => setOrderToCancel(order.id)}
                         disabled={cancellingOrderId === order.id}
                         className="flex-1 min-w-[130px] py-3 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs rounded-2xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
@@ -259,6 +259,39 @@ export default function MyOrders() {
           />
         )}
       </div>
+
+      {/* Cancel Order Confirmation Popup */}
+      {orderToCancel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100">
+            <div className="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-5 mx-auto">
+              <XCircle className="w-7 h-7" />
+            </div>
+            <h3 className="text-xl font-black text-slate-900 text-center mb-2">Cancel Order?</h3>
+            <p className="text-sm font-semibold text-slate-500 text-center mb-6 px-2">
+              Are you sure you want to cancel this order? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setOrderToCancel(null)}
+                disabled={cancellingOrderId}
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm rounded-xl transition-colors disabled:opacity-50"
+              >
+                No, Keep it
+              </button>
+              <button 
+                onClick={() => handleCancelOrder(orderToCancel)}
+                disabled={cancellingOrderId}
+                className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {cancellingOrderId ? (
+                  <><Loader2 className="w-4 h-4 animate-spin"/> Cancelling...</>
+                ) : "Yes, Cancel"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
