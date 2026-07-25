@@ -50,7 +50,8 @@ export default function DashboardHome() {
 
   const totalSpent = userOrders.reduce((sum, order) => {
     if (order.status?.toLowerCase() !== 'cancelled') {
-      return sum + (order.totalAmount || order.amount || 0);
+      const amt = parseFloat(order.totalAmount || order.amount || 0);
+      return sum + (isNaN(amt) ? 0 : amt);
     }
     return sum;
   }, 0);
