@@ -68,11 +68,12 @@ export default function DashboardHome() {
         duration: 0.8,
         stagger: 0.1,
         ease: 'power3.out',
+        clearProps: 'all'
       });
     }, containerRef);
 
     return () => ctx.revert();
-  }, [loadingOrders]);
+  }, []);
 
   return (
     <div ref={containerRef} className="pb-24 md:pb-8 space-y-6 sm:space-y-8">
