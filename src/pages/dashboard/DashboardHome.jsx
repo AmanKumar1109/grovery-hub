@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Package, Heart, ChevronRight, Clock, MapPin, Sparkles, ArrowRight, ShoppingBag } from 'lucide-react';
+import { Package, Heart, ChevronRight, Clock, MapPin, Sparkles, ArrowRight, ShoppingBag, Wallet } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import gsap from 'gsap';
@@ -47,6 +47,13 @@ export default function DashboardHome() {
   }, [currentUser]);
 
   const latestActiveOrder = userOrders.find(o => o.status !== 'Delivered' && o.status !== 'Cancelled') || userOrders[0];
+
+  const totalSpent = userOrders.reduce((sum, order) => {
+    if (order.status?.toLowerCase() !== 'cancelled') {
+      return sum + (order.totalAmount || order.amount || 0);
+    }
+    return sum;
+  }, 0);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -107,7 +114,7 @@ export default function DashboardHome() {
             <Heart className="w-5 h-5 fill-pink-500 stroke-pink-500" />
           </div>
           <p className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Wishlist Items</p>
-          <h3 className="text-2xl font-black text-slate-900 mt-1">Saved</h3>
+          <h3 className="text-2xl font-black text-slate-900 mt-1">{userProfile?.wishlist?.length || 0} Saved</h3>
         </Link>
 
         {/* Total Orders Card */}
@@ -120,21 +127,21 @@ export default function DashboardHome() {
           </div>
           <p className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Total Orders</p>
           <h3 className="text-2xl font-black text-slate-900 mt-1">
-            {loadingOrders ? '...' : `${userOrders.length} ${userOrders.length === 1 ? 'Order' : 'Orders'}`}
+            {loadingOrders ? '...' : `${userOrders.length}`}
           </h3>
         </Link>
 
-        {/* Delivery Address Card */}
+        {/* Total Spent Card */}
         <Link
-          to="/dashboard/addresses"
+          to="/dashboard/orders"
           className="stagger-item bg-white/90 backdrop-blur-xl border border-slate-200/80 p-5 rounded-3xl shadow-sm hover:shadow-md hover:border-emerald-200 transition-all group block col-span-2 sm:col-span-1"
         >
           <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <MapPin className="w-5 h-5" />
+            <Wallet className="w-5 h-5" />
           </div>
-          <p className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Primary Location</p>
-          <h3 className="text-sm font-black text-slate-900 mt-1 truncate">
-            {userProfile?.addresses?.[0]?.city || 'Mumbai'}, {userProfile?.addresses?.[0]?.pincode || 'MH'}
+          <p className="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Total Spent</p>
+          <h3 className="text-2xl font-black text-slate-900 mt-1 truncate">
+            {loadingOrders ? '...' : `₹${totalSpent.toFixed(2)}`}
           </h3>
         </Link>
       </div>
