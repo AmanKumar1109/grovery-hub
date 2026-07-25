@@ -5,6 +5,7 @@ import EmptyState from '../../components/dashboard/EmptyState';
 import OrderSkeleton from '../../components/dashboard/OrderSkeleton';
 import gsap from 'gsap';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { db } from '../../firebase';
 import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 
@@ -17,6 +18,7 @@ export default function MyOrders() {
   const [orderToCancel, setOrderToCancel] = useState(null);
   const containerRef = useRef(null);
   const { currentUser } = useAuth();
+  const { addToCart, setIsCartOpen, showToast } = useCart();
 
   useEffect(() => {
     if (!currentUser) {
@@ -71,6 +73,19 @@ export default function MyOrders() {
       setCancellingOrderId(null);
       setOrderToCancel(null);
     }
+  };
+
+  const handleReorder = (order) => {
+    if (!order.items || order.items.length === 0) {
+      showToast("No items found in this order.");
+      return;
+    }
+    
+    order.items.forEach(item => {
+      addToCart(item, item.quantity || 1);
+    });
+    
+    setIsCartOpen(true);
   };
 
   const formatDate = (timestamp) => {
@@ -242,8 +257,15 @@ export default function MyOrders() {
                       </button>
                     </>
                   )}
-                  {order.status === 'Delivered' && (
-                    <button className="flex-1 min-w-[130px] py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer">
+                  {(isCancelled || order.status === 'Delivered') && (
+                    <button 
+                      onClick={() => handleReorder(order)}
+                      className={`flex-1 min-w-[130px] py-3 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md cursor-pointer ${
+                        isCancelled 
+                          ? 'bg-slate-800 hover:bg-slate-900 shadow-slate-800/20' 
+                          : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+                      }`}
+                    >
                       Reorder Items
                     </button>
                   )}
