@@ -16,6 +16,7 @@ export default function MyOrders() {
   const [loading, setLoading] = useState(true);
   const [cancellingOrderId, setCancellingOrderId] = useState(null);
   const [orderToCancel, setOrderToCancel] = useState(null);
+  const [currentTime, setCurrentTime] = useState(Date.now());
   const containerRef = useRef(null);
   const { currentUser } = useAuth();
   const { addToCart, setIsCartOpen, showToast } = useCart();
@@ -125,6 +126,13 @@ export default function MyOrders() {
     return () => ctx.revert();
   }, [activeTab, orders.length, loading]);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const filteredOrders = orders.filter(order => {
     const status = order.status?.toLowerCase() || '';
     let matchesTab = false;
@@ -209,6 +217,26 @@ export default function MyOrders() {
             const orderDate = formatDate(order.createdAt);
             const orderImage = order.items?.[0]?.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=150';
             
+            const orderTimeMs = order.createdAt ? (
+              typeof order.createdAt.toMillis === 'function' ? order.createdAt.toMillis() :
+              typeof order.createdAt.seconds === 'number' ? order.createdAt.seconds * 1000 :
+              typeof order.createdAt === 'string' ? new Date(order.createdAt).getTime() :
+              typeof order.createdAt === 'number' ? order.createdAt :
+              order.createdAt instanceof Date ? order.createdAt.getTime() : currentTime
+            ) : currentTime;
+            
+            const timeElapsed = currentTime - orderTimeMs;
+            const timeRemaining = Math.max(0, 5 * 60 * 1000 - timeElapsed);
+            const isCancelable = timeRemaining > 0;
+            
+            const formatTime = (ms) => {
+              const totalSeconds = Math.floor(ms / 1000);
+              const minutes = Math.floor(totalSeconds / 60);
+              const seconds = totalSeconds % 60;
+              return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            };
+
+            
             return (
               <div key={order.id} className={`order-card backdrop-blur-xl border rounded-3xl p-5 sm:p-6 transition-all ${
                   isCancelled 
@@ -255,18 +283,35 @@ export default function MyOrders() {
                         <Clock className="w-4 h-4 stroke-[2.5]" />
                         <span>Track Live Delivery</span>
                       </Link>
-                      <button 
-                        onClick={() => setOrderToCancel(order.id)}
-                        disabled={cancellingOrderId === order.id}
-                        className="flex-1 min-w-[130px] py-3 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs rounded-2xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                      >
-                        {cancellingOrderId === order.id ? (
-                          <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            <span>Cancelling...</span>
-                          </>
-                        ) : "Cancel Order"}
-                      </button>
+                      {isCancelable ? (
+                        <button 
+                          onClick={() => setOrderToCancel(order.id)}
+                          disabled={cancellingOrderId === order.id}
+                          className="flex-1 min-w-[130px] py-3 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs rounded-2xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          {cancellingOrderId === order.id ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>Cancelling...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>Cancel Order</span>
+                              <span className="px-1.5 py-0.5 bg-red-200/80 text-red-800 rounded-md text-[10px] font-black tabular-nums tracking-tight border border-red-300/50">
+                                {formatTime(timeRemaining)}
+                              </span>
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <div 
+                          className="flex-1 min-w-[130px] py-3 bg-slate-100 text-slate-400 font-bold text-xs rounded-2xl flex items-center justify-center gap-2 cursor-not-allowed"
+                          title="Cancellation period of 5 minutes has passed"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          <span>Cancellation Time Expired</span>
+                        </div>
+                      )}
                     </>
                   )}
                   {(isCancelled || order.status === 'Delivered') && (

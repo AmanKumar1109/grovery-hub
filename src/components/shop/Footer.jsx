@@ -84,11 +84,11 @@ export default function Footer() {
           <div className="space-y-3">
             <h4 className="text-xs font-black text-white uppercase tracking-wider">Categories</h4>
             <ul className="space-y-2 text-xs font-semibold text-slate-400">
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Fresh Vegetables</a></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Fresh Fruits</a></li>
               <li><a href="#shop" className="hover:text-amber-400 transition-colors">Dairy & Fresh Milk</a></li>
               <li><a href="#shop" className="hover:text-amber-400 transition-colors">Bakery & Breads</a></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Meat & Seafood</a></li>
+              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Rice, Atta & Dals</a></li>
+              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Oils, Ghee & Masalas</a></li>
+              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Snacks & Beverages</a></li>
             </ul>
           </div>
 
