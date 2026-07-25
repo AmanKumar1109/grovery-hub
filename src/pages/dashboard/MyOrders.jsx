@@ -269,9 +269,12 @@ export default function MyOrders() {
                       Reorder Items
                     </button>
                   )}
-                  <button className="flex-1 min-w-[130px] py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-2xl transition-colors cursor-pointer">
+                  <Link 
+                    to={`/dashboard/invoice/${order.id}`}
+                    className="flex-1 min-w-[130px] py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-2xl transition-colors cursor-pointer text-center block flex items-center justify-center"
+                  >
                     View Invoice
-                  </button>
+                  </Link>
                 </div>
               </div>
             );

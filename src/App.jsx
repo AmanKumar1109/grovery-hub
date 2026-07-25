@@ -15,6 +15,7 @@ import Wishlist from './pages/dashboard/Wishlist';
 import SavedAddresses from './pages/dashboard/SavedAddresses';
 import Profile from './pages/dashboard/Profile';
 import Settings from './pages/dashboard/Settings';
+import InvoicePage from './pages/dashboard/InvoicePage';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
             <Route path="addresses" element={<SavedAddresses />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="invoice/:id" element={<InvoicePage />} />
           </Route>
 
           <Route path="/complete-profile" element={<Navigate to="/dashboard/profile" replace />} />
