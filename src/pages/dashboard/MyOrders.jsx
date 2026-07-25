@@ -126,18 +126,30 @@ export default function MyOrders() {
   }, [activeTab, orders.length, loading]);
 
   const filteredOrders = orders.filter(order => {
-    const matchesTab = activeTab === 'all' || order.status === activeTab;
+    const status = order.status?.toLowerCase() || '';
+    let matchesTab = false;
+    
+    if (activeTab === 'all') {
+      matchesTab = true;
+    } else if (activeTab === 'active') {
+      matchesTab = status !== 'delivered' && status !== 'cancelled';
+    } else if (activeTab === 'delivered') {
+      matchesTab = status === 'delivered';
+    } else if (activeTab === 'cancelled') {
+      matchesTab = status === 'cancelled';
+    }
+
     const matchesSearch = order.id.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
   });
 
-  const getStatusConfig = (status) => {
-    switch(status) {
-      case 'active': return { color: 'text-amber-700', bg: 'bg-amber-100/80 border border-amber-300', icon: Clock, label: 'In Delivery' };
-      case 'delivered': return { color: 'text-emerald-700', bg: 'bg-emerald-100/80 border border-emerald-300', icon: CheckCircle2, label: 'Delivered' };
-      case 'cancelled': return { color: 'text-red-700', bg: 'bg-red-100/80 border border-red-300', icon: XCircle, label: 'Cancelled' };
-      default: return { color: 'text-slate-600', bg: 'bg-slate-100', icon: Package, label: status };
-    }
+  const getStatusConfig = (rawStatus) => {
+    const status = rawStatus?.toLowerCase() || '';
+    if (status === 'delivered') return { color: 'text-emerald-700', bg: 'bg-emerald-100/80 border border-emerald-300', icon: CheckCircle2, label: 'Delivered' };
+    if (status === 'cancelled') return { color: 'text-red-700', bg: 'bg-red-100/80 border border-red-300', icon: XCircle, label: 'Cancelled' };
+    
+    const displayStatus = rawStatus === 'Order Received' ? 'Processing' : (rawStatus || 'Processing');
+    return { color: 'text-amber-700', bg: 'bg-amber-100/80 border border-amber-300', icon: Clock, label: displayStatus };
   };
 
   return (

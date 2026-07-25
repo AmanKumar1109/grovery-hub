@@ -117,7 +117,7 @@ export default function CheckoutPage() {
           image: item.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&auto=format&fit=crop&q=80'
         })),
         totalAmount: cartTotal || 0,
-        status: 'Order Received',
+        status: 'Processing',
         isCurrent: true,
         paymentMethod: 'Cash on Delivery',
         paymentStatus: 'Pending (COD)',

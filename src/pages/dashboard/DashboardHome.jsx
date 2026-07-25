@@ -46,7 +46,10 @@ export default function DashboardHome() {
     return () => unsub();
   }, [currentUser]);
 
-  const latestActiveOrder = userOrders.find(o => o.status !== 'Delivered' && o.status !== 'Cancelled') || userOrders[0];
+  const latestActiveOrder = userOrders.find(o => {
+    const s = o.status?.toLowerCase();
+    return s !== 'delivered' && s !== 'cancelled';
+  });
 
   const totalSpent = userOrders.reduce((sum, order) => {
     if (order.status?.toLowerCase() !== 'cancelled') {
@@ -170,11 +173,11 @@ export default function DashboardHome() {
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-4 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
                 <span className={`px-3 py-1 text-xs font-extrabold rounded-full ${
-                  latestActiveOrder.status === 'Delivered'
+                  latestActiveOrder.status?.toLowerCase() === 'delivered'
                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-200/60'
                     : 'bg-amber-100 text-amber-800 border border-amber-200/60'
                 }`}>
-                  {latestActiveOrder.status || 'Order Received'} 🚚
+                  {latestActiveOrder.status === 'Order Received' ? 'Processing' : (latestActiveOrder.status || 'Processing')} 🚚
                 </span>
                 <span className="text-xs font-bold text-slate-400">#{latestActiveOrder.id}</span>
               </div>

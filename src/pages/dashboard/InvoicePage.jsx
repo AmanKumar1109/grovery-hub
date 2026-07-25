@@ -87,7 +87,7 @@ export default function InvoicePage() {
             <p className="text-sm font-bold text-slate-800">Order ID: #{order.id}</p>
             <p className="text-sm font-semibold text-slate-500">Date: {formatDate(order.createdAt)}</p>
             <span className={`inline-block mt-3 px-3 py-1 text-xs font-bold rounded-full ${order.status?.toLowerCase() === 'cancelled' ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}`}>
-              {order.status || 'Paid'}
+              {order.status === 'Order Received' ? 'Processing' : (order.status || 'Paid')}
             </span>
           </div>
         </div>
