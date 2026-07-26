@@ -23,7 +23,7 @@ export default function PromoBanners() {
           stagger: 0.12,
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top 160%',
+            start: 'top 155%',
             toggleActions: 'play none none none',
           },
         }

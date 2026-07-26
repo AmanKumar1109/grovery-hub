@@ -47,7 +47,7 @@ export default function Testimonials() {
         defaults: { ease: 'power2.out' },
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: 'top 180%',
+          start: 'top 155%',
           toggleActions: 'play none none none',
         },
       });

@@ -70,7 +70,7 @@ export default function TrustFeatures() {
           delay: 0.25,
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top 160%',
+            start: 'top 155%',
             toggleActions: 'play none none none',
           },
         }

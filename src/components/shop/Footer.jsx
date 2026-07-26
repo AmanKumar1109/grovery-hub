@@ -15,7 +15,7 @@ export default function Footer() {
         defaults: { ease: 'power2.out' },
         scrollTrigger: {
           trigger: footerRef.current,
-          start: 'top 180%',
+          start: 'top 155%',
           toggleActions: 'play none none none',
         },
       });
