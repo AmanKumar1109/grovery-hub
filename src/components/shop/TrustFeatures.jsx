@@ -50,7 +50,7 @@ export default function TrustFeatures() {
           stagger: 0.1,
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top 82%',
+            start: 'top 110%',
             toggleActions: 'play none none none',
           },
         }
@@ -70,7 +70,7 @@ export default function TrustFeatures() {
           delay: 0.25,
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top 82%',
+            start: 'top 110%',
             toggleActions: 'play none none none',
           },
         }
