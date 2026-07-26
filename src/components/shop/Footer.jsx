@@ -1,13 +1,65 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin, Send, Heart } from 'lucide-react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Footer() {
+  const footerRef = useRef(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        defaults: { ease: 'power2.out' },
+        scrollTrigger: {
+          trigger: footerRef.current,
+          start: 'top 180%',
+          toggleActions: 'play none none none',
+        },
+      });
+
+      // Newsletter banner slides up
+      tl.fromTo(
+        '.footer-newsletter',
+        { y: 40, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6 }
+      );
+
+      // Brand column fades in from left
+      tl.fromTo(
+        '.footer-brand',
+        { x: -30, opacity: 0 },
+        { x: 0, opacity: 1, duration: 0.55 },
+        '-=0.3'
+      );
+
+      // Link columns stagger in from bottom
+      tl.fromTo(
+        '.footer-col',
+        { y: 30, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.5, stagger: 0.1 },
+        '-=0.25'
+      );
+
+      // Bottom bar fades in last
+      tl.fromTo(
+        '.footer-bottom',
+        { opacity: 0 },
+        { opacity: 1, duration: 0.5 },
+        '-=0.1'
+      );
+    }, footerRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <footer className="w-full bg-slate-950 text-slate-300 pt-16 pb-8 border-t border-slate-900">
+    <footer ref={footerRef} className="w-full bg-slate-950 text-slate-300 pt-16 pb-8 border-t border-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 space-y-12">
         {/* Top Newsletter & Brand Banner */}
-        <div className="bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 rounded-3xl p-8 text-slate-950 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+        <div className="footer-newsletter bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 rounded-3xl p-8 text-slate-950 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
           <div className="space-y-1 text-center md:text-left">
             <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
               Get Fresh Daily Deals & Organic Offers! 🌿
@@ -36,7 +88,7 @@ export default function Footer() {
         {/* Main Footer Columns */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pt-4">
           {/* Brand Info */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="footer-brand lg:col-span-2 space-y-4">
             <div className="flex items-center gap-2.5 select-none">
               <div className="w-10 h-10 bg-amber-400 rounded-xl flex items-center justify-center shadow-md">
                 <svg className="w-6 h-6 text-slate-950 fill-current" viewBox="0 0 24 24">
@@ -69,7 +121,7 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div className="space-y-3">
+          <div className="footer-col space-y-3">
             <h4 className="text-xs font-black text-white uppercase tracking-wider">Account & Shop</h4>
             <ul className="space-y-2 text-xs font-semibold text-slate-400">
               <li><a href="#shop" className="hover:text-amber-400 transition-colors">Shop Items</a></li>
@@ -81,7 +133,7 @@ export default function Footer() {
           </div>
 
           {/* Categories */}
-          <div className="space-y-3">
+          <div className="footer-col space-y-3">
             <h4 className="text-xs font-black text-white uppercase tracking-wider">Categories</h4>
             <ul className="space-y-2 text-xs font-semibold text-slate-400">
               <li><a href="#shop" className="hover:text-amber-400 transition-colors">Dairy & Fresh Milk</a></li>
@@ -93,7 +145,7 @@ export default function Footer() {
           </div>
 
           {/* Customer Service */}
-          <div className="space-y-3">
+          <div className="footer-col space-y-3">
             <h4 className="text-xs font-black text-white uppercase tracking-wider">Customer Support</h4>
             <ul className="space-y-2 text-xs font-semibold text-slate-400">
               <li><Link to="/dashboard/settings" className="hover:text-amber-400 transition-colors">Help Center & FAQ</Link></li>
@@ -106,7 +158,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-500">
+        <div className="footer-bottom pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-500">
           <p>© {new Date().getFullYear()} The Grocery Hub. All rights reserved.</p>
           <div className="flex items-center gap-2">
             <span>Built with</span>

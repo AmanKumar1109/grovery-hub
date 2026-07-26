@@ -23,7 +23,7 @@ export default function PromoBanners() {
           stagger: 0.12,
           scrollTrigger: {
             trigger: sectionRef.current,
-            start: 'top 150%',
+            start: 'top 160%',
             toggleActions: 'play none none none',
           },
         }
@@ -39,7 +39,7 @@ export default function PromoBanners() {
         {/* Banner 1: Organic Summer Fruits */}
         <div className="promo-banner bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-3xl p-6 text-slate-950 shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[220px] group">
           <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-white/20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
-          
+
           <div className="relative z-10 space-y-2">
             <span className="inline-flex items-center gap-1 px-3 py-1 bg-slate-950 text-white rounded-full text-[10px] font-extrabold uppercase tracking-wider">
               <Leaf className="w-3 h-3 text-amber-400" /> Daily Harvest
@@ -62,7 +62,7 @@ export default function PromoBanners() {
         {/* Banner 2: Farm Fresh Veggies Combo */}
         <div className="promo-banner bg-gradient-to-br from-emerald-700 via-emerald-800 to-emerald-900 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[220px] group">
           <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-amber-400/20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
-          
+
           <div className="relative z-10 space-y-2">
             <span className="inline-flex items-center gap-1 px-3 py-1 bg-amber-400 text-slate-950 rounded-full text-[10px] font-extrabold uppercase tracking-wider">
               <Award className="w-3 h-3" /> Best Value Box
@@ -85,7 +85,7 @@ export default function PromoBanners() {
         {/* Banner 3: Superfast 15 Min Delivery */}
         <div className="promo-banner bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[220px] group border border-slate-800">
           <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-emerald-500/20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
-          
+
           <div className="relative z-10 space-y-2">
             <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-500 text-white rounded-full text-[10px] font-extrabold uppercase tracking-wider">
               <Zap className="w-3 h-3 fill-white" /> Instant Express

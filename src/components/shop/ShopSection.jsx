@@ -4,10 +4,6 @@ import ProductCard from './ProductCard';
 import ProductSkeleton from './ProductSkeleton';
 import { useCart } from '../../context/CartContext';
 import { Search, SlidersHorizontal, Package, Loader2 } from 'lucide-react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-gsap.registerPlugin(ScrollTrigger);
 
 export default function ShopSection() {
   const { products, isLoadingProducts, loadMoreProducts, hasMore, isLoadingMore } = useCart();
@@ -15,11 +11,7 @@ export default function ShopSection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
 
-  const sectionRef = useRef(null);
-  const headingRef = useRef(null);
-  const controlsRef = useRef(null);
-  const gridRef = useRef(null);
-  const sentinelRef = useRef(null); // Invisible div at bottom for IntersectionObserver
+  const sentinelRef = useRef(null);
 
   const filteredProducts = (products || [])
     .filter((prod) => {
@@ -34,45 +26,6 @@ export default function ShopSection() {
       return 0;
     });
 
-  // GSAP scroll animations
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        defaults: { ease: 'power2.out' },
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: 'top 80%',
-          toggleActions: 'play none none none',
-        },
-      });
-
-      tl.fromTo(
-        headingRef.current,
-        { x: -40, opacity: 0 },
-        { x: 0, opacity: 1, duration: 0.6 }
-      );
-
-      tl.fromTo(
-        controlsRef.current,
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.5 },
-        '-=0.3'
-      );
-
-      if (gridRef.current) {
-        const cards = gridRef.current.querySelectorAll(':scope > *');
-        tl.fromTo(
-          cards,
-          { y: 30, opacity: 0 },
-          { y: 0, opacity: 1, duration: 0.5, stagger: 0.05 },
-          '-=0.2'
-        );
-      }
-    }, sectionRef);
-
-    return () => ctx.revert();
-  }, [filteredProducts.length, isLoadingProducts]);
-
   // IntersectionObserver — triggers loadMoreProducts when sentinel enters view
   useEffect(() => {
     if (!sentinelRef.current) return;
@@ -84,8 +37,8 @@ export default function ShopSection() {
         }
       },
       {
-        root: null,       // viewport
-        rootMargin: '200px', // start loading 200px before sentinel is visible
+        root: null,
+        rootMargin: '200px',
         threshold: 0,
       }
     );
@@ -95,18 +48,16 @@ export default function ShopSection() {
   }, [hasMore, isLoadingMore, loadMoreProducts]);
 
   return (
-    <section ref={sectionRef} id="shop" className="w-full px-3 sm:px-8 lg:px-12 py-6 sm:py-8 lg:py-12 bg-gradient-to-b from-slate-50 via-white to-slate-50 relative">
+    <section id="shop" className="w-full px-3 sm:px-8 lg:px-12 py-6 sm:py-8 lg:py-12 bg-gradient-to-b from-slate-50 via-white to-slate-50 relative">
       <div className="max-w-7xl mx-auto space-y-5 sm:space-y-8">
         {/* Category Showcase Pills */}
-        <div ref={headingRef}>
-          <CategoryShowcase
-            selectedCategory={selectedCategory}
-            onSelectCategory={setSelectedCategory}
-          />
-        </div>
+        <CategoryShowcase
+          selectedCategory={selectedCategory}
+          onSelectCategory={setSelectedCategory}
+        />
 
         {/* Search & Sort Controls Bar */}
-        <div ref={controlsRef} className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 p-3.5 sm:p-4 bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs">
           {/* Quick Search */}
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -150,13 +101,13 @@ export default function ShopSection() {
           </div>
         ) : filteredProducts.length > 0 ? (
           <>
-            <div ref={gridRef} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
               {filteredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
 
-            {/* Sentinel div — IntersectionObserver watches this to load more */}
+            {/* Sentinel — IntersectionObserver watches this to load more */}
             <div ref={sentinelRef} className="w-full h-4" aria-hidden="true" />
 
             {/* Loading more spinner */}
@@ -167,7 +118,7 @@ export default function ShopSection() {
               </div>
             )}
 
-            {/* End of list message */}
+            {/* End of list */}
             {!hasMore && products.length > 8 && (
               <p className="text-center text-xs font-bold text-slate-400 py-4">
                 ✅ All products loaded
