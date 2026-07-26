@@ -3,14 +3,14 @@ import CategoryShowcase from './CategoryShowcase';
 import ProductCard from './ProductCard';
 import ProductSkeleton from './ProductSkeleton';
 import { useCart } from '../../context/CartContext';
-import { Search, SlidersHorizontal, Package } from 'lucide-react';
+import { Search, SlidersHorizontal, Package, Loader2 } from 'lucide-react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function ShopSection() {
-  const { products, isLoadingProducts } = useCart();
+  const { products, isLoadingProducts, loadMoreProducts, hasMore, isLoadingMore } = useCart();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
@@ -19,6 +19,7 @@ export default function ShopSection() {
   const headingRef = useRef(null);
   const controlsRef = useRef(null);
   const gridRef = useRef(null);
+  const sentinelRef = useRef(null); // Invisible div at bottom for IntersectionObserver
 
   const filteredProducts = (products || [])
     .filter((prod) => {
@@ -33,6 +34,7 @@ export default function ShopSection() {
       return 0;
     });
 
+  // GSAP scroll animations
   useEffect(() => {
     const ctx = gsap.context(() => {
       const tl = gsap.timeline({
@@ -44,14 +46,12 @@ export default function ShopSection() {
         },
       });
 
-      // Heading slides in from left
       tl.fromTo(
         headingRef.current,
         { x: -40, opacity: 0 },
         { x: 0, opacity: 1, duration: 0.6 }
       );
 
-      // Controls bar fades up
       tl.fromTo(
         controlsRef.current,
         { y: 20, opacity: 0 },
@@ -59,7 +59,6 @@ export default function ShopSection() {
         '-=0.3'
       );
 
-      // Product cards stagger in — triggered from the section, not the grid
       if (gridRef.current) {
         const cards = gridRef.current.querySelectorAll(':scope > *');
         tl.fromTo(
@@ -73,6 +72,27 @@ export default function ShopSection() {
 
     return () => ctx.revert();
   }, [filteredProducts.length, isLoadingProducts]);
+
+  // IntersectionObserver — triggers loadMoreProducts when sentinel enters view
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          loadMoreProducts();
+        }
+      },
+      {
+        root: null,       // viewport
+        rootMargin: '200px', // start loading 200px before sentinel is visible
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, loadMoreProducts]);
 
   return (
     <section ref={sectionRef} id="shop" className="w-full px-3 sm:px-8 lg:px-12 py-6 sm:py-8 lg:py-12 bg-gradient-to-b from-slate-50 via-white to-slate-50 relative">
@@ -129,11 +149,31 @@ export default function ShopSection() {
             ))}
           </div>
         ) : filteredProducts.length > 0 ? (
-          <div ref={gridRef} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <>
+            <div ref={gridRef} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+
+            {/* Sentinel div — IntersectionObserver watches this to load more */}
+            <div ref={sentinelRef} className="w-full h-4" aria-hidden="true" />
+
+            {/* Loading more spinner */}
+            {isLoadingMore && (
+              <div className="flex items-center justify-center gap-2 py-6 text-slate-500 text-xs font-bold">
+                <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                <span>Loading more products...</span>
+              </div>
+            )}
+
+            {/* End of list message */}
+            {!hasMore && products.length > 8 && (
+              <p className="text-center text-xs font-bold text-slate-400 py-4">
+                ✅ All products loaded
+              </p>
+            )}
+          </>
         ) : (
           <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/80 space-y-3">
             <Package className="w-12 h-12 text-slate-300 mx-auto" />

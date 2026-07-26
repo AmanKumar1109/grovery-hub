@@ -1,6 +1,35 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { db } from '../firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
+import { collection, onSnapshot, getDocs, query, limit, startAfter } from 'firebase/firestore';
+
+const PAGE_SIZE = 8;
+
+// Shared doc transformer
+function transformDoc(d) {
+  const data = d.data();
+  const salePrice = parseFloat(data.price) || 0;
+  const mrp = parseFloat(data.sellingPrice) || 0;
+  const offPct = parseInt(data.offPercentage) || 0;
+  const originalPrice = mrp > salePrice ? mrp : (salePrice > 0 ? salePrice : 0);
+  const autoBadge = offPct > 0 ? `${offPct}% OFF` : (data.badge || '');
+  return {
+    id: d.id,
+    name: data.name || 'Grocery Item',
+    category: data.category || 'General',
+    price: salePrice,
+    originalPrice,
+    offPercentage: offPct,
+    unit: data.unit || '1 Pack',
+    rating: parseFloat(data.rating) || 4.8,
+    reviews: data.reviews || 120,
+    badge: autoBadge,
+    isOrganic: data.isOrganic !== undefined ? data.isOrganic : true,
+    isHalal: data.isHalal !== undefined ? data.isHalal : true,
+    inStock: data.inStock !== false,
+    isVisible: data.isVisible !== false,
+    image: data.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&auto=format&fit=crop&q=80'
+  };
+}
 
 const CartContext = createContext(null);
 
@@ -131,57 +160,64 @@ export function CartProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [dbCategories, setDbCategories] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [lastDoc, setLastDoc] = useState(null);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Subscribe to real-time Firestore items & categories
+  // Initial paginated fetch + real-time categories
   useEffect(() => {
-    const unsubItems = onSnapshot(collection(db, 'items'), (snap) => {
-      if (!snap.empty) {
-        const loaded = snap.docs
-          .map((d) => {
-            const data = d.data();
-            const salePrice = parseFloat(data.price) || 0;
-            const mrp = parseFloat(data.sellingPrice) || 0;
-            const offPct = parseInt(data.offPercentage) || 0;
-            // Use real MRP from admin; only fall back if missing
-            const originalPrice = mrp > salePrice ? mrp : (salePrice > 0 ? salePrice : 0);
-            // Auto badge: prefer stored badge, otherwise generate from off%
-            const autoBadge = offPct > 0
-              ? `${offPct}% OFF`
-              : (data.badge || '');
-            return {
-              id: d.id,
-              name: data.name || 'Grocery Item',
-              category: data.category || 'General',
-              price: salePrice,
-              originalPrice,
-              offPercentage: offPct,
-              unit: data.unit || '1 Pack',
-              rating: parseFloat(data.rating) || 4.8,
-              reviews: data.reviews || 120,
-              badge: autoBadge,
-              isOrganic: data.isOrganic !== undefined ? data.isOrganic : true,
-              isHalal: data.isHalal !== undefined ? data.isHalal : true,
-              inStock: data.inStock !== false,
-              isVisible: data.isVisible !== false,
-              image: data.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&auto=format&fit=crop&q=80'
-            };
-          })
-          .filter((item) => item.isVisible);
-        setProducts(loaded);
+    const fetchFirst = async () => {
+      try {
+        const q = query(collection(db, 'items'), limit(PAGE_SIZE));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const loaded = snap.docs.map(transformDoc).filter(item => item.isVisible);
+          setProducts(loaded.length > 0 ? loaded : []);
+          setLastDoc(snap.docs[snap.docs.length - 1]);
+          setHasMore(snap.docs.length === PAGE_SIZE);
+        } else {
+          setHasMore(false);
+        }
+      } catch (err) {
+        console.warn('Firebase fetch failed:', err);
+        setHasMore(false);
+      } finally {
+        setIsLoadingProducts(false);
       }
-      setIsLoadingProducts(false);
-    });
+    };
 
+    fetchFirst();
+
+    // Real-time categories (small collection, fine to stream)
     const unsubCat = onSnapshot(collection(db, 'categories'), (snap) => {
       const loadedCats = snap.docs.map(d => d.data().name || d.id);
       setDbCategories(loadedCats);
     });
 
-    return () => {
-      unsubItems();
-      unsubCat();
-    };
+    return () => unsubCat();
   }, []);
+
+  // Load next page — called by IntersectionObserver in ShopSection
+  const loadMoreProducts = useCallback(async () => {
+    if (!hasMore || isLoadingMore || !lastDoc) return;
+    setIsLoadingMore(true);
+    try {
+      const q = query(collection(db, 'items'), startAfter(lastDoc), limit(PAGE_SIZE));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        const loaded = snap.docs.map(transformDoc).filter(item => item.isVisible);
+        setProducts(prev => [...prev, ...loaded]);
+        setLastDoc(snap.docs[snap.docs.length - 1]);
+        setHasMore(snap.docs.length === PAGE_SIZE);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err) {
+      console.warn('Load more error:', err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [hasMore, isLoadingMore, lastDoc]);
 
   // Compute dynamic categories list with product counts
   const categoriesList = useMemo(() => {
@@ -290,6 +326,9 @@ export function CartProvider({ children }) {
         products,
         categoriesList,
         isLoadingProducts,
+        loadMoreProducts,
+        hasMore,
+        isLoadingMore,
         cartItems,
         cartCount,
         cartTotal,
