@@ -139,16 +139,26 @@ export function CartProvider({ children }) {
         const loaded = snap.docs
           .map((d) => {
             const data = d.data();
+            const salePrice = parseFloat(data.price) || 0;
+            const mrp = parseFloat(data.sellingPrice) || 0;
+            const offPct = parseInt(data.offPercentage) || 0;
+            // Use real MRP from admin; only fall back if missing
+            const originalPrice = mrp > salePrice ? mrp : (salePrice > 0 ? salePrice : 0);
+            // Auto badge: prefer stored badge, otherwise generate from off%
+            const autoBadge = offPct > 0
+              ? `${offPct}% OFF`
+              : (data.badge || '');
             return {
               id: d.id,
               name: data.name || 'Grocery Item',
               category: data.category || 'General',
-              price: parseFloat(data.price) || 0,
-              originalPrice: data.originalPrice ? parseFloat(data.originalPrice) : Math.round((parseFloat(data.price) || 0) * 1.2),
+              price: salePrice,
+              originalPrice,
+              offPercentage: offPct,
               unit: data.unit || '1 Pack',
               rating: parseFloat(data.rating) || 4.8,
               reviews: data.reviews || 120,
-              badge: data.badge || (data.inStock === false ? 'Out of Stock' : ''),
+              badge: autoBadge,
               isOrganic: data.isOrganic !== undefined ? data.isOrganic : true,
               isHalal: data.isHalal !== undefined ? data.isHalal : true,
               inStock: data.inStock !== false,

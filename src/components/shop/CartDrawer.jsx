@@ -69,9 +69,20 @@ export default function CartDrawer() {
                 <div className="flex-1 min-w-0">
                   <h4 className="text-xs font-extrabold text-slate-900 truncate">{item.name}</h4>
                   <p className="text-[11px] font-bold text-slate-500 mt-0.5">{item.unit}</p>
-                  <p className="text-sm font-black text-emerald-700 mt-1">
+                  <p className="text-sm font-black text-emerald-700 mt-1 flex items-center gap-1.5 flex-wrap">
                     ₹{item.price * item.quantity}{' '}
-                    <span className="text-[11px] font-normal text-slate-400">(₹{item.price} each)</span>
+                    <span className="text-[11px] font-normal text-slate-400">
+                      (₹{item.price} each
+                      {item.originalPrice > item.price && (
+                        <span className="ml-1 line-through text-slate-300">₹{item.originalPrice}</span>
+                      )}
+                      )
+                    </span>
+                    {item.offPercentage > 0 && (
+                      <span className="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-md">
+                        {item.offPercentage}% off
+                      </span>
+                    )}
                   </p>
                 </div>
 

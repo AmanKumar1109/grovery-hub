@@ -23,10 +23,14 @@ export default function ProductCard({ product }) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
 
-          {/* Discount / Stock Badge */}
+          {/* Out of Stock Badge */}
           {product.inStock === false ? (
             <span className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 py-0.5 sm:px-3 sm:py-1 bg-rose-600 text-white font-black text-[9px] sm:text-[11px] rounded-full shadow-md">
               Out of Stock
+            </span>
+          ) : product.offPercentage > 0 ? (
+            <span className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 py-0.5 sm:px-3 sm:py-1 bg-rose-500 text-white font-black text-[9px] sm:text-[11px] rounded-full shadow-md">
+              {product.offPercentage}% OFF
             </span>
           ) : product.badge ? (
             <span className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 py-0.5 sm:px-3 sm:py-1 bg-amber-400 text-slate-950 font-black text-[9px] sm:text-[11px] rounded-full shadow-md">
@@ -71,10 +75,17 @@ export default function ProductCard({ product }) {
 
       {/* Pricing & Add to Cart Action */}
       <div className="pt-2 border-t border-slate-100">
-        <div className="flex items-baseline gap-1.5 mb-2.5">
+        <div className="flex items-center gap-1.5 mb-2.5 flex-wrap">
           <span className="text-base sm:text-xl font-black text-emerald-700">₹{product.price}</span>
           {product.originalPrice > product.price && (
-            <span className="text-[10px] sm:text-xs font-bold text-slate-400 line-through">₹{product.originalPrice}</span>
+            <span className="text-[10px] sm:text-xs font-bold text-slate-400 line-through">
+              ₹{product.originalPrice}
+            </span>
+          )}
+          {product.offPercentage > 0 && (
+            <span className="text-[9px] sm:text-[11px] font-black text-rose-600 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded-lg">
+              {product.offPercentage}% off
+            </span>
           )}
         </div>
 
