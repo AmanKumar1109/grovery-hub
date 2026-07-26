@@ -1,12 +1,43 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ArrowRight, Zap, Leaf, Award } from 'lucide-react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function PromoBanners() {
+  const sectionRef = useRef(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const banners = sectionRef.current.querySelectorAll('.promo-banner');
+
+      gsap.fromTo(
+        banners,
+        { y: 40, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.6,
+          ease: 'power2.out',
+          stagger: 0.12,
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 82%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section className="w-full px-4 sm:px-8 lg:px-12 py-8 bg-white">
+    <section ref={sectionRef} className="w-full px-4 sm:px-8 lg:px-12 py-8 bg-white">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Banner 1: Organic Summer Fruits */}
-        <div className="bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-3xl p-6 text-slate-950 shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[220px] group">
+        <div className="promo-banner bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 rounded-3xl p-6 text-slate-950 shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[220px] group">
           <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-white/20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
           
           <div className="relative z-10 space-y-2">
@@ -29,7 +60,7 @@ export default function PromoBanners() {
         </div>
 
         {/* Banner 2: Farm Fresh Veggies Combo */}
-        <div className="bg-gradient-to-br from-emerald-700 via-emerald-800 to-emerald-900 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[220px] group">
+        <div className="promo-banner bg-gradient-to-br from-emerald-700 via-emerald-800 to-emerald-900 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[220px] group">
           <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-amber-400/20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
           
           <div className="relative z-10 space-y-2">
@@ -52,7 +83,7 @@ export default function PromoBanners() {
         </div>
 
         {/* Banner 3: Superfast 15 Min Delivery */}
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[220px] group border border-slate-800">
+        <div className="promo-banner bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 rounded-3xl p-6 text-white shadow-lg relative overflow-hidden flex flex-col justify-between min-h-[220px] group border border-slate-800">
           <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-emerald-500/20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-500"></div>
           
           <div className="relative z-10 space-y-2">

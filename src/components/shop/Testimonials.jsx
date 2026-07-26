@@ -1,5 +1,9 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Star, CheckCircle, Quote } from 'lucide-react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const reviews = [
   {
@@ -35,15 +39,65 @@ const reviews = [
 ];
 
 export default function Testimonials() {
+  const sectionRef = useRef(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({
+        defaults: { ease: 'power2.out' },
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: 'top 82%',
+          toggleActions: 'play none none none',
+        },
+      });
+
+      // Section heading
+      tl.fromTo(
+        '.testimonials-heading',
+        { y: -20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.55 }
+      );
+
+      // Subtitle
+      tl.fromTo(
+        '.testimonials-subtitle',
+        { y: 15, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.45 },
+        '-=0.25'
+      );
+
+      // Review cards stagger
+      tl.fromTo(
+        '.review-card',
+        { y: 40, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.55, stagger: 0.12 },
+        '-=0.2'
+      );
+
+      // Stars pop in
+      tl.fromTo(
+        '.review-star',
+        { scale: 0, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 0.25, ease: 'back.out(1.7)', stagger: 0.03 },
+        '-=0.3'
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section className="w-full px-4 sm:px-8 lg:px-12 py-12 lg:py-16 bg-white">
+    <section ref={sectionRef} className="w-full px-4 sm:px-8 lg:px-12 py-12 lg:py-16 bg-white">
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="text-center space-y-2 max-w-xl mx-auto">
-          <span className="text-xs font-black text-amber-500 uppercase tracking-widest">Happy Shoppers</span>
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-            Loved By 25,000+ Customers 🌟
-          </h2>
-          <p className="text-xs sm:text-sm font-medium text-slate-500">
+          <div className="testimonials-heading">
+            <span className="text-xs font-black text-amber-500 uppercase tracking-widest">Happy Shoppers</span>
+            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+              Loved By 25,000+ Customers 🌟
+            </h2>
+          </div>
+          <p className="testimonials-subtitle text-xs sm:text-sm font-medium text-slate-500">
             Real feedback from verified buyers who enjoy fresh organic groceries every day.
           </p>
         </div>
@@ -53,14 +107,14 @@ export default function Testimonials() {
           {reviews.map((rev) => (
             <div
               key={rev.id}
-              className="bg-slate-50/80 rounded-3xl p-6 border border-slate-200/70 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4 relative"
+              className="review-card bg-slate-50/80 rounded-3xl p-6 border border-slate-200/70 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4 relative"
             >
               <Quote className="w-8 h-8 text-amber-300 absolute top-4 right-4 opacity-50" />
 
               <div className="space-y-3">
                 <div className="flex items-center gap-1">
                   {[...Array(rev.rating)].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />
+                    <Star key={i} className="review-star w-4 h-4 text-amber-400 fill-amber-400" />
                   ))}
                 </div>
 

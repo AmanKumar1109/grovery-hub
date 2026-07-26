@@ -1,5 +1,9 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Truck, ShieldCheck, Tag, RefreshCw } from 'lucide-react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 
 const trustFeatures = [
   {
@@ -29,17 +33,64 @@ const trustFeatures = [
 ];
 
 export default function TrustFeatures() {
+  const sectionRef = useRef(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      const cards = sectionRef.current.querySelectorAll('.trust-card');
+
+      gsap.fromTo(
+        cards,
+        { y: 35, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.55,
+          ease: 'power2.out',
+          stagger: 0.1,
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 82%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+
+      // Icons pop in after the card reveals
+      const icons = sectionRef.current.querySelectorAll('.trust-icon');
+      gsap.fromTo(
+        icons,
+        { scale: 0.5, opacity: 0 },
+        {
+          scale: 1,
+          opacity: 1,
+          duration: 0.4,
+          ease: 'back.out(1.7)',
+          stagger: 0.1,
+          delay: 0.25,
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: 'top 82%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
   return (
-    <section className="w-full px-4 sm:px-8 lg:px-12 py-10 bg-slate-50 border-y border-slate-200/60">
+    <section ref={sectionRef} className="w-full px-4 sm:px-8 lg:px-12 py-10 bg-slate-50 border-y border-slate-200/60">
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {trustFeatures.map((feat, idx) => {
           const Icon = feat.icon;
           return (
             <div
               key={idx}
-              className="bg-white rounded-3xl p-6 border border-slate-200/70 shadow-xs hover:shadow-md transition-all space-y-3"
+              className="trust-card bg-white rounded-3xl p-6 border border-slate-200/70 shadow-xs hover:shadow-md transition-all space-y-3"
             >
-              <div className={`w-12 h-12 rounded-2xl ${feat.badgeColor} flex items-center justify-center`}>
+              <div className={`trust-icon w-12 h-12 rounded-2xl ${feat.badgeColor} flex items-center justify-center`}>
                 <Icon className="w-6 h-6 stroke-[2.2]" />
               </div>
               <h4 className="text-base font-black text-slate-900">{feat.title}</h4>
