@@ -80,7 +80,7 @@ export default function Profile() {
             </button>
           </div>
           <div className="text-center sm:text-left">
-            <h2 className="text-2xl font-black text-slate-900">{fullName || 'Saiful Talukdar'}</h2>
+            <h2 className="text-2xl font-black text-slate-900">{fullName || 'User'}</h2>
             <p className="text-xs font-bold text-slate-500 mt-0.5">{currentUser?.email}</p>
             <div className="flex items-center justify-center sm:justify-start gap-1.5 text-emerald-700 font-extrabold mt-2 text-xs">
               <ShieldCheck className="w-4 h-4" /> 

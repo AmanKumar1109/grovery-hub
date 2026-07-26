@@ -54,16 +54,16 @@ export default function Footer() {
 
             <div className="space-y-2 text-xs font-bold text-slate-400">
               <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-amber-400" />
-                <span>42 Grocery Way, Green Park Zone, Mumbai 400001</span>
+                <MapPin className="w-4 h-4 flex-shrink-0 text-amber-400" />
+                <span>Dadu complex, Near Shitla Mandir, Baharagora, 832101</span>
               </div>
               <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-amber-400" />
-                <span>+91 1800-456-7890 (Toll Free)</span>
+                <Phone className="w-4 h-4 flex-shrink-0 text-amber-400" />
+                <span>6207462800</span>
               </div>
               <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-amber-400" />
-                <span>support@groceryhub.com</span>
+                <Mail className="w-4 h-4 flex-shrink-0 text-amber-400" />
+                <span>thegroceryhub2025@gmail.com</span>
               </div>
             </div>
           </div>
@@ -84,11 +84,11 @@ export default function Footer() {
           <div className="space-y-3">
             <h4 className="text-xs font-black text-white uppercase tracking-wider">Categories</h4>
             <ul className="space-y-2 text-xs font-semibold text-slate-400">
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Fresh Vegetables</a></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Fresh Fruits</a></li>
               <li><a href="#shop" className="hover:text-amber-400 transition-colors">Dairy & Fresh Milk</a></li>
               <li><a href="#shop" className="hover:text-amber-400 transition-colors">Bakery & Breads</a></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Meat & Seafood</a></li>
+              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Rice, Atta & Dals</a></li>
+              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Oils, Ghee & Masalas</a></li>
+              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Snacks & Beverages</a></li>
             </ul>
           </div>
 

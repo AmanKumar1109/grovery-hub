@@ -128,7 +128,7 @@ export const initialProducts = [
 ];
 
 export function CartProvider({ children }) {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState([]);
   const [dbCategories, setDbCategories] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
 
@@ -237,7 +237,7 @@ export function CartProvider({ children }) {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const addToCart = (product) => {
+  const addToCart = (product, quantity = 1) => {
     if (product.inStock === false) {
       showToast(`Sorry, "${product.name}" is currently Out of Stock! ⚠️`);
       return;
@@ -246,10 +246,10 @@ export function CartProvider({ children }) {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity }];
     });
     showToast(`Added "${product.name}" to cart! 🛒`);
   };

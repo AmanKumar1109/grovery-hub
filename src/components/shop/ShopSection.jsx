@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import CategoryShowcase from './CategoryShowcase';
 import ProductCard from './ProductCard';
+import ProductSkeleton from './ProductSkeleton';
 import { useCart } from '../../context/CartContext';
 import { Search, SlidersHorizontal, Package } from 'lucide-react';
 
 export default function ShopSection() {
-  const { products } = useCart();
+  const { products, isLoadingProducts } = useCart();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
@@ -69,7 +70,13 @@ export default function ShopSection() {
         </div>
 
         {/* Product Cards Grid: 2 columns on Mobile (grid-cols-2), 3 on Tablet, 4 on Desktop */}
-        {filteredProducts.length > 0 ? (
+        {isLoadingProducts ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            {[...Array(8)].map((_, index) => (
+              <ProductSkeleton key={index} />
+            ))}
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />

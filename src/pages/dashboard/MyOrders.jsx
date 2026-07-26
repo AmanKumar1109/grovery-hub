@@ -2,18 +2,24 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Package, Clock, CheckCircle2, XCircle, Search, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import EmptyState from '../../components/dashboard/EmptyState';
+import OrderSkeleton from '../../components/dashboard/OrderSkeleton';
 import gsap from 'gsap';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { db } from '../../firebase';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 
 export default function MyOrders() {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingOrderId, setCancellingOrderId] = useState(null);
+  const [orderToCancel, setOrderToCancel] = useState(null);
+  const [currentTime, setCurrentTime] = useState(Date.now());
   const containerRef = useRef(null);
   const { currentUser } = useAuth();
+  const { addToCart, setIsCartOpen, showToast } = useCart();
 
   useEffect(() => {
     if (!currentUser) {
@@ -55,6 +61,34 @@ export default function MyOrders() {
     return () => unsubscribe();
   }, [currentUser]);
 
+  const handleCancelOrder = async (orderId) => {
+    setCancellingOrderId(orderId);
+    try {
+      const orderRef = doc(db, 'orders', orderId);
+      await updateDoc(orderRef, { status: 'cancelled' });
+      // No need to update local state since onSnapshot will handle it automatically
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+      alert("Failed to cancel order. Please try again.");
+    } finally {
+      setCancellingOrderId(null);
+      setOrderToCancel(null);
+    }
+  };
+
+  const handleReorder = (order) => {
+    if (!order.items || order.items.length === 0) {
+      showToast("No items found in this order.");
+      return;
+    }
+    
+    order.items.forEach(item => {
+      addToCart(item, item.quantity || 1);
+    });
+    
+    setIsCartOpen(true);
+  };
+
   const formatDate = (timestamp) => {
     if (!timestamp) return 'Just now';
     let date;
@@ -92,19 +126,38 @@ export default function MyOrders() {
     return () => ctx.revert();
   }, [activeTab, orders.length, loading]);
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const filteredOrders = orders.filter(order => {
-    const matchesTab = activeTab === 'all' || order.status === activeTab;
+    const status = order.status?.toLowerCase() || '';
+    let matchesTab = false;
+    
+    if (activeTab === 'all') {
+      matchesTab = true;
+    } else if (activeTab === 'active') {
+      matchesTab = status !== 'delivered' && status !== 'cancelled';
+    } else if (activeTab === 'delivered') {
+      matchesTab = status === 'delivered';
+    } else if (activeTab === 'cancelled') {
+      matchesTab = status === 'cancelled';
+    }
+
     const matchesSearch = order.id.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
   });
 
-  const getStatusConfig = (status) => {
-    switch(status) {
-      case 'active': return { color: 'text-amber-700', bg: 'bg-amber-100/80 border border-amber-300', icon: Clock, label: 'In Delivery' };
-      case 'delivered': return { color: 'text-emerald-700', bg: 'bg-emerald-100/80 border border-emerald-300', icon: CheckCircle2, label: 'Delivered' };
-      case 'cancelled': return { color: 'text-red-700', bg: 'bg-red-100/80 border border-red-300', icon: XCircle, label: 'Cancelled' };
-      default: return { color: 'text-slate-600', bg: 'bg-slate-100', icon: Package, label: status };
-    }
+  const getStatusConfig = (rawStatus) => {
+    const status = rawStatus?.toLowerCase() || '';
+    if (status === 'delivered') return { color: 'text-emerald-700', bg: 'bg-emerald-100/80 border border-emerald-300', icon: CheckCircle2, label: 'Delivered' };
+    if (status === 'cancelled') return { color: 'text-red-700', bg: 'bg-red-100/80 border border-red-300', icon: XCircle, label: 'Cancelled' };
+    
+    const displayStatus = rawStatus === 'Order Received' ? 'Processing' : (rawStatus || 'Processing');
+    return { color: 'text-amber-700', bg: 'bg-amber-100/80 border border-amber-300', icon: Clock, label: displayStatus };
   };
 
   return (
@@ -147,14 +200,16 @@ export default function MyOrders() {
       {/* Order Cards List */}
       <div className="space-y-4">
         {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center space-y-4">
-            <Loader2 className="w-10 h-10 text-amber-500 animate-spin" />
-            <p className="text-sm font-bold text-slate-500">Loading your orders...</p>
+          <div>
+            {[...Array(3)].map((_, i) => (
+              <OrderSkeleton key={i} />
+            ))}
           </div>
         ) : filteredOrders.length > 0 ? (
           filteredOrders.map(order => {
             const statusConfig = getStatusConfig(order.status);
             const StatusIcon = statusConfig.icon;
+            const isCancelled = order.status?.toLowerCase() === 'cancelled';
             
             // Extract some display data from the real order
             const itemCount = order.items?.reduce((sum, item) => sum + (item.quantity || 1), 0) || 0;
@@ -162,8 +217,32 @@ export default function MyOrders() {
             const orderDate = formatDate(order.createdAt);
             const orderImage = order.items?.[0]?.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=150';
             
+            const orderTimeMs = order.createdAt ? (
+              typeof order.createdAt.toMillis === 'function' ? order.createdAt.toMillis() :
+              typeof order.createdAt.seconds === 'number' ? order.createdAt.seconds * 1000 :
+              typeof order.createdAt === 'string' ? new Date(order.createdAt).getTime() :
+              typeof order.createdAt === 'number' ? order.createdAt :
+              order.createdAt instanceof Date ? order.createdAt.getTime() : currentTime
+            ) : currentTime;
+            
+            const timeElapsed = currentTime - orderTimeMs;
+            const timeRemaining = Math.max(0, 5 * 60 * 1000 - timeElapsed);
+            const isCancelable = timeRemaining > 0;
+            
+            const formatTime = (ms) => {
+              const totalSeconds = Math.floor(ms / 1000);
+              const minutes = Math.floor(totalSeconds / 60);
+              const seconds = totalSeconds % 60;
+              return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            };
+
+            
             return (
-              <div key={order.id} className="order-card bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-3xl p-5 sm:p-6 shadow-sm hover:shadow-md transition-all">
+              <div key={order.id} className={`order-card backdrop-blur-xl border rounded-3xl p-5 sm:p-6 transition-all ${
+                  isCancelled 
+                    ? 'bg-red-50/30 border-red-100/50 opacity-60 grayscale-[0.4]' 
+                    : 'bg-white/90 border-slate-200/80 shadow-sm hover:shadow-md'
+                }`}>
                 <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
                   <div className="flex items-center gap-3">
                     <div className={`p-2.5 rounded-xl ${statusConfig.bg} ${statusConfig.color}`}>
@@ -194,24 +273,65 @@ export default function MyOrders() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                  {order.status !== 'Delivered' && order.status !== 'Cancelled' && (
-                    <Link 
-                      to={`/dashboard/track-order/${order.id}`} 
-                      className="flex-1 min-w-[140px] py-3 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs rounded-2xl transition-all shadow-md shadow-amber-300/40 flex items-center justify-center gap-2"
-                    >
-                      <Clock className="w-4 h-4 stroke-[2.5]" />
-                      <span>Track Live Delivery</span>
-                    </Link>
+                <div className="flex flex-wrap items-center gap-3 mt-5 pt-5 border-t border-slate-100/80">
+                  {!isCancelled && order.status !== 'Delivered' && (
+                    <>
+                      <Link 
+                        to={`/dashboard/track-order/${order.id}`} 
+                        className="flex-1 min-w-[140px] py-3 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs rounded-2xl transition-all shadow-md shadow-amber-300/40 flex items-center justify-center gap-2"
+                      >
+                        <Clock className="w-4 h-4 stroke-[2.5]" />
+                        <span>Track Live Delivery</span>
+                      </Link>
+                      {isCancelable ? (
+                        <button 
+                          onClick={() => setOrderToCancel(order.id)}
+                          disabled={cancellingOrderId === order.id}
+                          className="flex-1 min-w-[130px] py-3 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs rounded-2xl transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                          {cancellingOrderId === order.id ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>Cancelling...</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>Cancel Order</span>
+                              <span className="px-1.5 py-0.5 bg-red-200/80 text-red-800 rounded-md text-[10px] font-black tabular-nums tracking-tight border border-red-300/50">
+                                {formatTime(timeRemaining)}
+                              </span>
+                            </>
+                          )}
+                        </button>
+                      ) : (
+                        <div 
+                          className="flex-1 min-w-[130px] py-3 bg-slate-100 text-slate-400 font-bold text-xs rounded-2xl flex items-center justify-center gap-2 cursor-not-allowed"
+                          title="Cancellation period of 5 minutes has passed"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          <span>Cancellation Time Expired</span>
+                        </div>
+                      )}
+                    </>
                   )}
-                  {order.status === 'Delivered' && (
-                    <button className="flex-1 min-w-[130px] py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md shadow-emerald-600/20 cursor-pointer">
+                  {(isCancelled || order.status === 'Delivered') && (
+                    <button 
+                      onClick={() => handleReorder(order)}
+                      className={`flex-1 min-w-[130px] py-3 text-white font-extrabold text-xs rounded-2xl transition-all shadow-md cursor-pointer ${
+                        isCancelled 
+                          ? 'bg-slate-800 hover:bg-slate-900 shadow-slate-800/20' 
+                          : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+                      }`}
+                    >
                       Reorder Items
                     </button>
                   )}
-                  <button className="flex-1 min-w-[130px] py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-2xl transition-colors cursor-pointer">
+                  <Link 
+                    to={`/dashboard/invoice/${order.id}`}
+                    className="flex-1 min-w-[130px] py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-2xl transition-colors cursor-pointer text-center block flex items-center justify-center"
+                  >
                     View Invoice
-                  </button>
+                  </Link>
                 </div>
               </div>
             );
@@ -226,6 +346,39 @@ export default function MyOrders() {
           />
         )}
       </div>
+
+      {/* Cancel Order Confirmation Popup */}
+      {orderToCancel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200 border border-slate-100">
+            <div className="w-14 h-14 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-5 mx-auto">
+              <XCircle className="w-7 h-7" />
+            </div>
+            <h3 className="text-xl font-black text-slate-900 text-center mb-2">Cancel Order?</h3>
+            <p className="text-sm font-semibold text-slate-500 text-center mb-6 px-2">
+              Are you sure you want to cancel this order? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setOrderToCancel(null)}
+                disabled={cancellingOrderId}
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm rounded-xl transition-colors disabled:opacity-50"
+              >
+                No, Keep it
+              </button>
+              <button 
+                onClick={() => handleCancelOrder(orderToCancel)}
+                disabled={cancellingOrderId}
+                className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {cancellingOrderId ? (
+                  <><Loader2 className="w-4 h-4 animate-spin"/> Cancelling...</>
+                ) : "Yes, Cancel"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

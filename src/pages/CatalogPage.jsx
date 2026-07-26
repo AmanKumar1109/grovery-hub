@@ -3,6 +3,7 @@ import Header from '../components/header/Header';
 import Footer from '../components/shop/Footer';
 import CartDrawer from '../components/shop/CartDrawer';
 import ProductCard from '../components/shop/ProductCard';
+import ProductSkeleton from '../components/shop/ProductSkeleton';
 import { useCart } from '../context/CartContext';
 import { Search, SlidersHorizontal, Package, Check, Filter, ChevronDown, ChevronUp, X } from 'lucide-react';
 
@@ -12,7 +13,7 @@ export default function CatalogPage() {
   const [sortBy, setSortBy] = useState('featured');
   const [onlyDiscounted, setOnlyDiscounted] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const { products, categoriesList, toastMessage } = useCart();
+  const { toastMessage, products, isLoadingProducts, categoriesList } = useCart();
 
   const filteredProducts = (products || [])
     .filter((prod) => {
@@ -165,7 +166,13 @@ export default function CatalogPage() {
         </div>
 
         {/* Catalog Products Grid: 2 columns on Mobile (grid-cols-2), 3 on Tablet, 4 on Desktop */}
-        {filteredProducts.length > 0 ? (
+        {isLoadingProducts ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+            {[...Array(12)].map((_, index) => (
+              <ProductSkeleton key={index} />
+            ))}
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
