@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Header from '../components/header/Header';
 import Footer from '../components/shop/Footer';
 import CartDrawer from '../components/shop/CartDrawer';
 import ProductCard from '../components/shop/ProductCard';
 import ProductSkeleton from '../components/shop/ProductSkeleton';
 import { useCart } from '../context/CartContext';
-import { Search, SlidersHorizontal, Package, Check, Filter, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { Search, SlidersHorizontal, Package, Check, Filter, ChevronDown, ChevronUp, X, Loader2 } from 'lucide-react';
 
 export default function CatalogPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -13,13 +13,24 @@ export default function CatalogPage() {
   const [sortBy, setSortBy] = useState('featured');
   const [onlyDiscounted, setOnlyDiscounted] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const { toastMessage, products, isLoadingProducts, categoriesList } = useCart();
+
+  const {
+    toastMessage,
+    products,
+    isLoadingProducts,
+    categoriesList,
+    loadMoreProducts,
+    hasMore,
+    isLoadingMore,
+  } = useCart();
+
+  const sentinelRef = useRef(null);
 
   const filteredProducts = (products || [])
     .filter((prod) => {
       const matchesCategory = selectedCategory === 'all' || prod.category === selectedCategory;
       const matchesSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesDiscount = !onlyDiscounted || (prod.originalPrice > prod.price);
+      const matchesDiscount = !onlyDiscounted || prod.originalPrice > prod.price;
       return matchesCategory && matchesSearch && matchesDiscount;
     })
     .sort((a, b) => {
@@ -30,8 +41,28 @@ export default function CatalogPage() {
     });
 
   const activeFiltersCount =
-    (selectedCategory !== 'all' ? 1 : 0) +
-    (onlyDiscounted ? 1 : 0);
+    (selectedCategory !== 'all' ? 1 : 0) + (onlyDiscounted ? 1 : 0);
+
+  // IntersectionObserver for infinite scrolling on Catalog page
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          loadMoreProducts();
+        }
+      },
+      {
+        root: null,
+        rootMargin: '300px',
+        threshold: 0,
+      }
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, loadMoreProducts]);
 
   return (
     <div className="min-h-screen w-full bg-slate-50 flex flex-col font-sans text-slate-800 antialiased selection:bg-amber-300 selection:text-slate-900">
@@ -89,7 +120,7 @@ export default function CatalogPage() {
 
               {/* Items Counter */}
               <span className="text-xs font-extrabold text-slate-500 hidden md:inline">
-                <span className="text-slate-900 font-black">{filteredProducts.length}</span> Items
+                Showing <span className="text-slate-900 font-black">{filteredProducts.length}</span> Items
               </span>
 
               {/* Sort Selector */}
@@ -173,11 +204,31 @@ export default function CatalogPage() {
             ))}
           </div>
         ) : filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+              {filteredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+
+            {/* Sentinel div for infinite scroll */}
+            <div ref={sentinelRef} className="w-full h-4" aria-hidden="true" />
+
+            {/* Loading Spinner for infinite scroll */}
+            {isLoadingMore && (
+              <div className="flex items-center justify-center gap-2 py-6 text-slate-500 text-xs font-bold">
+                <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                <span>Loading more catalog products...</span>
+              </div>
+            )}
+
+            {/* All items loaded indicator */}
+            {!hasMore && (
+              <p className="text-center text-xs font-bold text-slate-400 py-4">
+                ✅ All catalog products loaded
+              </p>
+            )}
+          </>
         ) : (
           <div className="text-center py-16 bg-white rounded-3xl border border-slate-200/80 space-y-3">
             <Package className="w-12 h-12 text-slate-300 mx-auto" />
