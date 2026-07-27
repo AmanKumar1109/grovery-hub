@@ -47,7 +47,11 @@ export default function HeroVisual() {
       </div>
 
       {/* Floating Delivery Badge overlay */}
-      <FloatingDeliveryBadge />
+      <div className="absolute inset-0 z-20 pointer-events-none animate-[bounce_4s_infinite]">
+        <div className="pointer-events-auto h-full w-full">
+          <FloatingDeliveryBadge />
+        </div>
+      </div>
 
       {/* Hero Character Image - Slanted Overlay */}
       <div

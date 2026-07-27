@@ -8,6 +8,44 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import gsap from 'gsap';
 
+const UrgencyBanner = () => {
+  const [timeLeft, setTimeLeft] = useState(14 * 60 + 59);
+  const [deliveryTime, setDeliveryTime] = useState('');
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev <= 1 ? 15 * 60 : prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const dt = new Date(Date.now() + 15 * 60000);
+    setDeliveryTime(dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+  }, []);
+
+  const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+  const secs = (timeLeft % 60).toString().padStart(2, '0');
+
+  return (
+    <div className="w-full bg-slate-950 text-slate-200 text-[10px] sm:text-[11px] font-bold py-1.5 px-2 flex items-center justify-center gap-1 sm:gap-2 overflow-hidden relative shadow-inner z-50">
+      <span className="relative flex h-2 w-2 flex-shrink-0">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
+      </span>
+      
+      <span className="tracking-wide relative z-10 flex items-center flex-wrap justify-center gap-1">
+        <span className="text-amber-400 font-extrabold uppercase hidden sm:inline">High Demand</span> 
+        <span className="hidden sm:inline text-slate-700">|</span>
+        <span>Order in next</span> 
+        <span className="bg-slate-800 text-white px-1.5 py-0.5 rounded shadow-sm border border-slate-700 font-black font-mono tracking-wider animate-pulse">{mins}:{secs}</span> 
+        <span>to get it by</span> 
+        <span className="text-emerald-400 font-black">{deliveryTime}</span>
+      </span>
+    </div>
+  );
+};
+
 export default function TopHeader() {
   const headerRef = useRef(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -62,10 +100,12 @@ export default function TopHeader() {
   ];
 
   return (
-    <div
+    <header
       ref={headerRef}
-      className="flex items-center justify-between px-4 sm:px-8 lg:px-12 py-3.5 sm:py-4 border-b border-gray-100 bg-white w-full relative z-30"
+      className="sticky top-0 z-50 w-full flex flex-col transition-all duration-300 shadow-sm"
     >
+      <UrgencyBanner />
+      <div className="flex items-center justify-between px-4 sm:px-8 lg:px-12 py-3.5 sm:py-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-md w-full">
       {/* Left: 3-Lines Hamburger Menu Button (Mobile/Tablet) & Brand Logo */}
       <div className="flex items-center gap-3">
         <button
@@ -103,13 +143,14 @@ export default function TopHeader() {
         {/* Shopping Cart Button */}
         <button
           type="button"
+          id="cart-icon-target"
           aria-label="Shopping Cart"
           onClick={() => setIsCartOpen(true)}
           className="relative p-2.5 rounded-full bg-gray-100/80 hover:bg-amber-100 text-gray-700 hover:text-amber-800 transition-colors cursor-pointer"
         >
           <ShoppingBag className="w-5 h-5" />
           {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 text-[10px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border-2 border-white shadow-sm animate-pulse">
+            <span className="absolute -top-1 -right-1 bg-amber-400 text-slate-950 text-[10px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border-2 border-white shadow-sm animate-bounce shadow-amber-400/50">
               {cartCount}
             </span>
           )}
@@ -329,6 +370,7 @@ export default function TopHeader() {
           </div>,
           document.body
         )}
-    </div>
+      </div>
+    </header>
   );
 }

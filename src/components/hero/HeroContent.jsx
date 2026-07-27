@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import FloatingReviewsCard from './FloatingReviewsCard';
 import gsap from 'gsap';
 
@@ -7,6 +7,15 @@ export default function HeroContent() {
   const titleRef = useRef(null);
   const descRef = useRef(null);
   const buttonRef = useRef(null);
+  const [currentWord, setCurrentWord] = useState(0);
+  const words = ["Fresh Fruits", "Farm Veggies", "Daily Dairy", "Healthy Snacks", "Daily Needs"];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentWord((prev) => (prev + 1) % words.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
@@ -44,11 +53,13 @@ export default function HeroContent() {
       {/* Main Headline */}
       <h1
         ref={titleRef}
-        className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-[1.12] tracking-tight mb-5"
+        className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-[1.12] tracking-tight mb-5 min-h-[140px] sm:min-h-[160px] lg:min-h-[200px]"
       >
-        Make Healthy <br />
-        Life With <span className="text-[#3f6212]">Fresh</span> <br />
-        Grocery
+        Delivering <br />
+        <span className="text-[#3f6212] inline-block transition-colors duration-500">
+          {words[currentWord]}
+        </span> <br />
+        In 15 Minutes
       </h1>
 
       {/* Paragraph Subtitle */}

@@ -1,6 +1,22 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Send, Heart } from 'lucide-react';
+import { Mail, Phone, MapPin, Heart, ChevronDown } from 'lucide-react';
+
+const Instagram = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+);
+
+const Twitter = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+);
+
+const Facebook = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+);
+
+const Youtube = ({ className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
+);
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -8,6 +24,11 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function Footer() {
   const footerRef = useRef(null);
+  const [openAccordion, setOpenAccordion] = useState(null);
+
+  const toggleAccordion = (section) => {
+    setOpenAccordion(openAccordion === section ? null : section);
+  };
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -20,9 +41,9 @@ export default function Footer() {
         },
       });
 
-      // Newsletter banner slides up
+      // Promo banner slides up
       tl.fromTo(
-        '.footer-newsletter',
+        '.footer-promo',
         { y: 40, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.6 }
       );
@@ -56,32 +77,29 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer ref={footerRef} className="w-full bg-slate-950 text-slate-300 pt-16 pb-8 border-t border-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 space-y-12">
-        {/* Top Newsletter & Brand Banner */}
-        <div className="footer-newsletter bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 rounded-3xl p-8 text-slate-950 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+    <footer ref={footerRef} className="relative w-full bg-slate-950 text-slate-300 pt-16 pb-8 border-t border-slate-900 overflow-hidden">
+      {/* Background Dot Pattern */}
+      <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 space-y-12">
+        {/* Top Promotional Banner */}
+        <div className="footer-promo bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 rounded-3xl p-8 text-slate-950 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
           <div className="space-y-1 text-center md:text-left">
-            <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
-              Get Fresh Daily Deals & Organic Offers! 🌿
+            <h3 className="text-2xl sm:text-3xl font-black tracking-tight flex flex-wrap items-center justify-center md:justify-start gap-1">
+              Get Fresh Groceries in 15 Minutes! <span className="inline-block animate-bounce">🚀</span>
             </h3>
             <p className="text-xs sm:text-sm font-bold text-slate-900/80">
-              Subscribe to get instant 20% discount coupon on your first order.
+              Shop online for superfast delivery of everyday essentials.
             </p>
           </div>
 
-          <div className="w-full md:w-auto flex items-center bg-slate-950 rounded-full p-1.5 shadow-lg">
-            <input
-              type="email"
-              placeholder="Enter your email address..."
-              className="bg-transparent px-4 py-2 text-xs font-bold text-white placeholder-slate-500 focus:outline-none w-full md:w-64"
-            />
-            <button
-              type="button"
-              className="bg-amber-400 hover:bg-amber-500 text-slate-950 px-5 py-2.5 rounded-full font-black text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+          <div className="w-full md:w-auto flex items-center justify-center">
+            <Link
+              to="/dashboard"
+              className="bg-slate-950 hover:bg-slate-900 text-white px-8 py-3 rounded-full font-black text-sm flex items-center gap-2 transition-colors cursor-pointer shadow-lg"
             >
-              <span>Subscribe</span>
-              <Send className="w-3.5 h-3.5" />
-            </button>
+              <span>Explore Shop</span>
+            </Link>
           </div>
         </div>
 
@@ -118,49 +136,84 @@ export default function Footer() {
                 <span>thegroceryhub2025@gmail.com</span>
               </div>
             </div>
+
+            {/* Social Media Icons */}
+            <div className="flex items-center gap-3 pt-2">
+              <a href="#" className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 shadow-lg">
+                <Instagram className="w-4 h-4" />
+              </a>
+              <a href="#" className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 shadow-lg">
+                <Twitter className="w-4 h-4" />
+              </a>
+              <a href="#" className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 shadow-lg">
+                <Facebook className="w-4 h-4" />
+              </a>
+              <a href="#" className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 shadow-lg">
+                <Youtube className="w-4 h-4" />
+              </a>
+            </div>
           </div>
 
           {/* Quick Links */}
-          <div className="footer-col space-y-3">
-            <h4 className="text-xs font-black text-white uppercase tracking-wider">Account & Shop</h4>
-            <ul className="space-y-2 text-xs font-semibold text-slate-400">
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Shop Items</a></li>
-              <li><Link to="/dashboard" className="hover:text-amber-400 transition-colors">User Dashboard</Link></li>
-              <li><Link to="/dashboard/orders" className="hover:text-amber-400 transition-colors">My Orders</Link></li>
-              <li><Link to="/dashboard/wishlist" className="hover:text-amber-400 transition-colors">Saved Wishlist</Link></li>
-              <li><Link to="/dashboard/addresses" className="hover:text-amber-400 transition-colors">Saved Addresses</Link></li>
+          <div className="footer-col border-b border-slate-800/50 md:border-none pb-4 md:pb-0">
+            <button onClick={() => toggleAccordion('account')} className="w-full flex items-center justify-between md:cursor-default md:pointer-events-none group focus:outline-none">
+              <h4 className="text-xs font-black text-white uppercase tracking-wider">Account & Shop</h4>
+              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform md:hidden ${openAccordion === 'account' ? 'rotate-180' : ''}`} />
+            </button>
+            <ul className={`mt-3 space-y-2 text-xs font-semibold text-slate-400 overflow-hidden md:!block ${openAccordion === 'account' ? 'block' : 'hidden'}`}>
+              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Shop Items</a></li>
+              <li><Link to="/dashboard" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">User Dashboard</Link></li>
+              <li><Link to="/dashboard/orders" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">My Orders</Link></li>
+              <li><Link to="/dashboard/wishlist" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Saved Wishlist</Link></li>
+              <li><Link to="/dashboard/addresses" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Saved Addresses</Link></li>
             </ul>
           </div>
 
           {/* Categories */}
-          <div className="footer-col space-y-3">
-            <h4 className="text-xs font-black text-white uppercase tracking-wider">Categories</h4>
-            <ul className="space-y-2 text-xs font-semibold text-slate-400">
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Dairy & Fresh Milk</a></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Bakery & Breads</a></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Rice, Atta & Dals</a></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Oils, Ghee & Masalas</a></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Snacks & Beverages</a></li>
+          <div className="footer-col border-b border-slate-800/50 md:border-none pb-4 md:pb-0">
+            <button onClick={() => toggleAccordion('categories')} className="w-full flex items-center justify-between md:cursor-default md:pointer-events-none group focus:outline-none">
+              <h4 className="text-xs font-black text-white uppercase tracking-wider">Categories</h4>
+              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform md:hidden ${openAccordion === 'categories' ? 'rotate-180' : ''}`} />
+            </button>
+            <ul className={`mt-3 space-y-2 text-xs font-semibold text-slate-400 overflow-hidden md:!block ${openAccordion === 'categories' ? 'block' : 'hidden'}`}>
+              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Dairy & Fresh Milk</a></li>
+              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Bakery & Breads</a></li>
+              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Rice, Atta & Dals</a></li>
+              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Oils, Ghee & Masalas</a></li>
+              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Snacks & Beverages</a></li>
             </ul>
           </div>
 
           {/* Customer Service */}
-          <div className="footer-col space-y-3">
-            <h4 className="text-xs font-black text-white uppercase tracking-wider">Customer Support</h4>
-            <ul className="space-y-2 text-xs font-semibold text-slate-400">
-              <li><Link to="/dashboard/settings" className="hover:text-amber-400 transition-colors">Help Center & FAQ</Link></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">15-Min Delivery Policy</a></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Quality Standards</a></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Refund & Returns</a></li>
-              <li><a href="#shop" className="hover:text-amber-400 transition-colors">Terms of Service</a></li>
+          <div className="footer-col border-b border-slate-800/50 md:border-none pb-4 md:pb-0">
+            <button onClick={() => toggleAccordion('support')} className="w-full flex items-center justify-between md:cursor-default md:pointer-events-none group focus:outline-none">
+              <h4 className="text-xs font-black text-white uppercase tracking-wider">Customer Support</h4>
+              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform md:hidden ${openAccordion === 'support' ? 'rotate-180' : ''}`} />
+            </button>
+            <ul className={`mt-3 space-y-2 text-xs font-semibold text-slate-400 overflow-hidden md:!block ${openAccordion === 'support' ? 'block' : 'hidden'}`}>
+              <li><Link to="/dashboard/settings" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Help Center & FAQ</Link></li>
+              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">15-Min Delivery Policy</a></li>
+              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Quality Standards</a></li>
+              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Refund & Returns</a></li>
+              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Terms of Service</a></li>
             </ul>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="footer-bottom pt-8 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-semibold text-slate-500">
-          <p>© {new Date().getFullYear()} The Grocery Hub. All rights reserved.</p>
-          <div className="flex items-center gap-2">
+        <div className="footer-bottom pt-8 border-t border-slate-900 flex flex-col md:flex-row items-center justify-between gap-4 md:gap-0 text-xs font-semibold text-slate-500">
+          <p className="order-3 md:order-1 mt-4 md:mt-0">© {new Date().getFullYear()} The Grocery Hub. All rights reserved.</p>
+          
+          {/* Live Delivery Status */}
+          <div className="order-1 md:order-2 flex items-center gap-2 bg-slate-900/50 px-3 py-1.5 rounded-full border border-slate-800 shadow-sm">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <span className="text-slate-300 font-bold">Live - Delivering in your area</span>
+          </div>
+
+          <div className="order-2 md:order-3 flex items-center gap-2">
             <span>Built with</span>
             <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
             <span>for Everyday Grocery Shoppers</span>

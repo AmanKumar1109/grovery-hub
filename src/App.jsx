@@ -16,6 +16,7 @@ import SavedAddresses from './pages/dashboard/SavedAddresses';
 import Profile from './pages/dashboard/Profile';
 import Settings from './pages/dashboard/Settings';
 import InvoicePage from './pages/dashboard/InvoicePage';
+import FloatingWhatsApp from './components/ui/FloatingWhatsApp';
 
 function App() {
   return (
@@ -45,6 +46,7 @@ function App() {
           <Route path="/complete-profile" element={<Navigate to="/dashboard/profile" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <FloatingWhatsApp />
       </CartProvider>
     </AuthProvider>
   );
