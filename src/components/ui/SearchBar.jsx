@@ -36,11 +36,11 @@ export default function SearchBar() {
 
   const categories = [
     'All Categories',
-    'Fresh Vegetables',
-    'Organic Fruits',
-    'Dairy & Eggs',
-    'Bakery & Snacks',
-    'Beverages',
+    'Rice & Atta',
+    'Dals & Pulses',
+    'Oils & Ghee',
+    'Spices & Masalas',
+    'Snacks & Biscuits',
   ];
 
   return (

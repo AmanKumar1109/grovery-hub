@@ -18,13 +18,11 @@ const getCategoryIcon = (categoryName) => {
 
 export const initialCategoriesList = [
   { id: 'all', name: 'All Products', icon: Sparkles, count: '12+ Items' },
-  { id: 'Fresh Vegetables', name: 'Fresh Vegetables', icon: Carrot, count: '3 Items' },
-  { id: 'Organic Fruits', name: 'Organic Fruits', icon: Apple, count: '2 Items' },
-  { id: 'Dairy & Eggs', name: 'Dairy & Eggs', icon: Milk, count: '2 Items' },
-  { id: 'Bakery & Bread', name: 'Bakery & Bread', icon: Croissant, count: '1 Item' },
-  { id: 'Beverages & Juices', name: 'Beverages & Juices', icon: Coffee, count: '1 Item' },
-  { id: 'Snacks & Munchies', name: 'Snacks & Munchies', icon: Cookie, count: '2 Items' },
-  { id: 'Meat & Seafood', name: 'Meat & Seafood', icon: Drumstick, count: '1 Item' },
+  { id: 'Rice & Atta', name: 'Rice & Atta', icon: Package, count: '3 Items' },
+  { id: 'Dals & Pulses', name: 'Dals & Pulses', icon: Package, count: '2 Items' },
+  { id: 'Oils & Ghee', name: 'Oils & Ghee', icon: Package, count: '2 Items' },
+  { id: 'Spices & Masalas', name: 'Spices & Masalas', icon: Package, count: '4 Items' },
+  { id: 'Snacks & Biscuits', name: 'Snacks & Biscuits', icon: Cookie, count: '3 Items' },
 ];
 
 export default function CategoryShowcase({ selectedCategory, onSelectCategory }) {
