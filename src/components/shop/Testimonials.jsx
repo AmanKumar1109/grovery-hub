@@ -8,33 +8,33 @@ gsap.registerPlugin(ScrollTrigger);
 const reviews = [
   {
     id: 1,
-    name: 'Aisha Rahman',
-    location: 'Green Park, Mumbai',
+    name: 'Abhijeet Ghosh',
+    location: 'Baharagora, Jharkhand',
     rating: 5,
-    comment: 'The vegetables arrived in 12 minutes! Incredibly fresh organic spinach and tomatoes. Highly recommended!',
+    comment: 'Mahine bhar ka ration ab main yahi se mangwati hu. Atta, dal aur masale sab ekdum badhiya quality ke hote hain aur delivery bhi fast hai.',
     verified: true,
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
-    itemBought: 'Fresh Organic Farm Vegetables',
+    avatar: 'https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=150',
+    itemBought: 'Monthly Grocery Combo',
   },
   {
     id: 2,
-    name: 'Rahul Sharma',
-    location: 'Andheri West, Mumbai',
+    name: 'Aman Kumar',
+    location: 'Baharagora, Jharkhand',
     rating: 5,
-    comment: 'Best price on fresh milk and free range eggs. The app dashboard makes order tracking so smooth!',
+    comment: 'Ghar ke saare kirane ka saaman yahan asani se mil jata hai. Chawal aur tel ka price market se sasta hai aur packing bhi bohot acchi hoti hai.',
     verified: true,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=150',
-    itemBought: 'Daily Dairy & Bakery Combo',
+    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150',
+    itemBought: 'Premium Rice & Cooking Oil',
   },
   {
     id: 3,
-    name: 'Priya Nair',
-    location: 'Bandra, Mumbai',
+    name: 'Aparna',
+    location: 'Baharagora, Jharkhand',
     rating: 5,
-    comment: '100% Halal certified chicken and organic fruits delivered with zero hassle. Truly premium service!',
+    comment: 'Pehli baar online grocery order ki thi, aur experience bahut accha raha. Sabhi grocery items sahi salamat aur bilkul time par mil gaye.',
     verified: true,
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150',
-    itemBought: 'Fresh Halal Chicken & Fruit Basket',
+    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150',
+    itemBought: 'Daily Household Groceries',
   },
 ];
 
@@ -94,7 +94,7 @@ export default function Testimonials() {
           <div className="testimonials-heading">
             <span className="text-xs font-black text-amber-500 uppercase tracking-widest">Happy Shoppers</span>
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-              Loved By 25,000+ Customers 🌟
+              Loved By 1000+ Indian Customers 🌟
             </h2>
           </div>
           <p className="testimonials-subtitle text-xs sm:text-sm font-medium text-slate-500">

@@ -42,7 +42,7 @@ export default function FloatingReviewsCard() {
       <div className="text-xs font-bold leading-snug text-gray-800">
         The Grocery Hub- Satisfied Around <br />
         <span className="text-emerald-600">the </span>
-        <span className="text-gray-800">Worldwide</span>
+        <span className="text-gray-800">Baharagora</span>
       </div>
     </div>
   );
