@@ -139,7 +139,7 @@ export default function Footer() {
 
             {/* Social Media Icons */}
             <div className="flex items-center gap-3 pt-2">
-              <a href="#" className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 shadow-lg">
+              <a href="https://www.instagram.com/thegroceryhub_baharagora?igsh=MW05NzlkcWlkeWpobA==" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 shadow-lg">
                 <Instagram className="w-4 h-4" />
               </a>
               <a href="#" className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 shadow-lg">
@@ -191,6 +191,7 @@ export default function Footer() {
               <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform md:hidden ${openAccordion === 'support' ? 'rotate-180' : ''}`} />
             </button>
             <ul className={`mt-3 space-y-2 text-xs font-semibold text-slate-400 overflow-hidden md:!block ${openAccordion === 'support' ? 'block' : 'hidden'}`}>
+              <li><Link to="/complaint" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Lodge a Complaint</Link></li>
               <li><Link to="/dashboard/settings" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Help Center & FAQ</Link></li>
               <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">15-Min Delivery Policy</a></li>
               <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Quality Standards</a></li>

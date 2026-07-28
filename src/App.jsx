@@ -16,6 +16,7 @@ import SavedAddresses from './pages/dashboard/SavedAddresses';
 import Profile from './pages/dashboard/Profile';
 import Settings from './pages/dashboard/Settings';
 import InvoicePage from './pages/dashboard/InvoicePage';
+import ComplaintPage from './pages/ComplaintPage';
 import FloatingWhatsApp from './components/ui/FloatingWhatsApp';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/complaint" element={<ComplaintPage />} />
           
           {/* Dashboard Nested Routes */}
           <Route path="/dashboard" element={<DashboardLayout />}>

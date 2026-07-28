@@ -166,12 +166,7 @@ export default function ProductCard({ product }) {
             </div>
           )}
 
-          {/* Express delivery badge bottom-left */}
-          {product.inStock !== false && (
-            <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 px-2 py-0.5 bg-white/90 backdrop-blur-sm text-slate-800 text-[8px] sm:text-[9px] font-black rounded-full flex items-center gap-0.5 shadow-md">
-              <Clock className="w-2.5 h-2.5 text-amber-500" /> {socialProof.deliveryMins} min
-            </div>
-          )}
+
         </div>
 
         {/* Content area with padding */}

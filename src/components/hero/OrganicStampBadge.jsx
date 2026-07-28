@@ -30,7 +30,7 @@ export default function OrganicStampBadge() {
           />
           <text className="text-[9.5px] font-extrabold tracking-wider uppercase fill-gray-900">
             <textPath href="#textPath" startOffset="0%">
-              THE GROCERY HUB • FRESH & HYGIENIC •
+              THE GROCERY HUB • FRESH & HYGIENIC
             </textPath>
           </text>
         </svg>
