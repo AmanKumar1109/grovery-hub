@@ -20,6 +20,13 @@ import HelpSupport from './pages/dashboard/HelpSupport';
 import ComplaintPage from './pages/ComplaintPage';
 import MyComplaints from './pages/dashboard/MyComplaints';
 import FloatingWhatsApp from './components/ui/FloatingWhatsApp';
+import OrderNotificationListener from './components/ui/OrderNotificationListener';
+import { useAuth } from './context/AuthContext';
+
+function GlobalNotification() {
+  const { currentUser } = useAuth();
+  return currentUser ? <OrderNotificationListener userId={currentUser.uid} /> : null;
+}
 
 function App() {
   return (
@@ -53,6 +60,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <FloatingWhatsApp />
+        <GlobalNotification />
       </CartProvider>
     </AuthProvider>
   );

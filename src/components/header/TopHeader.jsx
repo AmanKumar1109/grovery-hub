@@ -140,6 +140,9 @@ export default function TopHeader() {
 
       {/* Right: Action Items & User Profile / Login */}
       <div className="flex items-center gap-2 sm:gap-4">
+        {/* Notification Bell Portal Target */}
+        <div id="notification-bell-portal-target"></div>
+
         {/* Shopping Cart Button */}
         <button
           type="button"
