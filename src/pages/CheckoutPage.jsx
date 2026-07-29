@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft } from 'lucide-react';
-import { collection, addDoc, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft, Tag, X } from 'lucide-react';
+import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export default function CheckoutPage() {
@@ -13,6 +13,29 @@ export default function CheckoutPage() {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isOrderConfirmed, setIsOrderConfirmed] = useState(false);
+
+  // Promo Code States
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [promoError, setPromoError] = useState('');
+  const [discountAmount, setDiscountAmount] = useState(0);
+
+  // Fetch Coupons on Mount
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'coupons'));
+        const coupons = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setAvailableCoupons(coupons);
+      } catch (err) {
+        console.error("Failed to fetch coupons:", err);
+      }
+    };
+    fetchCoupons();
+  }, []);
+
+  const finalTotal = cartTotal - discountAmount;
 
   const [addressForm, setAddressForm] = useState({
     street: '',
@@ -67,6 +90,61 @@ export default function CheckoutPage() {
       setActiveAddressId(newId);
       showToast('Address saved successfully!');
     }
+  };
+
+  const handleApplyPromo = (codeToApply) => {
+    setPromoError('');
+    const code = (codeToApply || promoCodeInput).trim().toUpperCase();
+    if (!code) {
+      setPromoError('Please enter a valid code');
+      return;
+    }
+
+    const coupon = availableCoupons.find(c => c.code === code);
+    if (!coupon) {
+      setPromoError('Invalid Promo Code');
+      return;
+    }
+
+    if (!coupon.isActive) {
+      setPromoError('This Promo Code is currently inactive');
+      return;
+    }
+
+    if (cartTotal < coupon.minOrderValue) {
+      setPromoError(`Minimum order value for this code is ₹${coupon.minOrderValue}`);
+      return;
+    }
+
+    const expiry = new Date(coupon.validUntil);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Ignore time part for expiry check
+    if (expiry < today) {
+      setPromoError('This Promo Code has expired');
+      return;
+    }
+
+    let discount = 0;
+    if (coupon.discountType === 'flat') {
+      discount = parseFloat(coupon.discountValue) || 0;
+    } else if (coupon.discountType === 'percentage') {
+      const pct = parseFloat(coupon.discountValue) || 0;
+      discount = cartTotal * (pct / 100);
+      const maxDiscount = parseFloat(coupon.maxDiscount) || 0;
+      if (maxDiscount > 0 && discount > maxDiscount) {
+        discount = maxDiscount;
+      }
+    }
+
+    setDiscountAmount(discount);
+    setAppliedCoupon(coupon);
+    setPromoCodeInput('');
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+    setPromoError('');
   };
 
   const handlePlaceOrder = async () => {
@@ -125,7 +203,10 @@ export default function CheckoutPage() {
           price: item.price || 0,
           image: item.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&auto=format&fit=crop&q=80'
         })),
-        totalAmount: cartTotal || 0,
+        totalAmount: finalTotal > 0 ? finalTotal : 0,
+        subTotal: cartTotal || 0,
+        discountAmount: discountAmount || 0,
+        couponApplied: appliedCoupon ? appliedCoupon.code : null,
         status: 'Order Received',
         isCurrent: true,
         paymentMethod: 'Cash on Delivery',
@@ -310,6 +391,60 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Promo Code Section */}
+              <div className="border-t border-slate-100 pt-5 pb-2">
+                {!appliedCoupon ? (
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 mb-2 flex items-center gap-1.5"><Tag className="w-4 h-4 text-emerald-500"/> Apply Promo Code</h3>
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value={promoCodeInput}
+                        onChange={e => {
+                          setPromoCodeInput(e.target.value.toUpperCase());
+                          setPromoError('');
+                        }}
+                        placeholder="Enter code here" 
+                        className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 uppercase"
+                      />
+                      <button 
+                        onClick={() => handleApplyPromo()}
+                        className="px-4 py-2 bg-slate-900 text-white font-bold text-sm rounded-xl hover:bg-slate-800 transition-colors"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                    {promoError && <p className="text-xs font-bold text-rose-500 mt-2">{promoError}</p>}
+                    
+                    {/* List available coupons */}
+                    {availableCoupons.filter(c => c.isActive).length > 0 && (
+                      <div className="mt-3 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
+                        {availableCoupons.filter(c => c.isActive).map(c => (
+                          <div 
+                            key={c.id} 
+                            onClick={() => handleApplyPromo(c.code)}
+                            className="shrink-0 border border-emerald-200 bg-emerald-50/50 rounded-lg px-3 py-2 cursor-pointer hover:bg-emerald-50 transition-colors"
+                          >
+                            <p className="text-xs font-black text-emerald-700">{c.code}</p>
+                            <p className="text-[10px] font-bold text-slate-500 mt-0.5">Min ₹{c.minOrderValue}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-emerald-600 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5"/> Code Applied</p>
+                      <p className="text-sm font-black text-slate-900">{appliedCoupon.code}</p>
+                    </div>
+                    <button onClick={handleRemovePromo} className="text-slate-400 hover:text-rose-500 p-1">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
               <div className="border-t border-slate-100 pt-5 space-y-3">
                 <div className="flex justify-between text-sm font-bold text-slate-600">
                   <span>Subtotal</span>
@@ -319,9 +454,15 @@ export default function CheckoutPage() {
                   <span>Delivery Fee</span>
                   <span className="text-emerald-600">FREE</span>
                 </div>
+                {appliedCoupon && (
+                  <div className="flex justify-between text-sm font-bold text-emerald-600">
+                    <span>Discount ({appliedCoupon.code})</span>
+                    <span>-₹{discountAmount}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-lg font-black text-slate-900 pt-3 border-t border-slate-100">
                   <span>Total</span>
-                  <span>₹{cartTotal}</span>
+                  <span>₹{finalTotal}</span>
                 </div>
               </div>
 
