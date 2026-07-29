@@ -14,7 +14,14 @@ export default function ShopSection() {
 
   const filteredProducts = (products || [])
     .filter((prod) => {
-      const matchesCategory = selectedCategory === 'all' || prod.category === selectedCategory;
+      const matchesCategory =
+        selectedCategory === 'all'
+          ? true
+          : selectedCategory === 'Trending'
+          ? !!prod.isTrending
+          : selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1'
+          ? !!prod.isBogo
+          : prod.category === selectedCategory;
       const matchesSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     })
