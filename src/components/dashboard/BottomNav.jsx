@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Heart, User, MoreHorizontal, MapPin, Settings, LogOut, X, Store } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Heart, User, MoreHorizontal, MapPin, LogOut, X, Store, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import gsap from 'gsap';
 
@@ -12,9 +12,9 @@ const mainNavItems = [
 ];
 
 const moreItems = [
+  { path: '/dashboard/help', label: 'Help & Support', icon: HelpCircle },
   { path: '/dashboard/wishlist', label: 'Wishlist', icon: Heart },
   { path: '/dashboard/addresses', label: 'Addresses', icon: MapPin },
-  { path: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function BottomNav() {

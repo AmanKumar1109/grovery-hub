@@ -159,10 +159,10 @@ export default function ProductCard({ product }) {
             <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 ${isWishlisted ? 'fill-pink-500 stroke-pink-500 scale-110' : 'group-hover:scale-110'}`} />
           </button>
 
-          {/* Trending indicator on image bottom-right */}
-          {product.rating >= 4.5 && (
-            <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 px-2 py-0.5 bg-emerald-500/90 backdrop-blur-sm text-white text-[8px] sm:text-[9px] font-black rounded-full flex items-center gap-0.5 shadow-md">
-              <TrendingUp className="w-2.5 h-2.5" /> Trending
+          {/* Trending indicator on image bottom-right — ONLY when admin marks product.isTrending as true */}
+          {Boolean(product.isTrending) && (
+            <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 px-2.5 py-1 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center gap-1 shadow-lg animate-pulse tracking-wide z-10">
+              <Flame className="w-3 h-3 fill-white" /> 🔥 Trending
             </div>
           )}
 

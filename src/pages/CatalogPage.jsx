@@ -28,7 +28,12 @@ export default function CatalogPage() {
 
   const filteredProducts = (products || [])
     .filter((prod) => {
-      const matchesCategory = selectedCategory === 'all' || prod.category === selectedCategory;
+      const matchesCategory =
+        selectedCategory === 'all'
+          ? true
+          : selectedCategory === 'Trending' || selectedCategory === '🔥 Trending'
+          ? !!prod.isTrending
+          : prod.category === selectedCategory;
       const matchesSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesDiscount = !onlyDiscounted || prod.originalPrice > prod.price;
       return matchesCategory && matchesSearch && matchesDiscount;

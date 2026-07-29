@@ -27,6 +27,7 @@ function transformDoc(d) {
     isHalal: data.isHalal !== undefined ? data.isHalal : true,
     inStock: data.inStock !== false,
     isVisible: data.isVisible !== false,
+    isTrending: data.isTrending === true,
     image: data.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&auto=format&fit=crop&q=80'
   };
 }
@@ -47,6 +48,7 @@ export const initialProducts = [
     isOrganic: true,
     isHalal: true,
     inStock: true,
+    isTrending: false,
     image: 'https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&q=80&w=400',
   },
   {
@@ -58,10 +60,11 @@ export const initialProducts = [
     unit: '10 kg',
     rating: 4.9,
     reviews: 210,
-    badge: 'Trending',
+    badge: 'Bestseller',
     isOrganic: true,
     isHalal: true,
     inStock: true,
+    isTrending: false,
     image: 'https://images.unsplash.com/photo-1627485937980-221c88ac04f9?auto=format&fit=crop&q=80&w=400',
   },
   {
@@ -77,6 +80,7 @@ export const initialProducts = [
     isOrganic: true,
     isHalal: true,
     inStock: true,
+    isTrending: false,
     image: 'https://images.unsplash.com/photo-1585994273299-4a9492161f5c?auto=format&fit=crop&q=80&w=400',
   },
   {
@@ -92,6 +96,7 @@ export const initialProducts = [
     isOrganic: false,
     isHalal: true,
     inStock: true,
+    isTrending: false,
     image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&q=80&w=400',
   },
   {
@@ -107,6 +112,7 @@ export const initialProducts = [
     isOrganic: true,
     isHalal: true,
     inStock: true,
+    isTrending: false,
     image: 'https://images.unsplash.com/photo-1644310574706-e7587ea0b205?auto=format&fit=crop&q=80&w=400',
   },
   {
@@ -122,6 +128,7 @@ export const initialProducts = [
     isOrganic: true,
     isHalal: true,
     inStock: true,
+    isTrending: false,
     image: 'https://images.unsplash.com/photo-1613134909187-578d53018ea6?auto=format&fit=crop&q=80&w=400',
   },
   {
@@ -137,22 +144,8 @@ export const initialProducts = [
     isOrganic: true,
     isHalal: true,
     inStock: true,
+    isTrending: false,
     image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=400',
-  },
-  {
-    id: 'prod-8',
-    name: 'Digestive Biscuits',
-    category: 'Snacks & Biscuits',
-    price: 45,
-    originalPrice: 50,
-    unit: '250g Pack',
-    rating: 4.8,
-    reviews: 260,
-    badge: 'Crunchy',
-    isOrganic: false,
-    isHalal: true,
-    inStock: true,
-    image: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?auto=format&fit=crop&q=80&w=400',
   },
 ];
 
@@ -164,37 +157,28 @@ export function CartProvider({ children }) {
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Initial paginated fetch + real-time categories
+  // Real-time Firestore sync for items & categories
   useEffect(() => {
-    const fetchFirst = async () => {
-      try {
-        const q = query(collection(db, 'items'), limit(PAGE_SIZE));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          const loaded = snap.docs.map(transformDoc).filter(item => item.isVisible);
-          setProducts(loaded.length > 0 ? loaded : []);
-          setLastDoc(snap.docs[snap.docs.length - 1]);
-          setHasMore(snap.docs.length === PAGE_SIZE);
-        } else {
-          setHasMore(false);
-        }
-      } catch (err) {
-        console.warn('Firebase fetch failed:', err);
-        setHasMore(false);
-      } finally {
-        setIsLoadingProducts(false);
+    const unsubItems = onSnapshot(collection(db, 'items'), (snap) => {
+      if (!snap.empty) {
+        const loaded = snap.docs.map(transformDoc).filter(item => item.isVisible);
+        setProducts(loaded);
       }
-    };
+      setIsLoadingProducts(false);
+    }, (err) => {
+      console.warn('Real-time items sync notice:', err);
+      setIsLoadingProducts(false);
+    });
 
-    fetchFirst();
-
-    // Real-time categories (small collection, fine to stream)
     const unsubCat = onSnapshot(collection(db, 'categories'), (snap) => {
       const loadedCats = snap.docs.map(d => d.data().name || d.id);
       setDbCategories(loadedCats);
     });
 
-    return () => unsubCat();
+    return () => {
+      unsubItems();
+      unsubCat();
+    };
   }, []);
 
   // Load next page — called by IntersectionObserver in ShopSection
@@ -222,7 +206,9 @@ export function CartProvider({ children }) {
   // Compute dynamic categories list with product counts
   const categoriesList = useMemo(() => {
     const catCounts = {};
+    let trendingCount = 0;
     products.forEach(p => {
+      if (p.isTrending) trendingCount++;
       if (p.category) {
         catCounts[p.category] = (catCounts[p.category] || 0) + 1;
       }
@@ -231,7 +217,8 @@ export function CartProvider({ children }) {
     const allCategoryNames = Array.from(new Set([...dbCategories, ...Object.keys(catCounts)]));
 
     const list = [
-      { id: 'all', name: 'All Products', count: `${products.length} Items` }
+      { id: 'all', name: 'All Products', count: `${products.length} Items` },
+      { id: 'Trending', name: '🔥 Trending', count: `${trendingCount} Item${trendingCount === 1 ? '' : 's'}` }
     ];
 
     allCategoryNames.forEach(catName => {

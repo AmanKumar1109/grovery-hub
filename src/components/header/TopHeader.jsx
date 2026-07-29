@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ShoppingBag, Heart, ChevronDown, LayoutDashboard, ShoppingCart, User, MapPin, Settings, LogOut, Menu, X, Home, Store, LogIn } from 'lucide-react';
+import { ShoppingBag, Heart, ChevronDown, LayoutDashboard, ShoppingCart, User, MapPin, LogOut, Menu, X, Home, Store, LogIn, HelpCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import SearchBar from '../ui/SearchBar';
 import userAvatar from '../../assets/images/user-avatar.png';
@@ -96,7 +96,7 @@ export default function TopHeader() {
     { name: 'Wishlist', path: '/dashboard/wishlist', icon: Heart },
     { name: 'Saved Addresses', path: '/dashboard/addresses', icon: MapPin },
     { name: 'Profile Details', path: '/dashboard/profile', icon: User },
-    { name: 'Settings', path: '/dashboard/settings', icon: Settings },
+    { name: 'Help & Support', path: '/dashboard/help', icon: HelpCircle },
   ];
 
   return (
@@ -242,12 +242,12 @@ export default function TopHeader() {
                     Profile Details
                   </Link>
                   <Link
-                    to="/dashboard/settings"
+                    to="/dashboard/help"
                     onClick={() => setDropdownOpen(false)}
                     className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                   >
-                    <Settings className="w-4 h-4 text-slate-500" />
-                    Settings
+                    <HelpCircle className="w-4 h-4 text-emerald-600" />
+                    Help & Support
                   </Link>
                 </div>
 

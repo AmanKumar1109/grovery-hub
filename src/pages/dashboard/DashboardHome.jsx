@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Package, Heart, ChevronRight, Clock, MapPin, Sparkles, ArrowRight, ShoppingBag, Wallet } from 'lucide-react';
+import { Package, Heart, ChevronRight, Clock, MapPin, Sparkles, ArrowRight, ShoppingBag, Wallet, HelpCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import gsap from 'gsap';
@@ -216,13 +216,41 @@ export default function DashboardHome() {
             <h4 className="text-base font-extrabold text-slate-800">No active delivery right now</h4>
             <p className="text-xs text-slate-400">Place an order to track live 15-minute doorstep delivery!</p>
             <Link
-              to="/shop"
+              to="/catalog"
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-extrabold text-xs rounded-xl shadow-sm mt-2"
             >
               Browse Grocery Store
             </Link>
           </div>
         )}
+      </div>
+
+      {/* Customer Support Banner */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-teal-500/10 border border-amber-200/80 rounded-3xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-extrabold shadow-sm shrink-0">
+            <HelpCircle className="w-6 h-6 stroke-[2.2]" />
+          </div>
+          <div>
+            <h4 className="font-extrabold text-slate-900 text-sm">Need Help with an Order or Delivery?</h4>
+            <p className="text-xs text-slate-600">Lodge a complaint or chat directly on WhatsApp (+91 6207462800)</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <Link
+            to="/dashboard/help"
+            className="flex-1 sm:flex-initial py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl transition-all text-center"
+          >
+            Help & Support
+          </Link>
+          <Link
+            to="/complaint"
+            className="flex-1 sm:flex-initial py-2.5 px-4 bg-amber-400 hover:bg-amber-500 text-slate-950 font-extrabold text-xs rounded-xl shadow-sm transition-all text-center"
+          >
+            Lodge Complaint
+          </Link>
+        </div>
       </div>
     </div>
   );

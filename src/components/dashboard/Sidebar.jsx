@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Heart, MapPin, User, Settings, LogOut, Store } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Heart, MapPin, User, LogOut, Store, HelpCircle } from 'lucide-react';
 import userAvatar from '../../assets/images/user-avatar.png';
 import { useAuth } from '../../context/AuthContext';
 
@@ -8,10 +8,10 @@ const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { path: '/', label: 'Back to Shop', icon: Store, exact: true },
   { path: '/dashboard/orders', label: 'My Orders', icon: ShoppingBag },
+  { path: '/dashboard/help', label: 'Help & Support', icon: HelpCircle },
   { path: '/dashboard/wishlist', label: 'Wishlist', icon: Heart },
   { path: '/dashboard/addresses', label: 'Saved Addresses', icon: MapPin },
   { path: '/dashboard/profile', label: 'Profile', icon: User },
-  { path: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 
 export default function Sidebar() {

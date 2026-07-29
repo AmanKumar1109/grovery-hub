@@ -192,7 +192,7 @@ export default function Footer() {
             </button>
             <ul className={`mt-3 space-y-2 text-xs font-semibold text-slate-400 overflow-hidden md:!block ${openAccordion === 'support' ? 'block' : 'hidden'}`}>
               <li><Link to="/complaint" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Lodge a Complaint</Link></li>
-              <li><Link to="/dashboard/settings" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Help Center & FAQ</Link></li>
+              <li><Link to="/dashboard/help" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Help Center & FAQ</Link></li>
               <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">15-Min Delivery Policy</a></li>
               <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Quality Standards</a></li>
               <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Refund & Returns</a></li>

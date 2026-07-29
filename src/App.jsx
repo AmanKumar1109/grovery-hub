@@ -14,8 +14,8 @@ import TrackOrder from './pages/dashboard/TrackOrder';
 import Wishlist from './pages/dashboard/Wishlist';
 import SavedAddresses from './pages/dashboard/SavedAddresses';
 import Profile from './pages/dashboard/Profile';
-import Settings from './pages/dashboard/Settings';
 import InvoicePage from './pages/dashboard/InvoicePage';
+import HelpSupport from './pages/dashboard/HelpSupport';
 import ComplaintPage from './pages/ComplaintPage';
 import FloatingWhatsApp from './components/ui/FloatingWhatsApp';
 
@@ -35,13 +35,14 @@ function App() {
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
             <Route path="orders" element={<MyOrders />} />
+            <Route path="help" element={<HelpSupport />} />
             <Route path="track-order/:id" element={<TrackOrder />} />
             <Route path="track-order" element={<TrackOrder />} />
             <Route path="track/:id" element={<TrackOrder />} />
             <Route path="wishlist" element={<Wishlist />} />
             <Route path="addresses" element={<SavedAddresses />} />
             <Route path="profile" element={<Profile />} />
-            <Route path="settings" element={<Settings />} />
+            <Route path="settings" element={<Navigate to="/dashboard/help" replace />} />
             <Route path="invoice/:id" element={<InvoicePage />} />
           </Route>
 

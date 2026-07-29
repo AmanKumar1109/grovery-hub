@@ -1,10 +1,11 @@
 import React from 'react';
-import { Sparkles, Carrot, Apple, Milk, Croissant, Coffee, Cookie, Drumstick, Package, ArrowRight } from 'lucide-react';
+import { Sparkles, Carrot, Apple, Milk, Croissant, Coffee, Cookie, Drumstick, Package, ArrowRight, Flame } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 
 const getCategoryIcon = (categoryName) => {
   const lower = (categoryName || '').toLowerCase();
+  if (lower.includes('trend')) return Flame;
   if (lower === 'all' || lower.includes('all')) return Sparkles;
   if (lower.includes('veg')) return Carrot;
   if (lower.includes('fruit')) return Apple;
