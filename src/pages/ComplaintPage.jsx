@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 import TopHeader from '../components/header/TopHeader';
 import Footer from '../components/shop/Footer';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 
 export default function ComplaintPage() {
   const [formData, setFormData] = useState({
@@ -21,13 +23,16 @@ export default function ComplaintPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await addDoc(collection(db, 'complaints'), {
+        ...formData,
+        createdAt: serverTimestamp(),
+        status: 'pending'
+      });
       setIsSuccess(true);
       setFormData({
         name: '',
@@ -36,7 +41,12 @@ export default function ComplaintPage() {
         issueType: '',
         description: '',
       });
-    }, 1500);
+    } catch (error) {
+      console.error("Error adding document: ", error);
+      alert("Failed to submit complaint. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
