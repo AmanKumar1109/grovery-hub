@@ -80,7 +80,16 @@ export default function CheckoutPage() {
     try {
       const orderNum = Math.floor(1000 + Math.random() * 9000);
       const orderId = `ORD-${orderNum}`;
-      const timestamp = new Date().toISOString();
+      const now = new Date();
+      const timestamp = now.toISOString();
+      const formattedTime = now.toLocaleString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
 
       const phone = (activeAddress && activeAddress.phone) || (userProfile && userProfile.phone) || (currentUser && currentUser.phoneNumber) || '+91 9876543210';
       const custName = (userProfile && userProfile.fullName) || (currentUser && (currentUser.displayName || currentUser.email)) || (activeAddress && activeAddress.name) || 'Customer';
@@ -117,10 +126,11 @@ export default function CheckoutPage() {
           image: item.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&auto=format&fit=crop&q=80'
         })),
         totalAmount: cartTotal || 0,
-        status: 'Processing',
+        status: 'Order Received',
         isCurrent: true,
         paymentMethod: 'Cash on Delivery',
         paymentStatus: 'Pending (COD)',
+        orderTime: formattedTime,
         createdAt: timestamp,
         updatedAt: timestamp
       });

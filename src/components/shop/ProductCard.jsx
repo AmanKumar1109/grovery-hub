@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Heart, ShoppingBag, Star, Plus, Minus, Zap, TrendingUp, Clock, Users, Flame } from 'lucide-react';
+import { Heart, ShoppingBag, Star, Plus, Minus, Zap, TrendingUp, Clock, Users, Flame, Gift } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 
@@ -124,20 +124,30 @@ export default function ProductCard({ product }) {
           {/* Dark gradient overlay at bottom of image */}
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
 
-          {/* Top-left badge */}
-          {product.inStock === false ? (
-            <span className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2.5 py-1 sm:px-3 sm:py-1 bg-gradient-to-r from-rose-600 to-rose-500 text-white font-black text-[9px] sm:text-[11px] rounded-full shadow-lg shadow-rose-500/30 tracking-wide uppercase">
-              Sold Out
-            </span>
-          ) : product.offPercentage > 0 ? (
-            <span className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2.5 py-1 sm:px-3 sm:py-1 bg-gradient-to-r from-rose-500 to-orange-500 text-white font-black text-[9px] sm:text-[11px] rounded-full shadow-lg shadow-rose-500/30 flex items-center gap-1 tracking-wide">
-              <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white" /> {product.offPercentage}% OFF
-            </span>
-          ) : product.badge ? (
-            <span className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2.5 py-1 sm:px-3 sm:py-1 bg-gradient-to-r from-amber-400 to-yellow-400 text-slate-900 font-black text-[9px] sm:text-[11px] rounded-full shadow-lg shadow-amber-400/30 tracking-wide uppercase">
-              {product.badge}
-            </span>
-          ) : null}
+          {/* Top-Left Stacked Badges (Out of Stock, BOGO, Discount) */}
+          <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex flex-col items-start gap-1 z-10 pointer-events-none">
+            {product.inStock === false ? (
+              <span className="px-2.5 py-1 sm:px-3 sm:py-1 bg-slate-900/90 backdrop-blur-md text-white font-black text-[9px] sm:text-[11px] rounded-full shadow-md tracking-wide uppercase">
+                Sold Out
+              </span>
+            ) : (
+              <>
+                {/* Buy 1 Get 1 Free Overlay Badge */}
+                {Boolean(product.isBogo) && (
+                  <span className="px-2.5 py-1 bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center gap-1 shadow-lg tracking-wide uppercase">
+                    <Gift className="w-3 h-3 text-white" /> Buy 1 Get 1 Free
+                  </span>
+                )}
+
+                {/* Discount Badge */}
+                {product.offPercentage > 0 && (
+                  <span className="px-2.5 py-1 bg-gradient-to-r from-rose-500 to-orange-500 text-white font-black text-[9px] sm:text-[10px] rounded-full shadow-md flex items-center gap-1 tracking-wide">
+                    <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white" /> {product.offPercentage}% OFF
+                  </span>
+                )}
+              </>
+            )}
+          </div>
 
           {/* Wishlist Heart Toggle */}
           <button
@@ -151,7 +161,7 @@ export default function ProductCard({ product }) {
               }
               toggleWishlist(product);
             }}
-            className={`absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center transition-all duration-300 shadow-md active:scale-90 cursor-pointer hover:bg-white ${
+            className={`absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center transition-all duration-300 shadow-md active:scale-90 cursor-pointer hover:bg-white z-20 ${
               isWishlisted ? 'text-pink-600 scale-110 ring-2 ring-pink-200' : 'text-slate-400 hover:text-pink-500'
             }`}
             title="Add to Wishlist"
@@ -162,7 +172,7 @@ export default function ProductCard({ product }) {
           {/* Trending indicator on image bottom-right — ONLY when admin marks product.isTrending as true */}
           {Boolean(product.isTrending) && (
             <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 px-2.5 py-1 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center gap-1 shadow-lg animate-pulse tracking-wide z-10">
-              <Flame className="w-3 h-3 fill-white" /> 🔥 Trending
+              <Flame className="w-3 h-3 fill-white" /> Trending
             </div>
           )}
 

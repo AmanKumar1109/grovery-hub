@@ -27,7 +27,8 @@ function transformDoc(d) {
     isHalal: data.isHalal !== undefined ? data.isHalal : true,
     inStock: data.inStock !== false,
     isVisible: data.isVisible !== false,
-    isTrending: data.isTrending === true,
+    isTrending: data.isTrending === true || data.isTrending === 'true' || data.badge === 'Trending',
+    isBogo: data.isBogo === true || data.isBogo === 'true' || data.badge === 'Buy 1 Get 1' || data.isBOGO === true,
     image: data.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&auto=format&fit=crop&q=80'
   };
 }
@@ -207,8 +208,10 @@ export function CartProvider({ children }) {
   const categoriesList = useMemo(() => {
     const catCounts = {};
     let trendingCount = 0;
+    let bogoCount = 0;
     products.forEach(p => {
       if (p.isTrending) trendingCount++;
+      if (p.isBogo) bogoCount++;
       if (p.category) {
         catCounts[p.category] = (catCounts[p.category] || 0) + 1;
       }
@@ -218,7 +221,8 @@ export function CartProvider({ children }) {
 
     const list = [
       { id: 'all', name: 'All Products', count: `${products.length} Items` },
-      { id: 'Trending', name: '🔥 Trending', count: `${trendingCount} Item${trendingCount === 1 ? '' : 's'}` }
+      { id: 'Trending', name: 'Trending', count: `${trendingCount} Item${trendingCount === 1 ? '' : 's'}` },
+      { id: 'BOGO', name: 'Buy 1 Get 1', count: `${bogoCount} Item${bogoCount === 1 ? '' : 's'}` }
     ];
 
     allCategoryNames.forEach(catName => {

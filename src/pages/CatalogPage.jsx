@@ -31,8 +31,10 @@ export default function CatalogPage() {
       const matchesCategory =
         selectedCategory === 'all'
           ? true
-          : selectedCategory === 'Trending' || selectedCategory === '🔥 Trending'
+          : selectedCategory === 'Trending'
           ? !!prod.isTrending
+          : selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1'
+          ? !!prod.isBogo
           : prod.category === selectedCategory;
       const matchesSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesDiscount = !onlyDiscounted || prod.originalPrice > prod.price;

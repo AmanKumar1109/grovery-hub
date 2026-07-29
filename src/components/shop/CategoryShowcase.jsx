@@ -1,10 +1,11 @@
 import React from 'react';
-import { Sparkles, Carrot, Apple, Milk, Croissant, Coffee, Cookie, Drumstick, Package, ArrowRight, Flame } from 'lucide-react';
+import { Sparkles, Carrot, Apple, Milk, Croissant, Coffee, Cookie, Drumstick, Package, ArrowRight, Flame, Gift } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 
 const getCategoryIcon = (categoryName) => {
   const lower = (categoryName || '').toLowerCase();
+  if (lower.includes('bogo') || lower.includes('buy')) return Gift;
   if (lower.includes('trend')) return Flame;
   if (lower === 'all' || lower.includes('all')) return Sparkles;
   if (lower.includes('veg')) return Carrot;
@@ -36,7 +37,7 @@ export default function CategoryShowcase({ selectedCategory, onSelectCategory })
         <div>
           <span className="text-xs font-black text-amber-500 uppercase tracking-widest">Explore Categories</span>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-0.5">
-            Shop Fresh Organic Produce 🥦
+            Shop Fresh Organic Produce
           </h2>
         </div>
 
