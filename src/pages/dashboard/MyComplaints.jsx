@@ -6,7 +6,7 @@ import { MessageSquareWarning, Clock, CheckCircle2, ChevronRight, MessageCircle 
 import { Link } from 'react-router-dom';
 
 export default function MyComplaints() {
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
   const [complaints, setComplaints] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -14,14 +14,37 @@ export default function MyComplaints() {
     const fetchComplaints = async () => {
       if (!currentUser) return;
       try {
-        const q = query(
+        const docsMap = new Map();
+
+        // Fetch by userId
+        const qUser = query(
           collection(db, 'complaints'),
-          where('userId', '==', currentUser.uid),
-          orderBy('createdAt', 'desc')
+          where('userId', '==', currentUser.uid)
         );
-        const snap = await getDocs(q);
-        const fetched = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setComplaints(fetched);
+        const snapUser = await getDocs(qUser);
+        snapUser.docs.forEach(doc => {
+          docsMap.set(doc.id, { id: doc.id, ...doc.data() });
+        });
+
+        // Also fetch by phone number (for older complaints before userId was added)
+        if (userProfile?.phone) {
+          const qPhone = query(
+            collection(db, 'complaints'),
+            where('phone', '==', userProfile.phone)
+          );
+          const snapPhone = await getDocs(qPhone);
+          snapPhone.docs.forEach(doc => {
+            docsMap.set(doc.id, { id: doc.id, ...doc.data() });
+          });
+        }
+
+        const allDocs = Array.from(docsMap.values());
+
+        setComplaints(allDocs.sort((a, b) => {
+          const timeA = a.createdAt?.toDate?.()?.getTime() || 0;
+          const timeB = b.createdAt?.toDate?.()?.getTime() || 0;
+          return timeB - timeA;
+        }));
       } catch (err) {
         console.error("Error fetching complaints:", err);
       } finally {
@@ -29,7 +52,7 @@ export default function MyComplaints() {
       }
     };
     fetchComplaints();
-  }, [currentUser]);
+  }, [currentUser, userProfile]);
 
   if (isLoading) {
     return (
