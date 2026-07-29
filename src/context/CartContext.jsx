@@ -301,6 +301,8 @@ export function CartProvider({ children }) {
 
   const clearCart = () => {
     setCartItems([]);
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
     try {
       localStorage.removeItem('grocery_cart_items');
     } catch (e) {
@@ -310,6 +312,100 @@ export function CartProvider({ children }) {
 
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const cartTotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
+  // Global Promo Logic
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [promoError, setPromoError] = useState('');
+  const [discountAmount, setDiscountAmount] = useState(0);
+
+  // Fetch Coupons on Mount
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'coupons'));
+        const coupons = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setAvailableCoupons(coupons);
+      } catch (err) {
+        console.warn("Failed to fetch coupons:", err);
+      }
+    };
+    fetchCoupons();
+  }, []);
+
+  const handleApplyPromo = (codeToApply) => {
+    setPromoError('');
+    const code = (codeToApply || promoCodeInput).trim().toUpperCase();
+    if (!code) {
+      setPromoError('Please enter a valid code');
+      return;
+    }
+
+    const coupon = availableCoupons.find(c => c.code === code);
+    if (!coupon) {
+      setPromoError('Invalid Promo Code');
+      return;
+    }
+
+    if (!coupon.isActive) {
+      setPromoError('This Promo Code is currently inactive');
+      return;
+    }
+
+    if (cartTotal < coupon.minOrderValue) {
+      setPromoError(`Minimum order value for this code is ₹${coupon.minOrderValue}`);
+      return;
+    }
+
+    const expiry = new Date(coupon.validUntil);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Ignore time part for expiry check
+    if (expiry < today) {
+      setPromoError('This Promo Code has expired');
+      return;
+    }
+
+    setAppliedCoupon(coupon);
+    setPromoCodeInput('');
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+    setPromoError('');
+  };
+
+  // Recalculate discount whenever cartTotal or appliedCoupon changes
+  useEffect(() => {
+    if (!appliedCoupon) {
+      setDiscountAmount(0);
+      return;
+    }
+    
+    // If cart falls below min value, remove coupon
+    if (cartTotal < appliedCoupon.minOrderValue) {
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
+      showToast(`Promo Code removed. Minimum order value is ₹${appliedCoupon.minOrderValue}`);
+      return;
+    }
+
+    let discount = 0;
+    if (appliedCoupon.discountType === 'flat') {
+      discount = parseFloat(appliedCoupon.discountValue) || 0;
+    } else if (appliedCoupon.discountType === 'percentage') {
+      const pct = parseFloat(appliedCoupon.discountValue) || 0;
+      discount = cartTotal * (pct / 100);
+      const maxDiscount = parseFloat(appliedCoupon.maxDiscount) || 0;
+      if (maxDiscount > 0 && discount > maxDiscount) {
+        discount = maxDiscount;
+      }
+    }
+    setDiscountAmount(discount);
+  }, [cartTotal, appliedCoupon]);
+
+  const finalTotal = cartTotal - discountAmount;
 
   return (
     <CartContext.Provider
@@ -331,6 +427,17 @@ export function CartProvider({ children }) {
         clearCart,
         showToast,
         toastMessage,
+        availableCoupons,
+        promoCodeInput,
+        setPromoCodeInput,
+        appliedCoupon,
+        setAppliedCoupon,
+        promoError,
+        setPromoError,
+        discountAmount,
+        finalTotal,
+        handleApplyPromo,
+        handleRemovePromo
       }}
     >
       {children}

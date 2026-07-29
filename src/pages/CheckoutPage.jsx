@@ -8,34 +8,16 @@ import { db } from '../firebase';
 
 export default function CheckoutPage() {
   const { currentUser, userProfile, addAddress } = useAuth();
-  const { cartItems, cartTotal, clearCart, showToast } = useCart();
+  const { 
+    cartItems, cartTotal, clearCart, showToast,
+    availableCoupons, promoCodeInput, setPromoCodeInput,
+    appliedCoupon, promoError, setPromoError,
+    discountAmount, finalTotal, handleApplyPromo, handleRemovePromo 
+  } = useCart();
   const navigate = useNavigate();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isOrderConfirmed, setIsOrderConfirmed] = useState(false);
-
-  // Promo Code States
-  const [availableCoupons, setAvailableCoupons] = useState([]);
-  const [promoCodeInput, setPromoCodeInput] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [promoError, setPromoError] = useState('');
-  const [discountAmount, setDiscountAmount] = useState(0);
-
-  // Fetch Coupons on Mount
-  useEffect(() => {
-    const fetchCoupons = async () => {
-      try {
-        const snap = await getDocs(collection(db, 'coupons'));
-        const coupons = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setAvailableCoupons(coupons);
-      } catch (err) {
-        console.error("Failed to fetch coupons:", err);
-      }
-    };
-    fetchCoupons();
-  }, []);
-
-  const finalTotal = cartTotal - discountAmount;
 
   const [addressForm, setAddressForm] = useState({
     street: '',
@@ -90,61 +72,6 @@ export default function CheckoutPage() {
       setActiveAddressId(newId);
       showToast('Address saved successfully!');
     }
-  };
-
-  const handleApplyPromo = (codeToApply) => {
-    setPromoError('');
-    const code = (codeToApply || promoCodeInput).trim().toUpperCase();
-    if (!code) {
-      setPromoError('Please enter a valid code');
-      return;
-    }
-
-    const coupon = availableCoupons.find(c => c.code === code);
-    if (!coupon) {
-      setPromoError('Invalid Promo Code');
-      return;
-    }
-
-    if (!coupon.isActive) {
-      setPromoError('This Promo Code is currently inactive');
-      return;
-    }
-
-    if (cartTotal < coupon.minOrderValue) {
-      setPromoError(`Minimum order value for this code is ₹${coupon.minOrderValue}`);
-      return;
-    }
-
-    const expiry = new Date(coupon.validUntil);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Ignore time part for expiry check
-    if (expiry < today) {
-      setPromoError('This Promo Code has expired');
-      return;
-    }
-
-    let discount = 0;
-    if (coupon.discountType === 'flat') {
-      discount = parseFloat(coupon.discountValue) || 0;
-    } else if (coupon.discountType === 'percentage') {
-      const pct = parseFloat(coupon.discountValue) || 0;
-      discount = cartTotal * (pct / 100);
-      const maxDiscount = parseFloat(coupon.maxDiscount) || 0;
-      if (maxDiscount > 0 && discount > maxDiscount) {
-        discount = maxDiscount;
-      }
-    }
-
-    setDiscountAmount(discount);
-    setAppliedCoupon(coupon);
-    setPromoCodeInput('');
-  };
-
-  const handleRemovePromo = () => {
-    setAppliedCoupon(null);
-    setDiscountAmount(0);
-    setPromoError('');
   };
 
   const handlePlaceOrder = async () => {

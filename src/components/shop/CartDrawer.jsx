@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, CheckCircle2, Tag } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 export default function CartDrawer() {
-  const { isCartOpen, setIsCartOpen, cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, showToast } = useCart();
+  const { 
+    isCartOpen, setIsCartOpen, cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, showToast,
+    availableCoupons, promoCodeInput, setPromoCodeInput, appliedCoupon, promoError, setPromoError,
+    discountAmount, finalTotal, handleApplyPromo, handleRemovePromo 
+  } = useCart();
   const { currentUser, userProfile } = useAuth();
   const navigate = useNavigate();
 
@@ -127,6 +131,59 @@ export default function CartDrawer() {
         {/* Footer Checkout Summary */}
         {cartItems.length > 0 && (
           <div className="p-5 border-t border-slate-100 bg-white space-y-3 shadow-lg">
+            
+            {/* Promo Code Section */}
+            <div className="pb-2 border-b border-slate-100">
+              {!appliedCoupon ? (
+                <div>
+                  <h3 className="text-[11px] font-extrabold text-slate-900 mb-2 flex items-center gap-1"><Tag className="w-3.5 h-3.5 text-emerald-500"/> Apply Promo Code</h3>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      value={promoCodeInput}
+                      onChange={e => {
+                        setPromoCodeInput(e.target.value.toUpperCase());
+                        setPromoError('');
+                      }}
+                      placeholder="Enter code" 
+                      className="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 uppercase"
+                    />
+                    <button 
+                      onClick={() => handleApplyPromo()}
+                      className="px-3 py-1.5 bg-slate-900 text-white font-bold text-xs rounded-xl hover:bg-slate-800 transition-colors"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                  {promoError && <p className="text-[10px] font-bold text-rose-500 mt-1">{promoError}</p>}
+                  
+                  {availableCoupons.filter(c => c.isActive).length > 0 && (
+                    <div className="mt-2 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                      {availableCoupons.filter(c => c.isActive).map(c => (
+                        <div 
+                          key={c.id} 
+                          onClick={() => handleApplyPromo(c.code)}
+                          className="shrink-0 border border-emerald-200 bg-emerald-50/50 rounded-md px-2 py-1 cursor-pointer hover:bg-emerald-50 transition-colors"
+                        >
+                          <p className="text-[10px] font-black text-emerald-700">{c.code}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold text-emerald-600 flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Code Applied</p>
+                    <p className="text-xs font-black text-slate-900">{appliedCoupon.code}</p>
+                  </div>
+                  <button onClick={handleRemovePromo} className="text-slate-400 hover:text-rose-500 p-1">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-1.5 text-xs font-bold text-slate-600">
               <div className="flex justify-between">
                 <span>Subtotal</span>
@@ -136,9 +193,15 @@ export default function CartDrawer() {
                 <span>Delivery Charge</span>
                 <span className="text-emerald-700 font-extrabold">FREE 🌿</span>
               </div>
+              {appliedCoupon && (
+                <div className="flex justify-between text-emerald-600">
+                  <span>Discount ({appliedCoupon.code})</span>
+                  <span className="font-extrabold">-₹{discountAmount}</span>
+                </div>
+              )}
               <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-100">
                 <span>Total Amount</span>
-                <span className="text-emerald-700">₹{cartTotal}</span>
+                <span className="text-emerald-700">₹{finalTotal}</span>
               </div>
             </div>
 
