@@ -5,8 +5,11 @@ import TopHeader from '../components/header/TopHeader';
 import Footer from '../components/shop/Footer';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useAuth } from '../context/AuthContext';
 
 export default function ComplaintPage() {
+  const { currentUser } = useAuth();
+  
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -30,6 +33,7 @@ export default function ComplaintPage() {
     try {
       await addDoc(collection(db, 'complaints'), {
         ...formData,
+        userId: currentUser ? currentUser.uid : 'guest',
         createdAt: serverTimestamp(),
         status: 'pending'
       });

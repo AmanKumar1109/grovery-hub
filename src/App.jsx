@@ -14,9 +14,11 @@ import TrackOrder from './pages/dashboard/TrackOrder';
 import Wishlist from './pages/dashboard/Wishlist';
 import SavedAddresses from './pages/dashboard/SavedAddresses';
 import Profile from './pages/dashboard/Profile';
+import Settings from './pages/dashboard/Settings';
 import InvoicePage from './pages/dashboard/InvoicePage';
 import HelpSupport from './pages/dashboard/HelpSupport';
 import ComplaintPage from './pages/ComplaintPage';
+import MyComplaints from './pages/dashboard/MyComplaints';
 import FloatingWhatsApp from './components/ui/FloatingWhatsApp';
 
 function App() {
@@ -43,6 +45,7 @@ function App() {
             <Route path="addresses" element={<SavedAddresses />} />
             <Route path="profile" element={<Profile />} />
             <Route path="settings" element={<Navigate to="/dashboard/help" replace />} />
+            <Route path="complaints" element={<MyComplaints />} />
             <Route path="invoice/:id" element={<InvoicePage />} />
           </Route>
 
