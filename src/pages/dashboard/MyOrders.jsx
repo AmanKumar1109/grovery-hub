@@ -16,6 +16,8 @@ export default function MyOrders() {
   const [loading, setLoading] = useState(true);
   const [cancellingOrderId, setCancellingOrderId] = useState(null);
   const [orderToCancel, setOrderToCancel] = useState(null);
+  const [userCancelReason, setUserCancelReason] = useState('Ordered by mistake');
+  const [userCustomCancelReason, setUserCustomCancelReason] = useState('');
   const [currentTime, setCurrentTime] = useState(Date.now());
   const containerRef = useRef(null);
   const { currentUser } = useAuth();
@@ -64,8 +66,12 @@ export default function MyOrders() {
   const handleCancelOrder = async (orderId) => {
     setCancellingOrderId(orderId);
     try {
+      const finalReason = userCancelReason === 'Other' ? (userCustomCancelReason.trim() || 'No reason provided') : userCancelReason;
       const orderRef = doc(db, 'orders', orderId);
-      await updateDoc(orderRef, { status: 'cancelled' });
+      await updateDoc(orderRef, { 
+        status: 'cancelled',
+        cancelReason: `Cancelled by Customer: ${finalReason}`
+      });
       // No need to update local state since onSnapshot will handle it automatically
     } catch (error) {
       console.error("Error cancelling order:", error);
@@ -73,6 +79,8 @@ export default function MyOrders() {
     } finally {
       setCancellingOrderId(null);
       setOrderToCancel(null);
+      setUserCancelReason('Ordered by mistake');
+      setUserCustomCancelReason('');
     }
   };
 
@@ -370,11 +378,41 @@ export default function MyOrders() {
             <p className="text-sm font-semibold text-slate-500 text-center mb-6 px-2">
               Are you sure you want to cancel this order? This action cannot be undone.
             </p>
+
+            <div className="mb-6 space-y-3">
+              <label className="block text-xs font-bold text-slate-700">Why are you cancelling?</label>
+              <select 
+                value={userCancelReason}
+                onChange={(e) => setUserCancelReason(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-amber-500 outline-none"
+              >
+                <option value="Ordered by mistake">Ordered by mistake</option>
+                <option value="Found a better price elsewhere">Found a better price elsewhere</option>
+                <option value="Delivery time is too long">Delivery time is too long</option>
+                <option value="Forgot to apply a coupon">Forgot to apply a coupon</option>
+                <option value="Change of mind">Change of mind</option>
+                <option value="Other">Other</option>
+              </select>
+
+              {userCancelReason === 'Other' && (
+                <textarea 
+                  placeholder="Please specify your reason..."
+                  value={userCustomCancelReason}
+                  onChange={(e) => setUserCustomCancelReason(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 text-sm font-semibold focus:ring-2 focus:ring-amber-500 outline-none resize-none h-20"
+                ></textarea>
+              )}
+            </div>
+
             <div className="flex gap-3">
               <button 
-                onClick={() => setOrderToCancel(null)}
+                onClick={() => {
+                  setOrderToCancel(null);
+                  setUserCancelReason('Ordered by mistake');
+                  setUserCustomCancelReason('');
+                }}
                 disabled={cancellingOrderId}
-                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm rounded-xl transition-colors disabled:opacity-50"
+                className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-sm rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
               >
                 No, Keep it
               </button>
