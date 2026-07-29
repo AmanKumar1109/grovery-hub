@@ -12,9 +12,15 @@ export default function OrderNotificationListener({ userId }) {
   const [notification, setNotification] = useState(null);
   const [allNotifications, setAllNotifications] = useState([]);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [lastSeenTime, setLastSeenTime] = useState(
+    parseInt(localStorage.getItem('notificationLastSeen')) || 0
+  );
   const [portalTarget, setPortalTarget] = useState(null);
   const panelRef = useRef(null);
+
+  const unreadCount = allNotifications.filter(
+    (n) => new Date(n.timestamp).getTime() > lastSeenTime
+  ).length;
 
   // robust portal target locator
   useEffect(() => {
@@ -108,7 +114,6 @@ export default function OrderNotificationListener({ userId }) {
               
               setNotification(orderData.greetingMessage);
               playPingSound();
-              setUnreadCount(prev => prev + 1);
 
               setLastNotificationTime(orderData.greetingTimestamp);
               localStorage.setItem('lastGreetingTimestamp', orderData.greetingTimestamp);
@@ -127,7 +132,9 @@ export default function OrderNotificationListener({ userId }) {
 
   const handleOpenPanel = () => {
     setIsPanelOpen(true);
-    setUnreadCount(0);
+    const now = Date.now();
+    setLastSeenTime(now);
+    localStorage.setItem('notificationLastSeen', now.toString());
   };
 
   const formatTime = (ts) => {

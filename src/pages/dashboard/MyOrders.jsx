@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Package, Clock, CheckCircle2, XCircle, Search, Loader2 } from 'lucide-react';
+import { Package, Clock, CheckCircle2, XCircle, Search, Loader2, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import EmptyState from '../../components/dashboard/EmptyState';
 import OrderSkeleton from '../../components/dashboard/OrderSkeleton';
@@ -273,7 +273,19 @@ export default function MyOrders() {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 mt-5 pt-5 border-t border-slate-100/80">
+                {isCancelled && order.cancelReason && (
+                  <div className="mb-2 mt-4 p-3 rounded-2xl bg-slate-900/5 border border-slate-900/10 flex items-start gap-3">
+                    <div className="p-1.5 bg-red-100 text-red-600 rounded-lg shrink-0 mt-0.5">
+                      <AlertCircle className="w-4 h-4 stroke-[2.5]" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-extrabold text-slate-900">Cancellation Reason</p>
+                      <p className="text-xs font-bold text-slate-500 mt-0.5 leading-relaxed">{order.cancelReason}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap items-center gap-3 mt-4 pt-5 border-t border-slate-100/80">
                   {!isCancelled && order.status !== 'Delivered' && (
                     <>
                       <Link 

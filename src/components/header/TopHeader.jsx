@@ -141,7 +141,7 @@ export default function TopHeader() {
       {/* Right: Action Items & User Profile / Login */}
       <div className="flex items-center gap-2 sm:gap-4">
         {/* Notification Bell Portal Target */}
-        <div id="notification-bell-portal-target"></div>
+        <div id="notification-bell-portal-target" className="flex-shrink-0"></div>
 
         {/* Shopping Cart Button */}
         <button
@@ -170,7 +170,7 @@ export default function TopHeader() {
 
         {/* Conditional Render: User Account Profile Dropdown IF LOGGED IN, else Login/Sign Up Button */}
         {currentUser ? (
-          <div className="relative" ref={dropdownRef}>
+          <div className="relative flex-shrink-0" ref={dropdownRef}>
             <button
               type="button"
               onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -179,7 +179,7 @@ export default function TopHeader() {
               <img
                 src={userAvatar}
                 alt={userName}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-amber-400 shadow-sm group-hover:border-amber-500 transition-colors"
+                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-amber-400 shadow-sm group-hover:border-amber-500 transition-colors flex-shrink-0"
               />
               <div className="hidden md:flex flex-col text-left">
                 <span className="text-[11px] text-gray-400 font-medium leading-none">
