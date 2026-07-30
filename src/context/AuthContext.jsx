@@ -6,6 +6,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -79,7 +81,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Firebase Sign Up with Email and Password
-  const signup = async (email, password, fullName) => {
+  const signup = async (email, password, fullName, phone = '') => {
     const res = await createUserWithEmailAndPassword(auth, email, password);
     if (fullName && res.user) {
       await updateProfile(res.user, { displayName: fullName });
@@ -87,8 +89,8 @@ export function AuthProvider({ children }) {
     const initialData = {
       fullName: fullName || 'Grocery Member',
       email,
-      phone: '',
-      profileCompleted: false,
+      phone: phone,
+      profileCompleted: !!phone,
       addresses: [],
       primaryAddressId: null,
       wishlist: [],
@@ -115,14 +117,22 @@ export function AuthProvider({ children }) {
     setUserProfile(null);
   };
 
+  // Firebase Google Login
+  const loginWithGoogle = async () => {
+    const provider = new GoogleAuthProvider();
+    const res = await signInWithPopup(auth, provider);
+    return res.user;
+  };
+
   // Complete Profile details (Name, Phone only)
   const completeProfile = async (updatedData) => {
     if (!currentUser) return;
+    const newPhone = updatedData.phone ?? userProfile?.phone ?? '';
     const newProfile = {
       ...userProfile,
       fullName: updatedData.fullName || userProfile?.fullName || currentUser.displayName || 'Grocery Member',
-      phone: updatedData.phone ?? userProfile?.phone ?? '',
-      profileCompleted: true,
+      phone: newPhone,
+      profileCompleted: !!newPhone,
     };
 
     if (updatedData.fullName && currentUser.displayName !== updatedData.fullName) {
@@ -252,6 +262,7 @@ export function AuthProvider({ children }) {
         loading,
         signup,
         login,
+        loginWithGoogle,
         logout,
         completeProfile,
         addAddress,

@@ -5,6 +5,7 @@ import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
 import CartDrawer from '../shop/CartDrawer';
 import Footer from '../shop/Footer';
+import ProfileCompletionModal from './ProfileCompletionModal';
 
 export default function DashboardLayout() {
   return (
@@ -41,6 +42,9 @@ export default function DashboardLayout() {
       <div className="print:hidden">
         <Footer />
       </div>
+
+      {/* Profile Completion Overlay */}
+      <ProfileCompletionModal />
     </div>
   );
 }

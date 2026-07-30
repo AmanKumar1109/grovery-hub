@@ -196,7 +196,8 @@ export default function Footer() {
               <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">15-Min Delivery Policy</a></li>
               <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Quality Standards</a></li>
               <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Refund & Returns</a></li>
-              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Terms of Service</a></li>
+              <li><Link to="/terms-of-service" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Terms of Service</Link></li>
+              <li><Link to="/privacy-policy" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Privacy Policy</Link></li>
             </ul>
           </div>
         </div>

@@ -18,6 +18,8 @@ import Settings from './pages/dashboard/Settings';
 import InvoicePage from './pages/dashboard/InvoicePage';
 import HelpSupport from './pages/dashboard/HelpSupport';
 import ComplaintPage from './pages/ComplaintPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
 import MyComplaints from './pages/dashboard/MyComplaints';
 import FloatingWhatsApp from './components/ui/FloatingWhatsApp';
 import OrderNotificationListener from './components/ui/OrderNotificationListener';
@@ -39,6 +41,8 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/complaint" element={<ComplaintPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
           
           {/* Dashboard Nested Routes */}
           <Route path="/dashboard" element={<DashboardLayout />}>
