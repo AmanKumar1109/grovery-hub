@@ -31,132 +31,239 @@ export default function InvoicePage() {
   if (loading) return <div className="p-8 text-center font-bold text-slate-500">Loading Invoice...</div>;
   if (!order) return <div className="p-8 text-center font-black text-red-500">Invoice not found!</div>;
 
-  const formatDate = (timestamp) => {
+  const formatDateShort = (timestamp) => {
     if (!timestamp) return 'N/A';
     let date = timestamp;
     if (timestamp.toDate) date = timestamp.toDate();
     else if (typeof timestamp === 'number') date = new Date(timestamp);
     else if (typeof timestamp === 'string') date = new Date(timestamp);
-    return new Intl.DateTimeFormat('en-IN', {
-      day: 'numeric', month: 'long', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    }).format(date);
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
   };
 
   const handlePrint = () => {
     window.print();
   };
 
+  const numberToWords = (num) => {
+    if (num === 0) return 'Zero Only';
+    const a = ['','One ','Two ','Three ','Four ','Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+    const b = ['', '','Twenty ','Thirty ','Forty ','Fifty ','Sixty ','Seventy ','Eighty ','Ninety '];
+    const n = ('000000000' + Math.floor(num)).slice(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+    if (!n) return '';
+    let str = '';
+    str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + a[n[1][1]]) + 'Crore ' : '';
+    str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + a[n[2][1]]) + 'Lakh ' : '';
+    str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + a[n[3][1]]) + 'Thousand ' : '';
+    str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + a[n[4][1]]) + 'Hundred ' : '';
+    str += (n[5] != 0) ? (a[Number(n[5])] || b[n[5][0]] + a[n[5][1]]) : '';
+    return str.trim() + ' Only';
+  };
+
+  const getStatusColor = (status) => {
+    const s = (status || '').toLowerCase();
+    if (s === 'delivered') return 'bg-emerald-500';
+    if (s === 'cancelled') return 'bg-red-500';
+    return 'bg-amber-500'; // processing / paid / etc
+  };
+
   const subtotal = parseFloat(order.totalAmount || order.amount || 0);
   const deliveryFee = parseFloat(order.deliveryFee || 0);
   const total = subtotal + deliveryFee;
+  
+  let totalQty = 0;
+  let totalMrp = 0;
+  
+  order.items?.forEach(item => {
+    const qty = parseFloat(item.quantity || 1);
+    totalQty += qty;
+    const mrp = parseFloat(item.mrp || item.price || 0);
+    totalMrp += (mrp * qty);
+  });
+
+  const totalSavings = totalMrp - subtotal;
+  const customerName = order.shippingAddress?.fullName || userProfile?.fullName || 'Cash';
+  const customerPhone = order.shippingAddress?.phone || '';
 
   return (
-    <div className="max-w-4xl mx-auto p-4 sm:p-8">
-      {/* Hide on print */}
-      <div className="flex justify-between items-center mb-8 print:hidden">
-        <Link to="/dashboard/orders" className="flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors">
+    <div className="max-w-6xl mx-auto p-4 sm:p-8 bg-slate-50 min-h-screen print:bg-white print:p-0 print:m-0">
+      <style>
+        {`
+          @media print {
+            @page {
+              margin: 0;
+              size: 80mm auto;
+            }
+            body {
+              background: white;
+              margin: 0;
+              padding: 0;
+              color: black;
+            }
+            .thermal-print-container {
+              width: 80mm !important;
+              max-width: 80mm !important;
+              margin: 0 !important;
+              padding: 4mm !important;
+              box-shadow: none !important;
+              font-family: 'Courier New', Courier, monospace !important;
+            }
+          }
+        `}
+      </style>
+      
+      {/* Hide on print - Top Nav */}
+      <div className="mb-6 print:hidden">
+        <Link to="/dashboard/orders" className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-800 transition-colors font-semibold">
           <ArrowLeft className="w-5 h-5" />
-          <span className="font-bold text-sm">Back to Orders</span>
+          <span>Back to Orders</span>
         </Link>
-        <button 
-          onClick={handlePrint}
-          className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full font-bold text-sm shadow-md transition-colors"
-        >
-          <Printer className="w-4 h-4" />
-          <span>Print / Save PDF</span>
-        </button>
       </div>
 
-      {/* Invoice Document */}
-      <div className="bg-white p-8 sm:p-12 rounded-3xl shadow-lg border border-slate-200 print:shadow-none print:border-none print:p-0">
+      <div className="flex flex-col md:flex-row gap-8 justify-center items-start print:m-0 print:p-0 print:gap-0 print:block">
         
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start mb-12 border-b border-slate-200 pb-8 gap-6">
-          <div>
-            <h1 className="text-3xl font-black text-emerald-600 tracking-tight">The Grocery Hub</h1>
-            <div className="text-sm font-semibold text-slate-500 mt-2">
-              <p>Dadu complex, Near Shitla Mandir,</p>
-              <p>Baharagora, 832101</p>
-              <p className="mt-1">Phone: 6207462800</p>
-              <p>Email: thegroceryhub2025@gmail.com</p>
+        {/* Left/Main Column: Thermal Receipt */}
+        <div className="thermal-print-container w-full max-w-[380px] mx-auto bg-white shadow-xl p-6 font-mono text-[12px] leading-tight text-black print:shadow-none print:w-full print:max-w-full print:p-2">
+          
+          {/* Header */}
+          <div className="text-center mb-2">
+            <h1 className="text-xl font-bold uppercase mb-1">The Grocery Hub</h1>
+            <p>DADU COMPLEX, NEAR SHITLA MANDIR</p>
+            <p>BAHARAGORA, JHARKHAND-832101</p>
+            <p>MOB: 6207462800, 6203341481</p>
+            <p>GSTIN: 20AAYFT4502E1ZC</p>
+          </div>
+          
+          <div className="border-t border-b border-dashed border-black py-1 text-center font-bold mb-2">
+            TAX INVOICE
+          </div>
+          
+          {/* Info */}
+          <div className="mb-2 space-y-1">
+            <div className="flex justify-between">
+              <span>Inv No: {order.id?.slice(0, 8)}</span>
+              <span>Date: {formatDateShort(order.createdAt)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Name: {customerName?.slice(0, 15)}</span>
+              <span>Mob: {customerPhone}</span>
             </div>
           </div>
-          <div className="text-left sm:text-right">
-            <h2 className="text-4xl font-black text-slate-200 uppercase tracking-widest mb-2">INVOICE</h2>
-            <p className="text-sm font-bold text-slate-800">Order ID: #{order.id}</p>
-            <p className="text-sm font-semibold text-slate-500">Date: {formatDate(order.createdAt)}</p>
-            <span className={`inline-block mt-3 px-3 py-1 text-xs font-bold rounded-full ${order.status?.toLowerCase() === 'cancelled' ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'}`}>
-              {order.status === 'Order Received' ? 'Processing' : (order.status || 'Paid')}
-            </span>
-          </div>
-        </div>
-
-        {/* Customer Details */}
-        <div className="mb-12">
-          <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-4">Billed To:</h3>
-          <p className="text-base font-bold text-slate-800">{order.shippingAddress?.fullName || userProfile?.fullName || 'Customer'}</p>
-          {order.shippingAddress && (
-            <div className="text-sm font-medium text-slate-600 mt-1 max-w-sm">
-              <p>{order.shippingAddress.street}</p>
-              <p>{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.pincode}</p>
-              <p className="mt-1">Phone: {order.shippingAddress.phone}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Items Table */}
-        <div className="mb-12 overflow-x-auto">
-          <table className="w-full text-left min-w-[500px]">
+          
+          <div className="border-t border-black border-dashed mb-2"></div>
+          
+          {/* Items Table */}
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b-2 border-slate-200">
-                <th className="py-4 text-xs font-black text-slate-500 uppercase tracking-wider">Item Description</th>
-                <th className="py-4 text-xs font-black text-slate-500 uppercase tracking-wider text-center">Qty</th>
-                <th className="py-4 text-xs font-black text-slate-500 uppercase tracking-wider text-right">Price</th>
-                <th className="py-4 text-xs font-black text-slate-500 uppercase tracking-wider text-right">Total</th>
+              <tr className="border-b border-black border-dashed">
+                <th className="py-1 font-normal w-1/2">Item</th>
+                <th className="py-1 font-normal text-center w-1/6">Qty</th>
+                <th className="py-1 font-normal text-right w-1/6">Rate</th>
+                <th className="py-1 font-normal text-right w-1/6">Amt</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {order.items?.map((item, idx) => (
-                <tr key={idx}>
-                  <td className="py-4 text-sm font-bold text-slate-800">
-                    {item.name}
-                    {item.weight && <span className="block text-xs font-medium text-slate-400 mt-0.5">{item.weight}</span>}
-                  </td>
-                  <td className="py-4 text-sm font-semibold text-slate-600 text-center">{item.quantity || 1}</td>
-                  <td className="py-4 text-sm font-semibold text-slate-600 text-right">₹{parseFloat(item.price).toFixed(2)}</td>
-                  <td className="py-4 text-sm font-bold text-slate-900 text-right">₹{(parseFloat(item.price) * (item.quantity || 1)).toFixed(2)}</td>
-                </tr>
-              ))}
+            <tbody>
+              {order.items?.map((item, idx) => {
+                const qty = parseFloat(item.quantity || 1);
+                const price = parseFloat(item.price || 0);
+                const amt = price * qty;
+                return (
+                  <tr key={idx} className="align-top">
+                    <td className="py-1 pr-1">
+                      {idx + 1}. {item.name} {item.weight ? `(${item.weight})` : ''}
+                    </td>
+                    <td className="py-1 text-center">{qty}</td>
+                    <td className="py-1 text-right">{price.toFixed(2)}</td>
+                    <td className="py-1 text-right">{amt.toFixed(2)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </div>
-
-        {/* Totals */}
-        <div className="flex justify-end">
-          <div className="w-full sm:w-1/2 md:w-1/3">
-            <div className="flex justify-between py-2 text-sm font-semibold text-slate-600">
-              <span>Subtotal</span>
-              <span>₹{subtotal.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between py-2 text-sm font-semibold text-slate-600 border-b border-slate-200">
-              <span>Delivery Fee</span>
-              <span>{deliveryFee === 0 ? 'Free' : `₹${deliveryFee.toFixed(2)}`}</span>
-            </div>
-            <div className="flex justify-between py-4 text-lg font-black text-emerald-600">
-              <span>Total Amount</span>
-              <span>₹{total.toFixed(2)}</span>
+          
+          <div className="border-t border-black border-dashed mt-2 py-2">
+            <div className="flex justify-between font-bold">
+              <span>Total Items: {totalQty.toFixed(2)}</span>
+              <div className="flex items-center gap-2">
+                <span>Total:</span>
+                <span className="text-right">{subtotal.toFixed(2)}</span>
+              </div>
             </div>
           </div>
+          
+          {/* Tax & Summary */}
+          <div className="border-t border-black border-dashed py-2 space-y-1">
+            <div className="flex justify-between">
+              <span>Total MRP</span>
+              <span>: {totalMrp.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Total Savings</span>
+              <span>: {totalSavings.toFixed(2)}</span>
+            </div>
+            {deliveryFee > 0 && (
+              <div className="flex justify-between">
+                <span>Delivery Fee</span>
+                <span>: {deliveryFee.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between font-bold text-[14px] mt-1">
+              <span>NET PAYABLE</span>
+              <span>: Rs. {total.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <div className="border-t border-black border-dashed mt-2 pt-2 text-center text-[10px]">
+            <p>Rupees {numberToWords(total)}</p>
+          </div>
+
+          <div className="border-t border-black border-dashed mt-2 pt-2 text-center">
+            <p className="font-bold">Thank You, Visit Again!</p>
+          </div>
+          
         </div>
 
-        {/* Footer */}
-        <div className="mt-16 pt-8 border-t border-slate-200 text-center print:mt-auto">
-          <p className="text-sm font-bold text-slate-800">Thank you for shopping with The Grocery Hub!</p>
-          <p className="text-xs font-medium text-slate-500 mt-1">If you have any questions concerning this invoice, contact our support.</p>
+        {/* Right Column: Status & Actions (Hidden on Print) */}
+        <div className="w-full md:w-80 shrink-0 space-y-6 print:hidden">
+          
+          {/* Order Status Card */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 className="text-lg font-black text-slate-800 mb-4">Order Status</h2>
+            
+            <div className="flex items-center gap-3">
+              <div className="relative flex items-center justify-center">
+                <div className={`absolute w-10 h-10 rounded-full opacity-20 ${getStatusColor(order.status)} animate-ping`}></div>
+                <div className={`relative w-4 h-4 rounded-full ${getStatusColor(order.status)} ring-4 ring-white shadow-sm`}></div>
+              </div>
+              <div>
+                <p className="font-bold text-slate-900 text-lg capitalize">{order.status || 'Processing'}</p>
+                <p className="text-sm text-slate-500 font-medium">Order ID: {order.id?.slice(0, 8)}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions Card */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Actions</h2>
+            <button 
+              onClick={handlePrint}
+              className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition-colors shadow-sm"
+            >
+              <Printer className="w-5 h-5" />
+              <span>Print Receipt</span>
+            </button>
+            <p className="text-xs text-slate-500 text-center mt-3 font-medium">
+              Uses thermal receipt layout. Select "80mm Roll Paper" or similar when printing.
+            </p>
+          </div>
+
         </div>
 
       </div>
     </div>
   );
 }
+

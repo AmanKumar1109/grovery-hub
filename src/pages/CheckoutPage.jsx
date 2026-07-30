@@ -20,11 +20,14 @@ export default function CheckoutPage() {
   const [isOrderConfirmed, setIsOrderConfirmed] = useState(false);
 
   const [addressForm, setAddressForm] = useState({
+    name: '',
+    phone: '',
     street: '',
     locality: '',
     city: '',
-    state: '',
-    pincode: '',
+    state: 'Jharkhand',
+    pincode: '832101',
+    phone: '',
     tag: 'Home'
   });
 
@@ -246,6 +249,16 @@ export default function CheckoutPage() {
               ) : (
                 <form onSubmit={handleSaveAddress} className="space-y-4">
                   <p className="text-sm font-bold text-slate-500 mb-4">Please enter your delivery details to proceed.</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Full Name *</label>
+                      <input type="text" name="name" value={addressForm.name || ''} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="Your Name" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Phone *</label>
+                      <input type="tel" name="phone" value={addressForm.phone || ''} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="Mobile Number" />
+                    </div>
+                  </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1.5">Street Address *</label>
                     <input type="text" name="street" value={addressForm.street} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="House/Flat No., Building Name" />
@@ -261,12 +274,12 @@ export default function CheckoutPage() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">State</label>
-                      <input type="text" name="state" value={addressForm.state} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" />
+                      <input type="text" name="state" value={addressForm.state} readOnly className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed" />
                     </div>
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1.5">Pincode *</label>
-                    <input type="text" name="pincode" value={addressForm.pincode} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" />
+                    <input type="text" name="pincode" value={addressForm.pincode} readOnly className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed" />
                   </div>
                   <button type="submit" disabled={isProcessing} className="mt-2 w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm rounded-xl transition-all cursor-pointer">
                     {isProcessing ? 'Saving...' : 'Save Address'}

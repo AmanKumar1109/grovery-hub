@@ -13,11 +13,14 @@ export default function SavedAddresses() {
   const [isProcessing, setIsProcessing] = useState(false);
   
   const [addressForm, setAddressForm] = useState({
+    name: '',
+    phone: '',
     street: '',
     locality: '',
     city: '',
-    state: '',
-    pincode: '',
+    state: 'Jharkhand',
+    pincode: '832101',
+    phone: '',
     type: 'Home'
   });
 
@@ -61,7 +64,7 @@ export default function SavedAddresses() {
     setIsProcessing(false);
     
     setShowAddForm(false);
-    setAddressForm({ street: '', locality: '', city: '', state: '', pincode: '', type: 'Home' });
+    setAddressForm({ name: '', phone: '', street: '', locality: '', city: '', state: 'Jharkhand', pincode: '832101', type: 'Home' });
   };
 
   return (
@@ -91,6 +94,16 @@ export default function SavedAddresses() {
           </div>
           
           <form onSubmit={handleSaveAddress} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Full Name *</label>
+                <input type="text" name="name" value={addressForm.name || ''} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="Your Name" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">Phone *</label>
+                <input type="tel" name="phone" value={addressForm.phone || ''} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="Mobile Number" />
+              </div>
+            </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">Street Address *</label>
               <input type="text" name="street" value={addressForm.street} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="House/Flat No., Building Name" />
@@ -106,12 +119,12 @@ export default function SavedAddresses() {
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">State</label>
-                <input type="text" name="state" value={addressForm.state} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" />
+                <input type="text" name="state" value={addressForm.state} readOnly className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed" />
               </div>
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">Pincode *</label>
-              <input type="text" name="pincode" value={addressForm.pincode} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" />
+              <input type="text" name="pincode" value={addressForm.pincode} readOnly className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed" />
             </div>
             
             <div className="pt-2">
