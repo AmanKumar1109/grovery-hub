@@ -6,6 +6,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -106,6 +108,108 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     const res = await signInWithEmailAndPassword(auth, email, password);
     return res.user;
+  };
+
+  // Setup Recaptcha Verifier instance
+  const setupRecaptcha = (containerId = 'recaptcha-container', size = 'invisible') => {
+    if (window.recaptchaVerifier) {
+      try {
+        window.recaptchaVerifier.clear();
+      } catch (e) {
+        // clear silent catch
+      }
+      window.recaptchaVerifier = null;
+    }
+    window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+      size: size,
+      callback: () => {
+        // reCAPTCHA solved
+      },
+      'expired-callback': () => {
+        if (window.recaptchaVerifier) {
+          try { window.recaptchaVerifier.clear(); } catch (e) {}
+          window.recaptchaVerifier = null;
+        }
+      }
+    });
+    return window.recaptchaVerifier;
+  };
+
+  // Send OTP to phone number
+  const sendPhoneOtp = async (phoneNumber, containerId = 'recaptcha-container') => {
+    const digits = phoneNumber.replace(/\D/g, '');
+    const clean10 = digits.length >= 10 ? digits.slice(-10) : digits;
+    const formattedPhone = `+91${clean10}`;
+    
+    try {
+      const appVerifier = setupRecaptcha(containerId, 'invisible');
+      await appVerifier.render();
+      const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+      return confirmationResult;
+    } catch (err) {
+      console.warn('Invisible reCAPTCHA failed/timed out, retrying with visible reCAPTCHA check...', err);
+      try {
+        const appVerifierNormal = setupRecaptcha(containerId, 'normal');
+        await appVerifierNormal.render();
+        const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifierNormal);
+        return confirmationResult;
+      } catch (fallbackErr) {
+        console.error('Firebase Phone Auth Error [code]:', fallbackErr?.code, '[message]:', fallbackErr?.message);
+        if (window.recaptchaVerifier) {
+          try { window.recaptchaVerifier.clear(); } catch (e) {}
+          window.recaptchaVerifier = null;
+        }
+        throw fallbackErr;
+      }
+    }
+  };
+
+  // Verify Phone OTP code
+  const verifyPhoneOtp = async (confirmationResult, otpCode, fullName = '') => {
+    const res = await confirmationResult.confirm(otpCode);
+    const user = res.user;
+
+    if (fullName && (!user.displayName || user.displayName === 'Grocery Member')) {
+      await updateProfile(user, { displayName: fullName }).catch(() => {});
+    }
+
+    const userDocRef = doc(db, 'users', user.uid);
+    const userDocSnap = await getDoc(userDocRef);
+
+    let profileData;
+    if (userDocSnap.exists()) {
+      profileData = userDocSnap.data();
+      let shouldUpdate = false;
+      const updates = {};
+      if (fullName && (!profileData.fullName || profileData.fullName === 'Grocery Member')) {
+        profileData.fullName = fullName;
+        updates.fullName = fullName;
+        shouldUpdate = true;
+      }
+      if (!profileData.phone && user.phoneNumber) {
+        profileData.phone = user.phoneNumber;
+        updates.phone = user.phoneNumber;
+        shouldUpdate = true;
+      }
+      if (shouldUpdate) {
+        await setDoc(userDocRef, updates, { merge: true }).catch(() => {});
+      }
+    } else {
+      profileData = {
+        fullName: fullName || user.displayName || 'Grocery Member',
+        email: user.email || '',
+        phone: user.phoneNumber || '',
+        profileCompleted: !!fullName,
+        addresses: [],
+        primaryAddressId: null,
+        wishlist: [],
+        createdAt: new Date().toISOString(),
+      };
+      await setDoc(userDocRef, profileData).catch(() => {});
+    }
+
+    setUserProfile(profileData);
+    return user;
   };
 
   // Firebase Logout
@@ -253,6 +357,9 @@ export function AuthProvider({ children }) {
         signup,
         login,
         logout,
+        sendPhoneOtp,
+        verifyPhoneOtp,
+        setupRecaptcha,
         completeProfile,
         addAddress,
         deleteAddress,
