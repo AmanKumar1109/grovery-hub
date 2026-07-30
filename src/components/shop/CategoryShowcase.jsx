@@ -46,7 +46,7 @@ export default function CategoryShowcase({ selectedCategory, onSelectCategory })
           to="/catalog"
           className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-extrabold text-xs rounded-2xl shadow-md shadow-amber-300/40 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer self-start sm:self-auto group"
         >
-          <span>Explore More Catalog</span>
+          <span>Explore More Catalogue</span>
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>

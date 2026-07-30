@@ -7,7 +7,7 @@ export default function CategoryNav() {
 
   const navLinks = [
     { name: 'Home', path: '/', exact: true },
-    { name: 'Full Catalog', path: '/catalog', icon: Store },
+    { name: 'Full Catalogue', path: '/catalog', icon: Store },
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'My Orders', path: '/dashboard/orders' },
     { name: 'Wishlist', path: '/dashboard/wishlist' },

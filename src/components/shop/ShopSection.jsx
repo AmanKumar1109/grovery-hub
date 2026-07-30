@@ -101,7 +101,7 @@ export default function ShopSection() {
                 to="/catalog"
                 className="inline-flex items-center gap-2.5 px-8 py-3.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs sm:text-sm rounded-full shadow-lg shadow-amber-300/40 hover:shadow-amber-400/50 hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer group"
               >
-                <span>Explore All Products in Catalog</span>
+                <span>Explore All Products in Catalogue</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>

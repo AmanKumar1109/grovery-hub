@@ -138,7 +138,7 @@ export default function CatalogPage() {
                   onChange={(e) => setSortBy(e.target.value)}
                   className="bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-extrabold text-slate-800 focus:outline-none focus:border-amber-400 cursor-pointer"
                 >
-                  <option value="featured">Featured Catalog</option>
+                  <option value="featured">Featured Catalogue</option>
                   <option value="price-low">Price: Low to High</option>
                   <option value="price-high">Price: High to Low</option>
                   <option value="rating">Highest Rated</option>
@@ -152,7 +152,7 @@ export default function CatalogPage() {
             <div className="pt-4 border-t border-slate-100 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider">
-                  Filter Catalog Products
+                  Filter Catalogue Products
                 </h4>
                 {activeFiltersCount > 0 && (
                   <button
