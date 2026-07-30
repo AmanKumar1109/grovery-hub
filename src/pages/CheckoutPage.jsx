@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft, Tag, X } from 'lucide-react';
-import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export default function CheckoutPage() {
@@ -145,6 +145,20 @@ export default function CheckoutPage() {
         createdAt: timestamp,
         updatedAt: timestamp
       });
+
+      // Update recent buyers count for each item
+      for (const item of cartItems) {
+        if (item.id) {
+          try {
+            const prodRef = doc(db, 'items', item.id);
+            await updateDoc(prodRef, {
+              recentBuyers: increment(item.quantity || 1)
+            });
+          } catch (err) {
+            console.error("Error updating recent buyers for item:", err);
+          }
+        }
+      }
 
       clearCart();
       setIsProcessing(false);

@@ -100,11 +100,11 @@ export default function ProductCard({ product }) {
   const socialProof = useMemo(() => {
     const hash = (product.id || '').toString().split('').reduce((a, c) => a + c.charCodeAt(0), 0);
     return {
-      recentBuyers: 10 + (hash % 90),
+      recentBuyers: product.recentBuyers ? parseInt(product.recentBuyers) : 0,
       deliveryMins: 8 + (hash % 7),
       stockLeft: product.inStock === false ? 0 : 2 + (hash % 8),
     };
-  }, [product.id, product.inStock]);
+  }, [product.id, product.inStock, product.recentBuyers]);
 
   return (
     <div className="product-card-root bg-white rounded-2xl sm:rounded-3xl border border-slate-100/80 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] hover:border-amber-200/60 transition-all duration-500 flex flex-col justify-between group relative overflow-hidden hover:-translate-y-1">
@@ -210,12 +210,14 @@ export default function ProductCard({ product }) {
           <p className="text-[10px] sm:text-[11px] font-bold text-slate-400 tracking-wide">{product.unit}</p>
 
           {/* Social Proof */}
-          <div className="flex items-center gap-1 mt-1.5 mb-2 sm:mb-3">
-            <Users className="w-3 h-3 text-violet-400" />
-            <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">
-              {socialProof.recentBuyers} people bought this recently
-            </span>
-          </div>
+          {socialProof.recentBuyers > 0 && (
+            <div className="flex items-center gap-1 mt-1.5 mb-2 sm:mb-3">
+              <Users className="w-3 h-3 text-violet-400" />
+              <span className="text-[9px] sm:text-[10px] font-bold text-slate-400">
+                {socialProof.recentBuyers} people bought this recently
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
