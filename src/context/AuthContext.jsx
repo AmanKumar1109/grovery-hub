@@ -6,8 +6,6 @@ import {
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 
@@ -29,22 +27,22 @@ export function AuthProvider({ children }) {
           const userDocSnap = await getDoc(userDocRef);
           if (userDocSnap.exists()) {
             const data = userDocSnap.data();
-            
+
             // Migration: If user has old single address but no addresses array
             if (data.address && data.address.street && (!data.addresses || data.addresses.length === 0)) {
-               const defaultAddr = {
-                 id: 'migrated-default-' + Date.now(),
-                 type: data.addressType || 'Home',
-                 ...data.address
-               };
-               data.addresses = [defaultAddr];
-               data.primaryAddressId = defaultAddr.id;
-               
-               // Save migration quietly
-               setDoc(userDocRef, { addresses: data.addresses, primaryAddressId: data.primaryAddressId }, { merge: true });
+              const defaultAddr = {
+                id: 'migrated-default-' + Date.now(),
+                type: data.addressType || 'Home',
+                ...data.address
+              };
+              data.addresses = [defaultAddr];
+              data.primaryAddressId = defaultAddr.id;
+
+              // Save migration quietly
+              setDoc(userDocRef, { addresses: data.addresses, primaryAddressId: data.primaryAddressId }, { merge: true });
             }
             if (!data.addresses) data.addresses = [];
-            
+
             setUserProfile(data);
           } else {
             const initialData = {
@@ -110,108 +108,6 @@ export function AuthProvider({ children }) {
     return res.user;
   };
 
-  // Setup Recaptcha Verifier instance
-  const setupRecaptcha = (containerId = 'recaptcha-container', size = 'invisible') => {
-    if (window.recaptchaVerifier) {
-      try {
-        window.recaptchaVerifier.clear();
-      } catch (e) {
-        // clear silent catch
-      }
-      window.recaptchaVerifier = null;
-    }
-    window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-      size: size,
-      callback: () => {
-        // reCAPTCHA solved
-      },
-      'expired-callback': () => {
-        if (window.recaptchaVerifier) {
-          try { window.recaptchaVerifier.clear(); } catch (e) {}
-          window.recaptchaVerifier = null;
-        }
-      }
-    });
-    return window.recaptchaVerifier;
-  };
-
-  // Send OTP to phone number
-  const sendPhoneOtp = async (phoneNumber, containerId = 'recaptcha-container') => {
-    const digits = phoneNumber.replace(/\D/g, '');
-    const clean10 = digits.length >= 10 ? digits.slice(-10) : digits;
-    const formattedPhone = `+91${clean10}`;
-    
-    try {
-      const appVerifier = setupRecaptcha(containerId, 'invisible');
-      await appVerifier.render();
-      const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-      return confirmationResult;
-    } catch (err) {
-      console.warn('Invisible reCAPTCHA failed/timed out, retrying with visible reCAPTCHA check...', err);
-      try {
-        const appVerifierNormal = setupRecaptcha(containerId, 'normal');
-        await appVerifierNormal.render();
-        const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifierNormal);
-        return confirmationResult;
-      } catch (fallbackErr) {
-        console.error('Firebase Phone Auth Error [code]:', fallbackErr?.code, '[message]:', fallbackErr?.message);
-        if (window.recaptchaVerifier) {
-          try { window.recaptchaVerifier.clear(); } catch (e) {}
-          window.recaptchaVerifier = null;
-        }
-        throw fallbackErr;
-      }
-    }
-  };
-
-  // Verify Phone OTP code
-  const verifyPhoneOtp = async (confirmationResult, otpCode, fullName = '') => {
-    const res = await confirmationResult.confirm(otpCode);
-    const user = res.user;
-
-    if (fullName && (!user.displayName || user.displayName === 'Grocery Member')) {
-      await updateProfile(user, { displayName: fullName }).catch(() => {});
-    }
-
-    const userDocRef = doc(db, 'users', user.uid);
-    const userDocSnap = await getDoc(userDocRef);
-
-    let profileData;
-    if (userDocSnap.exists()) {
-      profileData = userDocSnap.data();
-      let shouldUpdate = false;
-      const updates = {};
-      if (fullName && (!profileData.fullName || profileData.fullName === 'Grocery Member')) {
-        profileData.fullName = fullName;
-        updates.fullName = fullName;
-        shouldUpdate = true;
-      }
-      if (!profileData.phone && user.phoneNumber) {
-        profileData.phone = user.phoneNumber;
-        updates.phone = user.phoneNumber;
-        shouldUpdate = true;
-      }
-      if (shouldUpdate) {
-        await setDoc(userDocRef, updates, { merge: true }).catch(() => {});
-      }
-    } else {
-      profileData = {
-        fullName: fullName || user.displayName || 'Grocery Member',
-        email: user.email || '',
-        phone: user.phoneNumber || '',
-        profileCompleted: !!fullName,
-        addresses: [],
-        primaryAddressId: null,
-        wishlist: [],
-        createdAt: new Date().toISOString(),
-      };
-      await setDoc(userDocRef, profileData).catch(() => {});
-    }
-
-    setUserProfile(profileData);
-    return user;
-  };
-
   // Firebase Logout
   const logout = async () => {
     await signOut(auth);
@@ -245,24 +141,24 @@ export function AuthProvider({ children }) {
   // Add Address
   const addAddress = async (addressData) => {
     if (!currentUser) return;
-    
+
     const newAddress = {
       id: 'addr_' + Date.now(),
       ...addressData
     };
-    
+
     const currentAddresses = userProfile?.addresses || [];
     const isFirstAddress = currentAddresses.length === 0;
     const newAddresses = [...currentAddresses, newAddress];
-    
+
     const newProfile = {
       ...userProfile,
       addresses: newAddresses,
       primaryAddressId: isFirstAddress ? newAddress.id : userProfile.primaryAddressId,
     };
-    
+
     try {
-      await setDoc(doc(db, 'users', currentUser.uid), { 
+      await setDoc(doc(db, 'users', currentUser.uid), {
         addresses: newProfile.addresses,
         primaryAddressId: newProfile.primaryAddressId
       }, { merge: true });
@@ -277,10 +173,10 @@ export function AuthProvider({ children }) {
   // Delete Address
   const deleteAddress = async (addressId) => {
     if (!currentUser || !addressId) return;
-    
+
     const currentAddresses = userProfile?.addresses || [];
     const newAddresses = currentAddresses.filter(a => a.id !== addressId);
-    
+
     let newPrimaryId = userProfile.primaryAddressId;
     // If we deleted the primary address, set a new primary if there are other addresses left
     if (newPrimaryId === addressId) {
@@ -292,9 +188,9 @@ export function AuthProvider({ children }) {
       addresses: newAddresses,
       primaryAddressId: newPrimaryId,
     };
-    
+
     try {
-      await setDoc(doc(db, 'users', currentUser.uid), { 
+      await setDoc(doc(db, 'users', currentUser.uid), {
         addresses: newAddresses,
         primaryAddressId: newPrimaryId
       }, { merge: true });
@@ -307,14 +203,14 @@ export function AuthProvider({ children }) {
   // Set Primary Address
   const setPrimaryAddress = async (addressId) => {
     if (!currentUser || !addressId) return;
-    
+
     const newProfile = {
       ...userProfile,
       primaryAddressId: addressId
     };
-    
+
     try {
-      await setDoc(doc(db, 'users', currentUser.uid), { 
+      await setDoc(doc(db, 'users', currentUser.uid), {
         primaryAddressId: addressId
       }, { merge: true });
       setUserProfile(newProfile);
@@ -326,14 +222,14 @@ export function AuthProvider({ children }) {
   // Toggle wishlist item
   const toggleWishlist = async (product) => {
     if (!currentUser) return false; // Return false if not logged in
-    
+
     const currentWishlist = userProfile?.wishlist || [];
     const isAlreadyWishlisted = currentWishlist.some((item) => item.id === product.id);
-    
+
     const newWishlist = isAlreadyWishlisted
       ? currentWishlist.filter((item) => item.id !== product.id)
       : [...currentWishlist, product];
-      
+
     const newProfile = { ...userProfile, wishlist: newWishlist };
     setUserProfile(newProfile);
 
@@ -357,9 +253,6 @@ export function AuthProvider({ children }) {
         signup,
         login,
         logout,
-        sendPhoneOtp,
-        verifyPhoneOtp,
-        setupRecaptcha,
         completeProfile,
         addAddress,
         deleteAddress,

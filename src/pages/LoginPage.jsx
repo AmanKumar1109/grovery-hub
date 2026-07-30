@@ -6,7 +6,7 @@ import Header from '../components/header/Header';
 import Footer from '../components/shop/Footer';
 
 export default function LoginPage() {
-  const [authMode, setAuthMode] = useState('phone'); // 'email' | 'phone'
+  const [authMode, setAuthMode] = useState('phone'); // 'phone' | 'email'
   
   // Email Auth State
   const [email, setEmail] = useState('');
@@ -117,9 +117,6 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen w-full bg-slate-50 flex flex-col font-sans text-slate-800 antialiased">
       <Header />
-
-      {/* Hidden reCAPTCHA container for Firebase Phone Auth */}
-      <div id="recaptcha-container"></div>
 
       <main className="flex-1 max-w-md w-full mx-auto px-4 py-12 flex items-center justify-center">
         <div className="w-full bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xl space-y-6 relative overflow-hidden">
