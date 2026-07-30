@@ -29,6 +29,7 @@ function transformDoc(d) {
     isVisible: data.isVisible !== false,
     isTrending: data.isTrending === true || data.isTrending === 'true' || data.badge === 'Trending',
     isBogo: data.isBogo === true || data.isBogo === 'true' || data.badge === 'Buy 1 Get 1' || data.isBOGO === true,
+    recentBuyers: data.recentBuyers || 0,
     image: data.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&auto=format&fit=crop&q=80'
   };
 }
