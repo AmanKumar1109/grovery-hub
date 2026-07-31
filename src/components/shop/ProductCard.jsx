@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function ProductCard({ product }) {
   const { cartItems, addToCart, updateQuantity, showToast, setIsCartOpen } = useCart();
   const { currentUser, userProfile, toggleWishlist } = useAuth();
-  
+
   const isWishlisted = userProfile?.wishlist?.some(item => item.id === product.id) || false;
 
   const cartItem = cartItems.find((item) => item.id === product.id);
@@ -19,10 +19,10 @@ export default function ProductCard({ product }) {
       addToCart(product);
       return;
     }
-    
+
     const img = card.querySelector('img');
     const cartIcon = document.getElementById('cart-icon-target');
-    
+
     if (!img || !cartIcon) {
       addToCart(product);
       return;
@@ -50,17 +50,17 @@ export default function ProductCard({ product }) {
 
     // 3. Trigger animation
     requestAnimationFrame(() => {
-      clone.style.top = `${targetRect.top + targetRect.height/2 - 15}px`;
-      clone.style.left = `${targetRect.left + targetRect.width/2 - 15}px`;
+      clone.style.top = `${targetRect.top + targetRect.height / 2 - 15}px`;
+      clone.style.left = `${targetRect.left + targetRect.width / 2 - 15}px`;
       clone.style.width = '30px';
       clone.style.height = '30px';
       clone.style.opacity = '0.2';
       clone.style.transform = 'scale(0.1) rotate(90deg)';
-      
+
       // Cleanup after animation and fire confetti
       setTimeout(() => {
         clone.remove();
-        
+
         // Custom DOM Confetti
         for (let i = 0; i < 12; i++) {
           const particle = document.createElement('div');
@@ -108,7 +108,7 @@ export default function ProductCard({ product }) {
 
   return (
     <div className="product-card-root bg-white rounded-2xl sm:rounded-3xl border border-slate-100/80 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] hover:border-amber-200/60 transition-all duration-500 flex flex-col justify-between group relative overflow-hidden hover:-translate-y-1">
-      
+
       {/* Shimmer hover overlay */}
       <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent z-10 pointer-events-none" />
 
@@ -120,7 +120,7 @@ export default function ProductCard({ product }) {
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
           />
-          
+
           {/* Dark gradient overlay at bottom of image */}
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/30 to-transparent pointer-events-none" />
 
@@ -161,9 +161,8 @@ export default function ProductCard({ product }) {
               }
               toggleWishlist(product);
             }}
-            className={`absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center transition-all duration-300 shadow-md active:scale-90 cursor-pointer hover:bg-white z-20 ${
-              isWishlisted ? 'text-pink-600 scale-110 ring-2 ring-pink-200' : 'text-slate-400 hover:text-pink-500'
-            }`}
+            className={`absolute top-2 right-2 sm:top-3 sm:right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center transition-all duration-300 shadow-md active:scale-90 cursor-pointer hover:bg-white z-20 ${isWishlisted ? 'text-pink-600 scale-110 ring-2 ring-pink-200' : 'text-slate-400 hover:text-pink-500'
+              }`}
             title="Add to Wishlist"
           >
             <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 ${isWishlisted ? 'fill-pink-500 stroke-pink-500 scale-110' : 'group-hover:scale-110'}`} />
@@ -187,13 +186,12 @@ export default function ProductCard({ product }) {
               {Array.from({ length: 5 }, (_, i) => (
                 <Star
                   key={i}
-                  className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-colors ${
-                    i < fullStars
-                      ? 'text-amber-400 fill-amber-400'
-                      : i === fullStars && hasHalf
+                  className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-colors ${i < fullStars
+                    ? 'text-amber-400 fill-amber-400'
+                    : i === fullStars && hasHalf
                       ? 'text-amber-400 fill-amber-400/50'
                       : 'text-slate-200 fill-slate-200'
-                  }`}
+                    }`}
                 />
               ))}
             </div>
@@ -238,23 +236,7 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {/* Low Stock Urgency Bar */}
-        {product.inStock !== false && socialProof.stockLeft <= 5 && (
-          <div className="mb-3">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[9px] sm:text-[10px] font-black text-rose-500 flex items-center gap-0.5">
-                <Flame className="w-3 h-3" /> Only {socialProof.stockLeft} left!
-              </span>
-              <span className="text-[8px] sm:text-[9px] font-bold text-slate-400">Hurry up!</span>
-            </div>
-            <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-rose-500 to-orange-400 rounded-full transition-all duration-500" 
-                style={{ width: `${(socialProof.stockLeft / 10) * 100}%` }}
-              />
-            </div>
-          </div>
-        )}
+
 
         {product.inStock === false ? (
           <button
@@ -281,7 +263,7 @@ export default function ProductCard({ product }) {
                 <Plus className="w-3.5 h-3.5" />
               </button>
             </div>
-            <button 
+            <button
               onClick={() => setIsCartOpen(true)}
               className="w-10 h-10 sm:w-11 sm:h-11 bg-slate-900 hover:bg-slate-800 text-white flex items-center justify-center rounded-xl sm:rounded-2xl shadow-lg cursor-pointer active:scale-90 transition-all"
               title="View Cart"
