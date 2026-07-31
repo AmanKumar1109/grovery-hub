@@ -3,6 +3,7 @@ import { MapPin, Plus, Trash2, Home, Briefcase, Navigation, Tag, CheckCircle2, X
 import gsap from 'gsap';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { loadGoogleMaps } from '../../utils/googleMapsLoader';
 
 export default function SavedAddresses() {
   const containerRef = useRef(null);
@@ -17,12 +18,16 @@ export default function SavedAddresses() {
     phone: '',
     street: '',
     locality: '',
-    city: '',
+    city: 'Baharagora',
     state: 'Jharkhand',
     pincode: '832101',
     phone: '',
-    type: 'Home'
+    type: 'Home',
+    lat: null,
+    lng: null
   });
+
+  const [isLocating, setIsLocating] = useState(false);
 
   const addresses = userProfile?.addresses || [];
   const primaryId = userProfile?.primaryAddressId;
@@ -64,7 +69,89 @@ export default function SavedAddresses() {
     setIsProcessing(false);
     
     setShowAddForm(false);
-    setAddressForm({ name: '', phone: '', street: '', locality: '', city: '', state: 'Jharkhand', pincode: '832101', type: 'Home' });
+    setAddressForm({ name: '', phone: '', street: '', locality: '', city: 'Baharagora', state: 'Jharkhand', pincode: '832101', type: 'Home', lat: null, lng: null });
+  };
+
+  const handleUseCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser');
+      return;
+    }
+    
+    setIsLocating(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const maps = await loadGoogleMaps();
+          const geocoder = new maps.Geocoder();
+          
+          geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+              const addressComponents = results[0].address_components;
+              let city = '';
+              let state = 'Jharkhand';
+              let pincode = '';
+              let streetParts = [];
+              let localityParts = [];
+              
+              addressComponents.forEach(component => {
+                const types = component.types;
+                if (types.includes('locality')) city = component.long_name;
+                else if (types.includes('administrative_area_level_1')) state = component.long_name;
+                else if (types.includes('postal_code')) pincode = component.long_name;
+                
+                if (types.includes('neighborhood') || types.includes('sublocality') || types.includes('sublocality_level_1') || types.includes('sublocality_level_2') || types.includes('point_of_interest') || types.includes('landmark')) {
+                  if (!localityParts.includes(component.long_name)) localityParts.push(component.long_name);
+                }
+                
+                if (types.includes('route') || types.includes('street_number') || types.includes('premise')) {
+                  streetParts.push(component.long_name);
+                }
+              });
+              
+              let street = streetParts.join(', ');
+              let locality = localityParts.join(', ');
+              
+              // Fallback to formatted address if street is entirely empty
+              if (!street) {
+                const parts = results[0].formatted_address.split(',');
+                street = parts[0] + (parts[1] && !parts[1].includes(city) ? ', ' + parts[1] : '');
+              }
+              
+              if (!city) city = 'Baharagora';
+              if (!pincode) pincode = '832101';
+              
+              setAddressForm(prev => ({
+                ...prev,
+                street: street || prev.street,
+                locality: locality || prev.locality,
+                city: city || prev.city,
+                state: state || prev.state,
+                pincode: pincode || prev.pincode,
+                lat: latitude,
+                lng: longitude
+              }));
+              alert('Location fetched successfully!');
+            } else {
+              alert('Could not fetch address for this location.');
+            }
+            setIsLocating(false);
+          });
+        } catch (error) {
+          console.error("Google Maps API Error:", error);
+          alert('Failed to load Google Maps for address conversion.');
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        setIsLocating(false);
+        if (error.code === 1) alert('Location permission denied. Please enable it in your browser.');
+        else alert('Could not fetch your location.');
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
 
   return (
@@ -88,9 +175,20 @@ export default function SavedAddresses() {
         <div className="address-card bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-black text-slate-900">Add New Address</h2>
-            <button onClick={() => setShowAddForm(false)} className="p-2 bg-slate-100 text-slate-500 hover:text-slate-900 rounded-full transition-colors">
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button 
+                type="button" 
+                onClick={handleUseCurrentLocation}
+                disabled={isLocating}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                <Navigation className={`w-3.5 h-3.5 ${isLocating ? 'animate-pulse' : ''}`} />
+                {isLocating ? 'Locating...' : 'Use Current Location'}
+              </button>
+              <button onClick={() => setShowAddForm(false)} className="p-2 bg-slate-100 text-slate-500 hover:text-slate-900 rounded-full transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
           
           <form onSubmit={handleSaveAddress} className="space-y-4">
@@ -115,7 +213,7 @@ export default function SavedAddresses() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">City *</label>
-                <input type="text" name="city" value={addressForm.city} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" />
+                <input type="text" name="city" value={addressForm.city} readOnly className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed" />
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">State</label>

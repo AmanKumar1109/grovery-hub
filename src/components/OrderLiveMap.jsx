@@ -10,20 +10,40 @@ import {
   resolveOrderCoordinates,
   getInitialRiderCoordinates
 } from '../utils/locationUtils';
+import { fetchRoadRoute, routePointsToLatLngs } from '../utils/routeService';
 import { Navigation, Clock, ShieldCheck, AlertTriangle } from 'lucide-react';
 
 export default function OrderLiveMap({ order }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const riderMarkerRef = useRef(null);
+  const routePolylineRef = useRef(null);
 
-  const customerCoords = resolveOrderCoordinates(order);
-  const initialRiderCoords = order?.riderLocation && order.riderLocation.lat
-    ? { lat: order.riderLocation.lat, lng: order.riderLocation.lng }
-    : getInitialRiderCoordinates(customerCoords.lat, customerCoords.lng);
-  const serviceCheck = checkDeliveryServiceable(customerCoords.lat, customerCoords.lng);
+  const [customerCoords, setCustomerCoords] = useState(null);
+  const [initialRiderCoords, setInitialRiderCoords] = useState(null);
+  const [serviceCheck, setServiceCheck] = useState(null);
 
-  const [riderPos, setRiderPos] = useState(initialRiderCoords);
+  const [riderPos, setRiderPos] = useState(null);
+  const [roadDistance, setRoadDistance] = useState(null);
+  const [roadDuration, setRoadDuration] = useState(null);
+
+  // 1. Resolve coordinates asynchronously on mount
+  useEffect(() => {
+    let active = true;
+    resolveOrderCoordinates(order).then(coords => {
+      if (!active) return;
+      setCustomerCoords(coords);
+      setServiceCheck(checkDeliveryServiceable(coords.lat, coords.lng));
+      
+      const initialRider = order?.riderLocation && order.riderLocation.lat
+        ? { lat: order.riderLocation.lat, lng: order.riderLocation.lng }
+        : getInitialRiderCoordinates(coords.lat, coords.lng);
+        
+      setInitialRiderCoords(initialRider);
+      setRiderPos(initialRider);
+    });
+    return () => { active = false; };
+  }, [order]);
 
   // Sync live rider location when order.riderLocation updates in Firestore
   useEffect(() => {
@@ -37,17 +57,18 @@ export default function OrderLiveMap({ order }) {
     }
   }, [order?.riderLocation]);
 
-  const distanceToCustomer = calculateDistance(
+  const distanceToCustomer = riderPos && customerCoords ? calculateDistance(
     riderPos.lat,
     riderPos.lng,
     customerCoords.lat,
     customerCoords.lng
-  );
+  ) : 0;
 
-  const currentETA = calculateETA(distanceToCustomer);
+  const currentETA = roadDuration ? `~${roadDuration} mins` : calculateETA(distanceToCustomer);
+  const displayDistance = roadDistance || distanceToCustomer;
 
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    if (!mapContainerRef.current || !customerCoords || !initialRiderCoords) return;
 
     if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
@@ -65,8 +86,11 @@ export default function OrderLiveMap({ order }) {
 
     mapInstanceRef.current = map;
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19
+    // Switch to Google Maps Standard Roadmap tiles for highly detailed local names
+    L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+      maxZoom: 20,
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+      attribution: '&copy; Google Maps'
     }).addTo(map);
 
     // 5 KM Geofence Ring
@@ -127,8 +151,8 @@ export default function OrderLiveMap({ order }) {
     const riderMarker = L.marker([initialRiderCoords.lat, initialRiderCoords.lng], { icon: riderIcon }).addTo(map);
     riderMarkerRef.current = riderMarker;
 
-    // Route Polyline
-    L.polyline(
+    // Draw initial straight line as placeholder while road route loads
+    const initialPolyline = L.polyline(
       [
         [BAHARAGORA_HUB.lat, BAHARAGORA_HUB.lng],
         [initialRiderCoords.lat, initialRiderCoords.lng],
@@ -136,11 +160,50 @@ export default function OrderLiveMap({ order }) {
       ],
       {
         color: '#059669',
-        weight: 4,
-        opacity: 0.8,
-        dashArray: '6, 6'
+        weight: 5,
+        opacity: 0.7,
+        dashArray: '8, 8'
       }
     ).addTo(map);
+    routePolylineRef.current = initialPolyline;
+
+    // Fetch real road route from Google Maps Directions API
+    fetchRoadRoute(
+      { lat: BAHARAGORA_HUB.lat, lng: BAHARAGORA_HUB.lng },
+      { lat: customerCoords.lat, lng: customerCoords.lng },
+      [{ lat: initialRiderCoords.lat, lng: initialRiderCoords.lng }]
+    ).then(result => {
+      if (!mapInstanceRef.current) return;
+
+      // Remove the placeholder straight line
+      if (routePolylineRef.current) {
+        routePolylineRef.current.remove();
+      }
+
+      const latLngs = routePointsToLatLngs(result.points);
+
+      // Draw the real road route
+      const roadPolyline = L.polyline(latLngs, {
+        color: '#059669',
+        weight: 5,
+        opacity: 0.85,
+        lineJoin: 'round',
+        lineCap: 'round'
+      }).addTo(mapInstanceRef.current);
+
+      routePolylineRef.current = roadPolyline;
+
+      if (result.success) {
+        setRoadDistance(result.totalDistanceKm);
+        setRoadDuration(result.totalDurationMins);
+      }
+
+      // Fit bounds to the route
+      if (latLngs.length > 0) {
+        const routeBounds = L.latLngBounds(latLngs);
+        mapInstanceRef.current.fitBounds(routeBounds, { padding: [35, 35] });
+      }
+    });
 
     const bounds = L.latLngBounds([
       [BAHARAGORA_HUB.lat, BAHARAGORA_HUB.lng],
@@ -162,7 +225,16 @@ export default function OrderLiveMap({ order }) {
         mapInstanceRef.current = null;
       }
     };
-  }, [order?.id]);
+  }, [order?.id, customerCoords]); // Re-run if coordinates change
+
+  if (!customerCoords || !riderPos || !serviceCheck) {
+    return (
+      <div className="bg-slate-900 rounded-3xl overflow-hidden shadow-xl border border-slate-800 flex flex-col items-center justify-center h-[300px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400"></div>
+        <p className="text-slate-400 text-xs mt-3 font-bold animate-pulse">Locating exact address...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-slate-900 rounded-3xl overflow-hidden shadow-xl border border-slate-800 flex flex-col space-y-0">
@@ -175,7 +247,7 @@ export default function OrderLiveMap({ order }) {
 
         <div className="flex items-center gap-1.5 text-emerald-400">
           <Navigation className="w-3.5 h-3.5 shrink-0" />
-          <span>{distanceToCustomer} km away</span>
+          <span>{displayDistance} km away</span>
         </div>
 
         {serviceCheck.isServiceable ? (

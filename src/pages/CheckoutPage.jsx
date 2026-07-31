@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft, Tag, X, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft, Tag, X, AlertTriangle, ShieldAlert, Navigation } from 'lucide-react';
 import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 import { checkAddressServiceability } from '../utils/locationUtils';
+import { loadGoogleMaps } from '../utils/googleMapsLoader';
 
 export default function CheckoutPage() {
   const { currentUser, userProfile, addAddress } = useAuth();
@@ -25,15 +26,99 @@ export default function CheckoutPage() {
     phone: '',
     street: '',
     locality: '',
-    city: '',
+    city: 'Baharagora',
     state: 'Jharkhand',
     pincode: '832101',
-    phone: '',
-    tag: 'Home'
+    tag: 'Home',
+    lat: null,
+    lng: null
   });
 
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [activeAddressId, setActiveAddressId] = useState(null);
+  const [isLocating, setIsLocating] = useState(false);
+
+  const handleUseCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      showToast('Geolocation is not supported by your browser');
+      return;
+    }
+    
+    setIsLocating(true);
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const maps = await loadGoogleMaps();
+          const geocoder = new maps.Geocoder();
+          
+          geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
+            if (status === 'OK' && results[0]) {
+              const addressComponents = results[0].address_components;
+              let city = '';
+              let state = 'Jharkhand';
+              let pincode = '';
+              let streetParts = [];
+              let localityParts = [];
+              
+              addressComponents.forEach(component => {
+                const types = component.types;
+                if (types.includes('locality')) city = component.long_name;
+                else if (types.includes('administrative_area_level_1')) state = component.long_name;
+                else if (types.includes('postal_code')) pincode = component.long_name;
+                
+                if (types.includes('neighborhood') || types.includes('sublocality') || types.includes('sublocality_level_1') || types.includes('sublocality_level_2') || types.includes('point_of_interest') || types.includes('landmark')) {
+                  if (!localityParts.includes(component.long_name)) localityParts.push(component.long_name);
+                }
+                
+                if (types.includes('route') || types.includes('street_number') || types.includes('premise')) {
+                  streetParts.push(component.long_name);
+                }
+              });
+              
+              street = streetParts.join(', ');
+              locality = localityParts.join(', ');
+              
+              // Fallback to formatted address if street is entirely empty
+              if (!street) {
+                const parts = results[0].formatted_address.split(',');
+                street = parts[0] + (parts[1] && !parts[1].includes(city) ? ', ' + parts[1] : '');
+              }
+              
+              if (!city) city = 'Baharagora';
+              if (!pincode) pincode = '832101';
+              
+              setAddressForm(prev => ({
+                ...prev,
+                street: street || prev.street,
+                locality: locality || prev.locality,
+                city: city || prev.city,
+                state: state || prev.state,
+                pincode: pincode || prev.pincode,
+                lat: latitude,
+                lng: longitude
+              }));
+              showToast('Location fetched successfully!');
+            } else {
+              showToast('Could not fetch address for this location.');
+            }
+            setIsLocating(false);
+          });
+        } catch (error) {
+          console.error("Google Maps API Error:", error);
+          showToast('Failed to load Google Maps for address conversion.');
+          setIsLocating(false);
+        }
+      },
+      (error) => {
+        setIsLocating(false);
+        if (error.code === 1) showToast('Location permission denied. Please enable it in your browser.');
+        else showToast('Could not fetch your location.');
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
 
   useEffect(() => {
     if (userProfile?.addresses && userProfile.addresses.length > 0) {
@@ -123,7 +208,9 @@ export default function CheckoutPage() {
         state: activeAddress.state || '',
         pincode: activeAddress.pincode || '',
         tag: activeAddress.tag || activeAddress.type || 'Home',
-        phone: phone
+        phone: phone,
+        lat: activeAddress.lat || null,
+        lng: activeAddress.lng || null
       } : { street: 'Store Pickup' };
 
       await setDoc(doc(db, 'orders', orderId), {
@@ -135,6 +222,8 @@ export default function CheckoutPage() {
         address: addrStr,
         deliveryAddress: addrStr,
         deliveryAddressObject: safeDeliveryAddress,
+        lat: activeAddress?.lat || null,
+        lng: activeAddress?.lng || null,
         items: cartItems.map(item => ({
           id: item.id || `ITEM-${Math.floor(Math.random() * 1000)}`,
           name: item.name || 'Grocery Item',
@@ -288,7 +377,18 @@ export default function CheckoutPage() {
                 </div>
               ) : (
                 <form onSubmit={handleSaveAddress} className="space-y-4">
-                  <p className="text-sm font-bold text-slate-500 mb-4">Please enter your delivery details to proceed.</p>
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-sm font-bold text-slate-500">Please enter your delivery details to proceed.</p>
+                    <button 
+                      type="button" 
+                      onClick={handleUseCurrentLocation}
+                      disabled={isLocating}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
+                    >
+                      <Navigation className={`w-3.5 h-3.5 ${isLocating ? 'animate-pulse' : ''}`} />
+                      {isLocating ? 'Locating...' : 'Use Current Location'}
+                    </button>
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">Full Name *</label>
@@ -310,7 +410,7 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">City *</label>
-                      <input type="text" name="city" value={addressForm.city} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" />
+                      <input type="text" name="city" value={addressForm.city} readOnly className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed" />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">State</label>

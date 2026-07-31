@@ -1,3 +1,5 @@
+import { loadGoogleMaps } from './googleMapsLoader';
+
 // Exact Baharagora Store Location (Dadu Complex, near Shitla Mandir, Baharagora, Jharkhand 832101)
 export const BAHARAGORA_HUB = {
   lat: 22.2825,
@@ -68,11 +70,12 @@ export function calculateETA(distanceKm, averageSpeedKmH = 25) {
 }
 
 /**
- * Resolves or generates coordinates around Baharagora for customer addresses
+ * Resolves coordinates for customer addresses using Google Maps Geocoder if exact lat/lng is missing.
  */
-export function resolveOrderCoordinates(order) {
-  if (!order) return { lat: BAHARAGORA_HUB.lat + 0.015, lng: BAHARAGORA_HUB.lng + 0.012 };
+export async function resolveOrderCoordinates(order) {
+  if (!order) return { lat: BAHARAGORA_HUB.lat, lng: BAHARAGORA_HUB.lng };
 
+  // 1. If order already has direct exact lat/lng (From "Use Current Location")
   if (order.lat && order.lng) {
     return { lat: parseFloat(order.lat), lng: parseFloat(order.lng) };
   }
@@ -80,24 +83,32 @@ export function resolveOrderCoordinates(order) {
     return { lat: parseFloat(order.customerCoords.lat), lng: parseFloat(order.customerCoords.lng) };
   }
 
-  const str = String(order.id || order.customerAddress || 'order-101');
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = (hash << 5) - hash + str.charCodeAt(i);
-    hash |= 0;
+  // 2. Geocode the address text using Google Maps
+  const addressString = order.address || order.customerAddress || order.deliveryAddress || 'Baharagora, Jharkhand';
+  
+  try {
+    const maps = await loadGoogleMaps();
+    const geocoder = new maps.Geocoder();
+    
+    return new Promise((resolve) => {
+      geocoder.geocode({ address: addressString }, (results, status) => {
+        if (status === 'OK' && results[0]) {
+          const location = results[0].geometry.location;
+          resolve({
+            lat: location.lat(),
+            lng: location.lng()
+          });
+        } else {
+          console.warn(`Geocode failed for address: ${addressString}. Status: ${status}`);
+          // Fallback to Baharagora Hub if geocoding completely fails
+          resolve({ lat: BAHARAGORA_HUB.lat, lng: BAHARAGORA_HUB.lng });
+        }
+      });
+    });
+  } catch (err) {
+    console.error("Error loading Google Maps for Geocoding:", err);
+    return { lat: BAHARAGORA_HUB.lat, lng: BAHARAGORA_HUB.lng };
   }
-
-  const angle = Math.abs(hash % 360) * (Math.PI / 180);
-  const isBeyond = Math.abs(hash % 10) === 0;
-  const radiusKm = isBeyond ? 5.8 + (Math.abs(hash % 15) / 10) : 1.2 + (Math.abs(hash % 35) / 10);
-
-  const latOffset = (radiusKm / 111) * Math.sin(angle);
-  const lngOffset = (radiusKm / (111 * Math.cos(BAHARAGORA_HUB.lat * (Math.PI / 180)))) * Math.cos(angle);
-
-  return {
-    lat: Math.round((BAHARAGORA_HUB.lat + latOffset) * 10000) / 10000,
-    lng: Math.round((BAHARAGORA_HUB.lng + lngOffset) * 10000) / 10000
-  };
 }
 
 export function getInitialRiderCoordinates(customerLat, customerLng) {
@@ -167,17 +178,25 @@ export function checkAddressServiceability(addressObj) {
     }
   }
 
-  // Resolve coordinates
-  const coords = resolveOrderCoordinates({ customerAddress: addrStr });
-  const distanceKm = calculateDistance(BAHARAGORA_HUB.lat, BAHARAGORA_HUB.lng, coords.lat, coords.lng);
-  const isServiceable = distanceKm <= MAX_DELIVERY_RADIUS_KM;
+  // If we have real coordinates (from Use Current Location), do a precise distance check
+  if (addressObj.lat && addressObj.lng) {
+    const distanceKm = calculateDistance(BAHARAGORA_HUB.lat, BAHARAGORA_HUB.lng, addressObj.lat, addressObj.lng);
+    const isServiceable = distanceKm <= MAX_DELIVERY_RADIUS_KM;
+    return {
+      isServiceable,
+      distanceKm,
+      townName: addressObj.city || 'Local Area',
+      reason: isServiceable
+        ? ''
+        : `🚫 Delivery Unavailable: Address is ${distanceKm} km away from Baharagora Store (Exceeds 5.0 km limit)!`
+    };
+  }
 
+  // If no exact coordinates but passed the string/pincode checks, assume serviceable
   return {
-    isServiceable,
-    distanceKm,
+    isServiceable: true,
+    distanceKm: 0,
     townName: addressObj.city || 'Local Area',
-    reason: isServiceable
-      ? ''
-      : `🚫 Delivery Unavailable: Address is ${distanceKm} km away from Baharagora Store (Exceeds 5.0 km limit)!`
+    reason: ''
   };
 }
