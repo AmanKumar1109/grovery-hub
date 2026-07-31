@@ -18,10 +18,24 @@ export default function OrderLiveMap({ order }) {
   const riderMarkerRef = useRef(null);
 
   const customerCoords = resolveOrderCoordinates(order);
-  const initialRiderCoords = getInitialRiderCoordinates(customerCoords.lat, customerCoords.lng);
+  const initialRiderCoords = order?.riderLocation && order.riderLocation.lat
+    ? { lat: order.riderLocation.lat, lng: order.riderLocation.lng }
+    : getInitialRiderCoordinates(customerCoords.lat, customerCoords.lng);
   const serviceCheck = checkDeliveryServiceable(customerCoords.lat, customerCoords.lng);
 
   const [riderPos, setRiderPos] = useState(initialRiderCoords);
+
+  // Sync live rider location when order.riderLocation updates in Firestore
+  useEffect(() => {
+    if (order?.riderLocation && order.riderLocation.lat && order.riderLocation.lng) {
+      const livePos = { lat: order.riderLocation.lat, lng: order.riderLocation.lng };
+      setRiderPos(livePos);
+
+      if (riderMarkerRef.current) {
+        riderMarkerRef.current.setLatLng([livePos.lat, livePos.lng]);
+      }
+    }
+  }, [order?.riderLocation]);
 
   const distanceToCustomer = calculateDistance(
     riderPos.lat,
