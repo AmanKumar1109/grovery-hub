@@ -1,9 +1,10 @@
-// Baharagora Central Grocery Hub Coordinates (Baharagora, Jharkhand, India)
+// Exact Baharagora Store Location (Dadu Complex, near Shitla Mandir, Baharagora, Jharkhand 832101)
 export const BAHARAGORA_HUB = {
-  lat: 22.2813,
-  lng: 86.7225,
-  name: 'Baharagora Grocery Hub Store',
-  address: 'Main Market, Baharagora, East Singhbhum, Jharkhand - 832301'
+  lat: 22.2825,
+  lng: 86.7235,
+  name: 'The Grocery Hub Store',
+  address: 'Dadu Complex, Near Shitla Mandir, Baharagora, Jharkhand - 832101',
+  pincode: '832101'
 };
 
 // Maximum Allowed Delivery Radius Limit (in Kilometers)
@@ -153,7 +154,7 @@ export function checkAddressServiceability(addressObj) {
     }
   }
 
-  // Pincode validation: Baharagora local pincode is 832301
+  // Pincode validation: Baharagora local store pincode is 832101
   const pincode = String(addressObj.pincode || '').trim();
   if (pincode && pincode.length === 6) {
     if (pincode.startsWith('831') || pincode.startsWith('834') || pincode.startsWith('721') || pincode.startsWith('757')) {
@@ -161,7 +162,7 @@ export function checkAddressServiceability(addressObj) {
         isServiceable: false,
         distanceKm: 110,
         townName: addressObj.city || 'Out of Town',
-        reason: `🚫 Delivery Unavailable: Pincode ${pincode} is out of our 5 km delivery radius around Baharagora (832301)!`
+        reason: `🚫 Delivery Unavailable: Pincode ${pincode} is out of our 5 km delivery radius around Baharagora (832101)!`
       };
     }
   }
