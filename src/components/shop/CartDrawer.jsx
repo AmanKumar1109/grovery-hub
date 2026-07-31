@@ -7,7 +7,7 @@ export default function CartDrawer() {
   const { 
     isCartOpen, setIsCartOpen, cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, showToast,
     availableCoupons, promoCodeInput, setPromoCodeInput, appliedCoupon, promoError, setPromoError,
-    discountAmount, finalTotal, handleApplyPromo, handleRemovePromo 
+    discountAmount, deliveryFee, finalTotal, handleApplyPromo, handleRemovePromo 
   } = useCart();
   const { currentUser, userProfile } = useAuth();
   const navigate = useNavigate();
@@ -191,7 +191,11 @@ export default function CartDrawer() {
               </div>
               <div className="flex justify-between">
                 <span>Delivery Charge</span>
-                <span className="text-emerald-700 font-extrabold">FREE 🌿</span>
+                {deliveryFee === 0 ? (
+                  <span className="text-emerald-700 font-extrabold">FREE 🌿</span>
+                ) : (
+                  <span className="text-slate-900 font-extrabold">+₹{deliveryFee}</span>
+                )}
               </div>
               {appliedCoupon && (
                 <div className="flex justify-between text-emerald-600">
