@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft, Tag, X } from 'lucide-react';
+import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft, Tag, X, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
+import { checkAddressServiceability } from '../utils/locationUtils';
 
 export default function CheckoutPage() {
   const { currentUser, userProfile, addAddress } = useAuth();
@@ -48,6 +49,9 @@ export default function CheckoutPage() {
   const activeAddress = addresses.find(a => a.id === activeAddressId) || addresses[0];
   const hasAddress = Boolean(activeAddress);
 
+  // Baharagora 5 KM Delivery Radius Check
+  const serviceability = checkAddressServiceability(activeAddress || addressForm);
+
   useEffect(() => {
     if (!currentUser) {
       navigate('/login');
@@ -80,6 +84,12 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     if (!hasAddress || isProcessing) {
       if (!hasAddress) showToast('Please provide a delivery address first.');
+      return;
+    }
+
+    // STRICT 5 KM BAHARAGORA RADIUS CHECK
+    if (!serviceability.isServiceable) {
+      showToast(serviceability.reason || 'Sorry! Delivery unavailable outside 5 km of Baharagora.');
       return;
     }
 
@@ -233,6 +243,22 @@ export default function CheckoutPage() {
                       {activeAddress.city}, {activeAddress.state}, {activeAddress.pincode}
                     </p>
                   </div>
+
+                  {/* 5 KM Baharagora Radius Unserviceable Warning Banner */}
+                  {!serviceability.isServiceable && (
+                    <div className="p-4 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-800 space-y-1.5 shadow-sm">
+                      <div className="flex items-center gap-2 font-black text-sm text-rose-700">
+                        <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+                        <span>OUT OF 5 KM DELIVERY RADIUS ZONE</span>
+                      </div>
+                      <p className="text-xs font-bold text-rose-700 leading-relaxed">
+                        {serviceability.reason}
+                      </p>
+                      <p className="text-[11px] font-medium text-rose-600 pt-1">
+                        📍 Store Location: Main Market, Baharagora (832301). We only deliver orders within 5 km of Baharagora Hub.
+                      </p>
+                    </div>
+                  )}
                   
                   {addresses.length > 1 && (
                     <div className="pt-2">
@@ -422,12 +448,30 @@ export default function CheckoutPage() {
 
               <button
                 onClick={handlePlaceOrder}
-                disabled={isProcessing || !hasAddress}
-                className={`mt-6 w-full py-4 bg-amber-400 hover:bg-amber-500 text-slate-950 font-extrabold text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-amber-300/40 transition-all ${(!hasAddress || isProcessing) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:-translate-y-0.5'}`}
+                disabled={isProcessing || !hasAddress || !serviceability.isServiceable}
+                className={`mt-6 w-full py-4 font-extrabold text-sm rounded-2xl flex items-center justify-center gap-2 transition-all ${
+                  !serviceability.isServiceable
+                    ? 'bg-rose-100 text-rose-700 border-2 border-rose-300 opacity-80 cursor-not-allowed'
+                    : (!hasAddress || isProcessing)
+                    ? 'bg-amber-400 opacity-50 cursor-not-allowed text-slate-950'
+                    : 'bg-amber-400 hover:bg-amber-500 text-slate-950 shadow-lg shadow-amber-300/40 cursor-pointer hover:-translate-y-0.5'
+                }`}
               >
-                <span>{isProcessing ? 'Processing...' : 'Place Order'}</span>
-                {!isProcessing && <ArrowRight className="w-5 h-5" />}
+                <span>
+                  {isProcessing
+                    ? 'Processing...'
+                    : !serviceability.isServiceable
+                    ? '🚫 Delivery Unavailable (Out of 5 KM Zone)'
+                    : 'Place Order'}
+                </span>
+                {!isProcessing && serviceability.isServiceable && <ArrowRight className="w-5 h-5" />}
               </button>
+
+              {!serviceability.isServiceable && (
+                <p className="text-center text-xs font-extrabold text-rose-600 mt-3">
+                  ⚠️ This address (Bistupur / Jamshedpur / Out of range) is outside our 5 km Baharagora delivery zone!
+                </p>
+              )}
               
               {!hasAddress && (
                 <p className="text-center text-xs font-bold text-red-500 mt-3">
