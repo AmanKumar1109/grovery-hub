@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 import gsap from 'gsap';
 import { db } from '../../firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
+import OrderLiveMap from '../../components/OrderLiveMap';
 
 export default function TrackOrder() {
   const { id } = useParams();
@@ -187,12 +188,9 @@ export default function TrackOrder() {
             </div>
           </div>
           
-          <div className="track-item bg-slate-900 rounded-3xl h-48 relative overflow-hidden flex items-center justify-center border border-slate-800 shadow-md">
-            <Map className="w-10 h-10 text-slate-700 absolute" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-amber-400/20 rounded-full animate-ping"></div>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-amber-400 rounded-full border-4 border-slate-950 shadow-lg z-10 flex items-center justify-center">
-              <div className="w-2 h-2 bg-slate-950 rounded-full"></div>
-            </div>
+          {/* Interactive Live Map Component */}
+          <div className="track-item">
+            <OrderLiveMap order={order} />
           </div>
         </div>
       </div>

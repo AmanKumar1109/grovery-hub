@@ -60,3 +60,15 @@ html, body {
 .shadow-floating {
   box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.12), 0 4px 10px -2px rgba(0, 0, 0, 0.04);
 }
+
+/* Leaflet Custom Styles */
+.custom-leaflet-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.leaflet-container {
+  font-family: inherit !important;
+  width: 100%;
+  height: 100%;
+}
