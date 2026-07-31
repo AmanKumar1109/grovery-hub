@@ -11,10 +11,13 @@ import { loadGoogleMaps } from '../utils/googleMapsLoader';
 export default function CheckoutPage() {
   const { currentUser, userProfile, addAddress } = useAuth();
   const { 
-    cartItems, cartTotal, clearCart, showToast,
+    cartItems, 
+    cartTotal, 
+    finalTotal, 
+    deliveryFee,
     availableCoupons, promoCodeInput, setPromoCodeInput,
     appliedCoupon, promoError, setPromoError,
-    discountAmount, finalTotal, handleApplyPromo, handleRemovePromo 
+    discountAmount, handleApplyPromo, handleRemovePromo 
   } = useCart();
   const navigate = useNavigate();
 
@@ -234,6 +237,7 @@ export default function CheckoutPage() {
         })),
         totalAmount: finalTotal > 0 ? finalTotal : 0,
         subTotal: cartTotal || 0,
+        deliveryFee: deliveryFee || 0,
         discountAmount: discountAmount || 0,
         couponApplied: appliedCoupon ? appliedCoupon.code : null,
         status: 'Order Received',
@@ -532,7 +536,9 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-sm font-bold text-slate-600">
                   <span>Delivery Fee</span>
-                  <span className="text-emerald-600">FREE</span>
+                  <span className={deliveryFee === 0 ? "text-emerald-600 font-black" : "text-slate-900"}>
+                    {deliveryFee === 0 ? "FREE" : `+₹${deliveryFee}`}
+                  </span>
                 </div>
                 {appliedCoupon && (
                   <div className="flex justify-between text-sm font-bold text-emerald-600">

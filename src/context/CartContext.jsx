@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { db } from '../firebase';
 import { collection, onSnapshot, getDocs, query, limit, startAfter } from 'firebase/firestore';
+import { useSettings } from './SettingsContext';
 
 const PAGE_SIZE = 8;
 
@@ -406,7 +407,38 @@ export function CartProvider({ children }) {
     setDiscountAmount(discount);
   }, [cartTotal, appliedCoupon]);
 
-  const finalTotal = cartTotal - discountAmount;
+  const { globalSettings } = useSettings();
+  
+  let deliveryFee = 0;
+  if (cartTotal > 0 && globalSettings) {
+    const minFree = globalSettings.minOrderFreeDelivery || 500;
+
+    if (cartTotal >= minFree) {
+      deliveryFee = 0;
+    } else if (globalSettings.deliveryTiers && globalSettings.deliveryTiers.length > 0) {
+      // Sort tiers by minAmount ascending
+      const sortedTiers = [...globalSettings.deliveryTiers].sort((a, b) => (a.minAmount || 0) - (b.minAmount || 0));
+      
+      const matchingTier = sortedTiers.find(tier => cartTotal >= (tier.minAmount || 0) && cartTotal <= tier.maxAmount);
+      if (matchingTier) {
+        deliveryFee = matchingTier.fee;
+      } else {
+        // Fallback: find the first tier where cartTotal is less than maxAmount
+        const fallbackTier = sortedTiers.find(tier => cartTotal <= tier.maxAmount);
+        if (fallbackTier) {
+          deliveryFee = fallbackTier.fee;
+        } else {
+          // If it somehow exceeds all maxAmounts but hasn't reached Free Delivery threshold
+          deliveryFee = sortedTiers[sortedTiers.length - 1].fee;
+        }
+      }
+    } else {
+      // Fallback if no tiers exist but free delivery isn't reached
+      deliveryFee = globalSettings.standardDeliveryFee || 40;
+    }
+  }
+
+  const finalTotal = cartTotal - discountAmount + deliveryFee;
 
   return (
     <CartContext.Provider
@@ -436,6 +468,7 @@ export function CartProvider({ children }) {
         promoError,
         setPromoError,
         discountAmount,
+        deliveryFee,
         finalTotal,
         handleApplyPromo,
         handleRemovePromo

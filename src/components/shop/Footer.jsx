@@ -19,10 +19,12 @@ const Youtube = ({ className }) => (
 );
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useSettings } from '../../context/SettingsContext';
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function Footer() {
+  const { globalSettings } = useSettings();
   const footerRef = useRef(null);
   const [openAccordion, setOpenAccordion] = useState(null);
 
@@ -129,25 +131,31 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 flex-shrink-0 text-amber-400" />
-                <span>6207462800</span>
+                <span>{globalSettings?.supportPhone || '6207462800'}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 flex-shrink-0 text-amber-400" />
-                <span>thegroceryhub2025@gmail.com</span>
+                <span>{globalSettings?.supportEmail || 'thegroceryhub2025@gmail.com'}</span>
               </div>
             </div>
 
             {/* Social Media Icons */}
             <div className="flex items-center gap-3 pt-2">
-              <a href="https://www.instagram.com/thegroceryhub_baharagora?igsh=MW05NzlkcWlkeWpobA==" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 shadow-lg">
-                <Instagram className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 shadow-lg">
-                <Twitter className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 shadow-lg">
-                <Facebook className="w-4 h-4" />
-              </a>
+              {globalSettings?.instagramUrl && (
+                <a href={globalSettings.instagramUrl} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 shadow-lg">
+                  <Instagram className="w-4 h-4" />
+                </a>
+              )}
+              {globalSettings?.twitterUrl && (
+                <a href={globalSettings.twitterUrl} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 shadow-lg">
+                  <Twitter className="w-4 h-4" />
+                </a>
+              )}
+              {globalSettings?.facebookUrl && (
+                <a href={globalSettings.facebookUrl} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 shadow-lg">
+                  <Facebook className="w-4 h-4" />
+                </a>
+              )}
               <a href="#" className="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-slate-400 hover:bg-amber-400 hover:text-slate-950 transition-all duration-300 hover:scale-110 shadow-lg">
                 <Youtube className="w-4 h-4" />
               </a>
@@ -195,7 +203,8 @@ export default function Footer() {
               <li><Link to="/dashboard/help" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Help Center & FAQ</Link></li>
               <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">15-Min Delivery Policy</a></li>
               <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Quality Standards</a></li>
-              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Refund & Returns</a></li>
+              <li><Link to="/about-us" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">About Us</Link></li>
+              <li><Link to="/refund-policy" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Refund & Returns Policy</Link></li>
               <li><Link to="/terms-of-service" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Terms of Service</Link></li>
               <li><Link to="/privacy-policy" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Privacy Policy</Link></li>
             </ul>

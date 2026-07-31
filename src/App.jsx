@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { SettingsProvider } from './context/SettingsContext';
 import { CartProvider } from './context/CartContext';
 import HomePage from './pages/HomePage';
 import CatalogPage from './pages/CatalogPage';
@@ -18,8 +19,7 @@ import Settings from './pages/dashboard/Settings';
 import InvoicePage from './pages/dashboard/InvoicePage';
 import HelpSupport from './pages/dashboard/HelpSupport';
 import ComplaintPage from './pages/ComplaintPage';
-import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import TermsOfServicePage from './pages/TermsOfServicePage';
+import DynamicPage from './pages/DynamicPage';
 import MyComplaints from './pages/dashboard/MyComplaints';
 import FloatingWhatsApp from './components/ui/FloatingWhatsApp';
 import OrderNotificationListener from './components/ui/OrderNotificationListener';
@@ -33,39 +33,40 @@ function GlobalNotification() {
 function App() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/catalog" element={<CatalogPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/complaint" element={<ComplaintPage />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-          <Route path="/terms-of-service" element={<TermsOfServicePage />} />
-          
-          {/* Dashboard Nested Routes */}
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<DashboardHome />} />
-            <Route path="orders" element={<MyOrders />} />
-            <Route path="help" element={<HelpSupport />} />
-            <Route path="track-order/:id" element={<TrackOrder />} />
-            <Route path="track-order" element={<TrackOrder />} />
-            <Route path="track/:id" element={<TrackOrder />} />
-            <Route path="wishlist" element={<Wishlist />} />
-            <Route path="addresses" element={<SavedAddresses />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="settings" element={<Navigate to="/dashboard/help" replace />} />
-            <Route path="complaints" element={<MyComplaints />} />
-            <Route path="invoice/:id" element={<InvoicePage />} />
-          </Route>
-
-          <Route path="/complete-profile" element={<Navigate to="/dashboard/profile" replace />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-        <FloatingWhatsApp />
-        <GlobalNotification />
-      </CartProvider>
+      <SettingsProvider>
+        <CartProvider>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/catalog" element={<CatalogPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/complaint" element={<ComplaintPage />} />
+            <Route path="/privacy-policy" element={<DynamicPage documentId="privacyPolicy" title="Privacy Policy" />} />
+            <Route path="/terms-of-service" element={<DynamicPage documentId="termsOfService" title="Terms of Service" />} />
+            <Route path="/refund-policy" element={<DynamicPage documentId="refundPolicy" title="Refund & Returns Policy" />} />
+            <Route path="/about-us" element={<DynamicPage documentId="aboutUs" title="About Us" />} />
+            
+            {/* Dashboard Nested Routes */}
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<DashboardHome />} />
+              <Route path="orders" element={<MyOrders />} />
+              <Route path="help" element={<HelpSupport />} />
+              <Route path="track-order/:id" element={<TrackOrder />} />
+              <Route path="track-order" element={<TrackOrder />} />
+              <Route path="track/:id" element={<TrackOrder />} />
+              <Route path="wishlist" element={<Wishlist />} />
+              <Route path="addresses" element={<SavedAddresses />} />
+              <Route path="profile" element={<Profile />} />
+              <Route path="settings" element={<Navigate to="/dashboard/help" replace />} />
+              <Route path="complaints" element={<MyComplaints />} />
+              <Route path="invoice/:id" element={<InvoicePage />} />
+            </Route>
+          </Routes>
+          <FloatingWhatsApp />
+          <GlobalNotification />
+        </CartProvider>
+      </SettingsProvider>
     </AuthProvider>
   );
 }
