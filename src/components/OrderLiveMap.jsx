@@ -65,7 +65,7 @@ export default function OrderLiveMap({ order }) {
   ) : 0;
 
   const currentETA = roadDuration ? `~${roadDuration} mins` : calculateETA(distanceToCustomer);
-  const displayDistance = roadDistance || distanceToCustomer;
+  const displayDistance = distanceToCustomer.toFixed(2);
 
   useEffect(() => {
     if (!mapContainerRef.current || !customerCoords || !initialRiderCoords) return;
@@ -170,8 +170,7 @@ export default function OrderLiveMap({ order }) {
     // Fetch real road route from Google Maps Directions API
     fetchRoadRoute(
       { lat: BAHARAGORA_HUB.lat, lng: BAHARAGORA_HUB.lng },
-      { lat: customerCoords.lat, lng: customerCoords.lng },
-      [{ lat: initialRiderCoords.lat, lng: initialRiderCoords.lng }]
+      { lat: customerCoords.lat, lng: customerCoords.lng }
     ).then(result => {
       if (!mapInstanceRef.current) return;
 

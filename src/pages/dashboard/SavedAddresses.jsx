@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { loadGoogleMaps } from '../../utils/googleMapsLoader';
+import LocationPickerModal from '../../components/LocationPickerModal';
 
 export default function SavedAddresses() {
   const containerRef = useRef(null);
@@ -12,6 +13,7 @@ export default function SavedAddresses() {
   
   const [showAddForm, setShowAddForm] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showLocationPickerModal, setShowLocationPickerModal] = useState(false);
   
   const [addressForm, setAddressForm] = useState({
     name: '',
@@ -21,11 +23,26 @@ export default function SavedAddresses() {
     city: 'Baharagora',
     state: 'Jharkhand',
     pincode: '832101',
-    phone: '',
     type: 'Home',
     lat: null,
     lng: null
   });
+
+  const handleConfirmLocationFromModal = (locationData) => {
+    setAddressForm(prev => ({
+      ...prev,
+      street: locationData.street || prev.street,
+      locality: locationData.locality || prev.locality,
+      city: locationData.city || prev.city,
+      state: locationData.state || prev.state,
+      pincode: locationData.pincode || prev.pincode,
+      lat: locationData.lat,
+      lng: locationData.lng,
+      location: locationData.location,
+      addressDetails: locationData.addressDetails
+    }));
+    setShowAddForm(true);
+  };
 
   const [isLocating, setIsLocating] = useState(false);
 
@@ -178,14 +195,13 @@ export default function SavedAddresses() {
             <div className="flex items-center gap-2">
               <button 
                 type="button" 
-                onClick={handleUseCurrentLocation}
-                disabled={isLocating}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
+                onClick={() => setShowLocationPickerModal(true)}
+                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-200 transition-all active:scale-95 cursor-pointer"
               >
-                <Navigation className={`w-3.5 h-3.5 ${isLocating ? 'animate-pulse' : ''}`} />
-                {isLocating ? 'Locating...' : 'Use Current Location'}
+                <Navigation className="w-3.5 h-3.5" />
+                <span>🎯 Select Location on Map</span>
               </button>
-              <button onClick={() => setShowAddForm(false)} className="p-2 bg-slate-100 text-slate-500 hover:text-slate-900 rounded-full transition-colors">
+              <button onClick={() => setShowAddForm(false)} className="p-2 bg-slate-100 text-slate-500 hover:text-slate-900 rounded-full transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -324,6 +340,13 @@ export default function SavedAddresses() {
           })}
         </div>
       )}
+
+      <LocationPickerModal
+        isOpen={showLocationPickerModal}
+        onClose={() => setShowLocationPickerModal(false)}
+        onConfirm={handleConfirmLocationFromModal}
+        initialLocation={addressForm}
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs, updateDoc, i
 import { db } from '../firebase';
 import { checkAddressServiceability } from '../utils/locationUtils';
 import { loadGoogleMaps } from '../utils/googleMapsLoader';
+import LocationPickerModal from '../components/LocationPickerModal';
 
 export default function CheckoutPage() {
   const { currentUser, userProfile, addAddress } = useAuth();
@@ -17,7 +18,8 @@ export default function CheckoutPage() {
     deliveryFee,
     availableCoupons, promoCodeInput, setPromoCodeInput,
     appliedCoupon, promoError, setPromoError,
-    discountAmount, handleApplyPromo, handleRemovePromo 
+    discountAmount, handleApplyPromo, handleRemovePromo,
+    showToast, clearCart
   } = useCart();
   const navigate = useNavigate();
 
@@ -40,6 +42,23 @@ export default function CheckoutPage() {
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [activeAddressId, setActiveAddressId] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [showLocationPickerModal, setShowLocationPickerModal] = useState(false);
+
+  const handleConfirmLocationFromModal = (locationData) => {
+    setAddressForm(prev => ({
+      ...prev,
+      street: locationData.street || prev.street,
+      locality: locationData.locality || prev.locality,
+      city: locationData.city || prev.city,
+      state: locationData.state || prev.state,
+      pincode: locationData.pincode || prev.pincode,
+      lat: locationData.lat,
+      lng: locationData.lng,
+      location: locationData.location,
+      addressDetails: locationData.addressDetails
+    }));
+    setShowAddressForm(true);
+  };
 
   const handleUseCurrentLocation = async () => {
     if (!navigator.geolocation) {
@@ -216,7 +235,7 @@ export default function CheckoutPage() {
         lng: activeAddress.lng || null
       } : { street: 'Store Pickup' };
 
-      await setDoc(doc(db, 'orders', orderId), {
+      const orderData = {
         id: orderId,
         orderId: orderId,
         userId: currentUser ? currentUser.uid : 'guest',
@@ -247,7 +266,11 @@ export default function CheckoutPage() {
         orderTime: formattedTime,
         createdAt: timestamp,
         updatedAt: timestamp
-      });
+      };
+
+      const sanitizedOrderData = JSON.parse(JSON.stringify(orderData, (k, v) => v === undefined ? null : v));
+
+      await setDoc(doc(db, 'orders', orderId), sanitizedOrderData);
 
       // Update recent buyers count for each item
       for (const item of cartItems) {
@@ -381,16 +404,15 @@ export default function CheckoutPage() {
                 </div>
               ) : (
                 <form onSubmit={handleSaveAddress} className="space-y-4">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-4">
                     <p className="text-sm font-bold text-slate-500">Please enter your delivery details to proceed.</p>
                     <button 
                       type="button" 
-                      onClick={handleUseCurrentLocation}
-                      disabled={isLocating}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 cursor-pointer"
+                      onClick={() => setShowLocationPickerModal(true)}
+                      className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-200 transition-all active:scale-95 cursor-pointer"
                     >
-                      <Navigation className={`w-3.5 h-3.5 ${isLocating ? 'animate-pulse' : ''}`} />
-                      {isLocating ? 'Locating...' : 'Use Current Location'}
+                      <Navigation className="w-4 h-4" />
+                      <span>🎯 Select Location on Map</span>
                     </button>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -588,6 +610,13 @@ export default function CheckoutPage() {
           </div>
         </div>
       </div>
+
+      <LocationPickerModal
+        isOpen={showLocationPickerModal}
+        onClose={() => setShowLocationPickerModal(false)}
+        onConfirm={handleConfirmLocationFromModal}
+        initialLocation={addressForm}
+      />
     </div>
   );
 }

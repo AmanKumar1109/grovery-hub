@@ -2,10 +2,10 @@ import { loadGoogleMaps } from './googleMapsLoader';
 
 // Exact Baharagora Store Location (Dadu Complex, near Shitla Mandir, Baharagora, Jharkhand 832101)
 export const BAHARAGORA_HUB = {
-  lat: 22.2825,
-  lng: 86.7235,
-  name: 'The Grocery Hub Store',
-  address: 'Dadu Complex, Near Shitla Mandir, Baharagora, Jharkhand - 832101',
+  lat: 22.2760625,
+  lng: 86.7193125,
+  name: 'THE GROCERY HUB',
+  address: 'Dadu Complex, near Shitla Mandir, Baharagora, Jharkhand 832101',
   pincode: '832101'
 };
 

@@ -157,9 +157,11 @@ export function AuthProvider({ children }) {
       ...addressData
     };
 
+    const sanitizedNewAddress = JSON.parse(JSON.stringify(newAddress, (k, v) => v === undefined ? null : v));
+
     const currentAddresses = userProfile?.addresses || [];
     const isFirstAddress = currentAddresses.length === 0;
-    const newAddresses = [...currentAddresses, newAddress];
+    const newAddresses = [...currentAddresses, sanitizedNewAddress];
 
     const newProfile = {
       ...userProfile,
