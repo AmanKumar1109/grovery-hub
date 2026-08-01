@@ -403,18 +403,36 @@ export default function CheckoutPage() {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSaveAddress} className="space-y-4">
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-4">
-                    <p className="text-sm font-bold text-slate-500">Please enter your delivery details to proceed.</p>
-                    <button 
-                      type="button" 
-                      onClick={() => setShowLocationPickerModal(true)}
-                      className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-200 transition-all active:scale-95 cursor-pointer"
-                    >
-                      <Navigation className="w-4 h-4" />
-                      <span>🎯 Select Location on Map</span>
-                    </button>
-                  </div>
+                <div className="space-y-4">
+                  {!addressForm.lat ? (
+                    <div className="bg-slate-50 p-8 rounded-3xl border-2 border-dashed border-slate-200 text-center space-y-4">
+                      <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <MapPin className="w-8 h-8" />
+                      </div>
+                      <h3 className="text-lg font-black text-slate-900">Where should we deliver?</h3>
+                      <p className="text-sm font-medium text-slate-500 max-w-xs mx-auto">Please select your exact delivery location on the map to continue.</p>
+                      <button 
+                        type="button" 
+                        onClick={() => setShowLocationPickerModal(true)}
+                        className="mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-black shadow-lg shadow-emerald-200 transition-all active:scale-95 cursor-pointer"
+                      >
+                        <Navigation className="w-4 h-4" />
+                        <span>🎯 Select Exact Delivery Point</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <form onSubmit={handleSaveAddress} className="space-y-4">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-4">
+                        <p className="text-sm font-bold text-slate-500">Please enter your delivery details to proceed.</p>
+                        <button 
+                          type="button" 
+                          onClick={() => setShowLocationPickerModal(true)}
+                          className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-200 transition-all active:scale-95 cursor-pointer"
+                        >
+                          <Navigation className="w-4 h-4" />
+                          <span>🎯 Edit Map Location</span>
+                        </button>
+                      </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1.5">Full Name *</label>
@@ -451,6 +469,8 @@ export default function CheckoutPage() {
                     {isProcessing ? 'Saving...' : 'Save Address'}
                   </button>
                 </form>
+                  )}
+                </div>
               )}
             </div>
 

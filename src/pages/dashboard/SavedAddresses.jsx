@@ -180,7 +180,7 @@ export default function SavedAddresses() {
         </div>
         {!showAddForm && (
           <button 
-            onClick={() => setShowAddForm(true)}
+            onClick={() => setShowLocationPickerModal(true)}
             className="flex items-center justify-center gap-2 px-5 py-3 bg-amber-400 hover:bg-amber-500 text-slate-950 font-extrabold text-xs rounded-2xl transition-all shadow-md shadow-amber-300/40 active:scale-95 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[3]" /> Add New Address

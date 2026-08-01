@@ -92,6 +92,12 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
     });
     return () => { active = false; };
   }, [isOpen]);
+  // Auto-request GPS on open if no initial location
+  useEffect(() => {
+    if (isOpen && (!initialLocation || Object.keys(initialLocation).length === 0)) {
+      requestLocation();
+    }
+  }, [isOpen]);
 
   // Update pin position when GPS location succeeds
   useEffect(() => {

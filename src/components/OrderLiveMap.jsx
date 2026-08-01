@@ -64,8 +64,15 @@ export default function OrderLiveMap({ order }) {
     customerCoords.lng
   ) : 0;
 
-  const currentETA = roadDuration ? `~${roadDuration} mins` : calculateETA(distanceToCustomer);
-  const displayDistance = distanceToCustomer.toFixed(2);
+  const hubToCustomerStraightLine = customerCoords ? calculateDistance(
+    BAHARAGORA_HUB.lat,
+    BAHARAGORA_HUB.lng,
+    customerCoords.lat,
+    customerCoords.lng
+  ) : 0;
+
+  const currentETA = roadDuration ? `~${roadDuration} mins` : calculateETA(hubToCustomerStraightLine);
+  const displayDistance = roadDistance !== null ? roadDistance.toFixed(2) : hubToCustomerStraightLine.toFixed(2);
 
   useEffect(() => {
     if (!mapContainerRef.current || !customerCoords || !initialRiderCoords) return;
@@ -246,7 +253,7 @@ export default function OrderLiveMap({ order }) {
 
         <div className="flex items-center gap-1.5 text-emerald-400">
           <Navigation className="w-3.5 h-3.5 shrink-0" />
-          <span>{displayDistance} km away</span>
+          <span>{displayDistance} km (Road Distance)</span>
         </div>
 
         {serviceCheck.isServiceable ? (
