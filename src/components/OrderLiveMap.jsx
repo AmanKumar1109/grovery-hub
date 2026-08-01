@@ -100,14 +100,22 @@ export default function OrderLiveMap({ order }) {
       attribution: '&copy; Google Maps'
     }).addTo(map);
 
-    // 5 KM Geofence Ring
+    // 5 KM Geofence Ring - Strong & Accurate Boundary
     L.circle([BAHARAGORA_HUB.lat, BAHARAGORA_HUB.lng], {
       radius: MAX_DELIVERY_RADIUS_KM * 1000,
-      color: serviceCheck.isServiceable ? '#10b981' : '#f43f5e',
+      color: serviceCheck.isServiceable ? '#059669' : '#e11d48',
       fillColor: serviceCheck.isServiceable ? '#10b981' : '#f43f5e',
-      fillOpacity: 0.1,
-      weight: 2,
-      dashArray: '6, 6'
+      fillOpacity: serviceCheck.isServiceable ? 0.06 : 0.15,
+      weight: 4
+    }).addTo(map);
+
+    // Add a thin outer glow/stroke in RED to always show the absolute limit
+    L.circle([BAHARAGORA_HUB.lat, BAHARAGORA_HUB.lng], {
+      radius: MAX_DELIVERY_RADIUS_KM * 1000,
+      color: '#ef4444',
+      fillOpacity: 0,
+      weight: 1.5,
+      dashArray: '4, 8'
     }).addTo(map);
 
     const createIcon = (svg, color) => {
@@ -138,11 +146,6 @@ export default function OrderLiveMap({ order }) {
       '#059669'
     );
 
-    const riderIcon = createIcon(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M10 17h4V5H2v12h3"/><path d="M20 17h2v-3.5a2.5 2.5 0 0 0-2.5-2.5H14"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>`,
-      '#f59e0b'
-    );
-
     const customerIcon = createIcon(
       `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`,
       serviceCheck.isServiceable ? '#2563eb' : '#e11d48'
@@ -154,15 +157,10 @@ export default function OrderLiveMap({ order }) {
     // Customer Marker
     L.marker([customerCoords.lat, customerCoords.lng], { icon: customerIcon }).addTo(map);
 
-    // Rider Marker
-    const riderMarker = L.marker([initialRiderCoords.lat, initialRiderCoords.lng], { icon: riderIcon }).addTo(map);
-    riderMarkerRef.current = riderMarker;
-
     // Draw initial straight line as placeholder while road route loads
     const initialPolyline = L.polyline(
       [
         [BAHARAGORA_HUB.lat, BAHARAGORA_HUB.lng],
-        [initialRiderCoords.lat, initialRiderCoords.lng],
         [customerCoords.lat, customerCoords.lng]
       ],
       {
@@ -213,8 +211,7 @@ export default function OrderLiveMap({ order }) {
 
     const bounds = L.latLngBounds([
       [BAHARAGORA_HUB.lat, BAHARAGORA_HUB.lng],
-      [customerCoords.lat, customerCoords.lng],
-      [initialRiderCoords.lat, initialRiderCoords.lng]
+      [customerCoords.lat, customerCoords.lng]
     ]);
     map.fitBounds(bounds, { padding: [35, 35] });
 

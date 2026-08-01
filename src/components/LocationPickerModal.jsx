@@ -75,6 +75,10 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
   const serviceability = checkDeliveryServiceable(coords.lat, coords.lng);
   const accuracyInfo = getAccuracyLevel();
 
+  // Map Interaction State
+  const [isMapDragging, setIsMapDragging] = useState(false);
+  const isProgrammaticMoveRef = useRef(false);
+
   // Load Google Maps JS SDK Services (Places & Geocoder)
   useEffect(() => {
     if (!isOpen) return;
@@ -102,6 +106,7 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
   // Update pin position when GPS location succeeds
   useEffect(() => {
     if (gpsStatus === 'success' && gpsLocation) {
+      isProgrammaticMoveRef.current = true;
       setCoords(gpsLocation);
       setCurrentAccuracy(gpsAccuracy);
       setAddressSource('gps');
@@ -178,15 +183,25 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
       attribution: '&copy; Google Maps'
     }).addTo(map);
 
-    // 5 KM Geofence Circle around Hub
+    // 5 KM Geofence Circle around Hub - Strong & Accurate Boundary
     const isServiceable = serviceability.isServiceable;
+    
+    // Create the main solid boundary line
     L.circle([BAHARAGORA_HUB.lat, BAHARAGORA_HUB.lng], {
       radius: MAX_DELIVERY_RADIUS_KM * 1000,
-      color: isServiceable ? '#10b981' : '#f43f5e',
+      color: isServiceable ? '#059669' : '#e11d48', // Stronger solid border color
       fillColor: isServiceable ? '#10b981' : '#f43f5e',
-      fillOpacity: 0.08,
-      weight: 2,
-      dashArray: '6, 6'
+      fillOpacity: isServiceable ? 0.06 : 0.15,
+      weight: 4 // Thicker border
+    }).addTo(map);
+    
+    // Add a thin outer glow/stroke in RED to always show the absolute limit
+    L.circle([BAHARAGORA_HUB.lat, BAHARAGORA_HUB.lng], {
+      radius: MAX_DELIVERY_RADIUS_KM * 1000,
+      color: '#ef4444',
+      fillOpacity: 0,
+      weight: 1.5,
+      dashArray: '4, 8'
     }).addTo(map);
 
     // Store Hub Marker Icon
@@ -204,40 +219,24 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
       .addTo(map)
       .bindPopup(`<strong style="color: #059669;">🏪 THE GROCERY HUB</strong><br/><span style="font-size: 11px;">Baharagora Store</span>`);
 
-    // Customer Delivery Pin Icon (DRAGGABLE)
-    const pinColor = isServiceable ? '#2563eb' : '#e11d48';
-    const customerPinIcon = L.divIcon({
-      className: 'custom-leaflet-marker draggable-pin',
-      html: `
-        <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
-          <div style="background: ${pinColor}; border: 3px solid white; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(0,0,0,0.35); cursor: grab;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-          </div>
-          <div style="background: rgba(15, 23, 42, 0.9); color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 800; margin-top: 4px; border: 1px solid rgba(255,255,255,0.3); white-space: nowrap;">
-            🎯 Drag to Exact Entrance
-          </div>
-        </div>
-      `,
-      iconSize: [44, 60],
-      iconAnchor: [22, 22]
+    // Map Drag Events for Fixed Center Pin (Flipkart Style)
+    map.on('movestart', () => {
+      setIsMapDragging(true);
     });
 
-    const marker = L.marker([coords.lat, coords.lng], {
-      icon: customerPinIcon,
-      draggable: true
-    }).addTo(map);
-
-    markerRef.current = marker;
-
-    // Drag end listener — update coordinates & reverse geocode
-    marker.on('dragend', (e) => {
-      const newPos = e.target.getLatLng();
-      const newLat = Math.round(newPos.lat * 1000000) / 1000000;
-      const newLng = Math.round(newPos.lng * 1000000) / 1000000;
-      setCoords({ lat: newLat, lng: newLng });
-      setCurrentAccuracy(null);
-      setAddressSource('manual_pin');
-      reverseGeocode(newLat, newLng);
+    map.on('moveend', () => {
+      setIsMapDragging(false);
+      const newCenter = map.getCenter();
+      const newLat = Math.round(newCenter.lat * 1000000) / 1000000;
+      const newLng = Math.round(newCenter.lng * 1000000) / 1000000;
+      
+      if (!isProgrammaticMoveRef.current) {
+        setCoords({ lat: newLat, lng: newLng });
+        setCurrentAccuracy(null);
+        setAddressSource('map_drag');
+        reverseGeocode(newLat, newLng);
+      }
+      isProgrammaticMoveRef.current = false;
     });
 
     // Invalidate map size after animation
@@ -256,11 +255,10 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
     };
   }, [isOpen]);
 
-  // Sync marker position when coords state changes
+  // Sync map view when coords change programmatically (GPS, Search)
   useEffect(() => {
-    if (mapInstanceRef.current && markerRef.current) {
-      markerRef.current.setLatLng([coords.lat, coords.lng]);
-      mapInstanceRef.current.panTo([coords.lat, coords.lng]);
+    if (mapInstanceRef.current && isProgrammaticMoveRef.current) {
+      mapInstanceRef.current.setView([coords.lat, coords.lng], 17, { animate: true, duration: 0.8 });
     }
   }, [coords]);
 
@@ -311,6 +309,7 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
           const loc = results[0].geometry.location;
           const newLat = loc.lat();
           const newLng = loc.lng();
+          isProgrammaticMoveRef.current = true;
           setCoords({ lat: newLat, lng: newLng });
           setPlaceId(prediction.place_id);
           setFormattedAddress(results[0].formatted_address);
@@ -455,13 +454,28 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
             )}
           </div>
 
-          {/* Interactive Map Area */}
+          {/* Interactive Map Area (Flipkart Style) */}
           <div className="relative rounded-3xl overflow-hidden border border-slate-200 shadow-inner bg-slate-950">
             <div
               ref={mapContainerRef}
-              style={{ width: '100%', height: '240px', minHeight: '240px', zIndex: 1 }}
+              style={{ width: '100%', height: '280px', minHeight: '280px', zIndex: 1 }}
               className="w-full h-full"
             />
+
+            {/* Central Fixed Pin (Flipkart Style) */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1000] pointer-events-none flex flex-col items-center justify-end h-16 w-16">
+              <div className={`relative flex flex-col items-center transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${isMapDragging ? '-translate-y-4' : 'translate-y-0'}`}>
+                {/* Pin Head */}
+                <div className={`flex items-center justify-center w-11 h-11 rounded-full border-4 shadow-lg transition-colors duration-300 ${serviceability.isServiceable ? 'bg-emerald-500 border-white text-white shadow-emerald-500/40' : 'bg-rose-500 border-white text-white shadow-rose-500/40'}`}>
+                  <MapPin className="w-5 h-5 fill-current" />
+                </div>
+                {/* Pin Point/Stick */}
+                <div className={`w-1 h-3 ${serviceability.isServiceable ? 'bg-emerald-500' : 'bg-rose-500'} -mt-1 rounded-b-full transition-colors duration-300`}></div>
+              </div>
+              
+              {/* Pin Drop Shadow */}
+              <div className={`absolute bottom-0 w-3 h-1.5 bg-black/40 rounded-full blur-[1px] transition-all duration-300 ${isMapDragging ? 'scale-75 opacity-20' : 'scale-100 opacity-40'}`}></div>
+            </div>
 
             {/* Live 5 KM Serviceability Badge Overlay on Map */}
             <div className="absolute top-3 left-3 right-3 z-[1000] flex items-center justify-between gap-2 pointer-events-none">
@@ -492,8 +506,8 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
             </div>
 
             {/* Pin Drag Helper Banner */}
-            <div className="absolute bottom-2 left-3 right-3 z-[1000] bg-slate-900/80 backdrop-blur-xs text-slate-300 px-3 py-1.5 rounded-xl text-[11px] font-bold text-center pointer-events-none">
-              📍 Touch & hold the marker to drag it right onto your building entrance
+            <div className={`absolute bottom-2 left-3 right-3 z-[1000] bg-slate-900/80 backdrop-blur-xs text-slate-300 px-3 py-1.5 rounded-xl text-[11px] font-bold text-center pointer-events-none transition-opacity duration-300 ${isMapDragging ? 'opacity-100' : 'opacity-0'}`}>
+              📍 Drag the map to place the pin on your exact entrance
             </div>
           </div>
 
