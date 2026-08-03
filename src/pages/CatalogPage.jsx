@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import Header from '../components/header/Header';
 import Footer from '../components/shop/Footer';
 import CartDrawer from '../components/shop/CartDrawer';
@@ -10,6 +10,7 @@ import { Search, SlidersHorizontal, Package, Check, Filter, ChevronDown, Chevron
 
 export default function CatalogPage() {
   const location = useLocation();
+  const { categoryName } = useParams();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
@@ -17,8 +18,16 @@ export default function CatalogPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const cat = params.get('category');
+    // Priority 1: Clean URL parameter (e.g. /category/Dairy)
+    // Priority 2: Query parameter (e.g. /catalog?category=Dairy)
+    let cat = null;
+    if (categoryName) {
+      cat = decodeURIComponent(categoryName);
+    } else {
+      const params = new URLSearchParams(location.search);
+      cat = params.get('category');
+    }
+
     if (cat) {
       setSelectedCategory(cat);
       // Auto-open filters if a category is pre-selected
@@ -26,7 +35,17 @@ export default function CatalogPage() {
         setIsFilterOpen(true);
       }
     }
-  }, [location.search]);
+
+    const searchParam = new URLSearchParams(location.search).get('search');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    } else {
+      setSearchQuery('');
+    }
+    
+    // Always scroll to top when category changes
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  }, [location.search, categoryName]);
 
   const {
     toastMessage,

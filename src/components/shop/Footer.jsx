@@ -53,11 +53,11 @@ export default function Footer() {
       id: 'col2',
       title: 'Categories',
       links: [
-        { id: 1, label: 'Dairy & Fresh Milk', url: '/?category=Dairy & Fresh Milk#shop' },
-        { id: 2, label: 'Bakery & Breads', url: '/?category=Bakery & Breads#shop' },
-        { id: 3, label: 'Rice, Atta & Dals', url: '/?category=Rice, Atta & Dals#shop' },
-        { id: 4, label: 'Oils, Ghee & Masalas', url: '/?category=Oils, Ghee & Masalas#shop' },
-        { id: 5, label: 'Snacks & Beverages', url: '/?category=Snacks & Beverages#shop' }
+        { id: 1, label: 'Dairy & Fresh Milk', url: '/category/Dairy & Fresh Milk' },
+        { id: 2, label: 'Bakery & Breads', url: '/category/Bakery & Breads' },
+        { id: 3, label: 'Rice, Atta & Dals', url: '/category/Rice, Atta & Dals' },
+        { id: 4, label: 'Oils, Ghee & Masalas', url: '/category/Oils, Ghee & Masalas' },
+        { id: 5, label: 'Snacks & Beverages', url: '/category/Snacks & Beverages' }
       ]
     },
     {
