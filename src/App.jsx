@@ -42,8 +42,11 @@ function App() {
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/complaint" element={<ComplaintPage />} />
+            <Route path="/cancellation-policy" element={<DynamicPage documentId="cancellationPolicy" title="Cancellation Policy" />} />
+            <Route path="/disclaimer" element={<DynamicPage documentId="disclaimer" title="Disclaimer" />} />
+            <Route path="/shipping-policy" element={<DynamicPage documentId="shippingPolicy" title="Shipping & Delivery" />} />
             <Route path="/privacy-policy" element={<DynamicPage documentId="privacyPolicy" title="Privacy Policy" />} />
-            <Route path="/terms-of-service" element={<DynamicPage documentId="termsOfService" title="Terms of Service" />} />
+            <Route path="/terms-of-service" element={<DynamicPage documentId="termsOfService" title="Terms and Conditions" />} />
             <Route path="/refund-policy" element={<DynamicPage documentId="refundPolicy" title="Refund & Returns Policy" />} />
             <Route path="/about-us" element={<DynamicPage documentId="aboutUs" title="About Us" />} />
             

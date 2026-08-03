@@ -216,7 +216,10 @@ export default function Footer() {
               <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Quality Standards</a></li>
               <li><Link to="/about-us" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">About Us</Link></li>
               <li><Link to="/refund-policy" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Refund & Returns Policy</Link></li>
-              <li><Link to="/terms-of-service" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Terms of Service</Link></li>
+              <li><Link to="/cancellation-policy" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Cancellation Policy</Link></li>
+              <li><Link to="/disclaimer" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Disclaimer</Link></li>
+              <li><Link to="/shipping-policy" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Shipping & Delivery Policy</Link></li>
+              <li><Link to="/terms-of-service" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Terms and Conditions</Link></li>
               <li><Link to="/privacy-policy" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Privacy Policy</Link></li>
             </ul>
           </div>
