@@ -27,9 +27,12 @@ export const initialCategoriesList = [
   { id: 'Snacks & Biscuits', name: 'Snacks & Biscuits', icon: Cookie, count: '3 Items' },
 ];
 
-export default function CategoryShowcase({ selectedCategory, onSelectCategory }) {
-  const { categoriesList: dynamicCategories } = useCart();
+export default function CategoryShowcase({ selectedCategory, onSelectCategory, selectedSubcategory, onSelectSubcategory }) {
+  const { categoriesList: dynamicCategories, categoryDocs } = useCart();
   const listToRender = dynamicCategories && dynamicCategories.length > 0 ? dynamicCategories : initialCategoriesList;
+
+  const currentCatDoc = categoryDocs?.find(c => c.name === selectedCategory);
+  const subcategories = currentCatDoc?.subcategories || [];
 
   return (
     <div className="w-full py-4 space-y-4">
@@ -80,6 +83,35 @@ export default function CategoryShowcase({ selectedCategory, onSelectCategory })
           );
         })}
       </div>
+
+      {/* Subcategory Pills (If applicable) */}
+      {subcategories.length > 0 && (
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 snap-x mt-2">
+          <button
+            onClick={() => onSelectSubcategory(null)}
+            className={`snap-start px-3 py-1.5 rounded-xl font-bold text-[10px] whitespace-nowrap transition-all duration-200 cursor-pointer flex-shrink-0 ${
+              !selectedSubcategory
+                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            All {selectedCategory}
+          </button>
+          {subcategories.map((sub) => (
+            <button
+              key={sub}
+              onClick={() => onSelectSubcategory(sub)}
+              className={`snap-start px-3 py-1.5 rounded-xl font-bold text-[10px] whitespace-nowrap transition-all duration-200 cursor-pointer flex-shrink-0 ${
+                selectedSubcategory === sub
+                  ? 'bg-amber-400 text-slate-900 border border-amber-400'
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:border-amber-300'
+              }`}
+            >
+              {sub}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

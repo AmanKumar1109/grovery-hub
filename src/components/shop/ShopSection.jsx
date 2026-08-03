@@ -9,6 +9,12 @@ import { Search, SlidersHorizontal, Package, ArrowRight } from 'lucide-react';
 export default function ShopSection() {
   const { products, isLoadingProducts } = useCart();
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedSubcategory, setSelectedSubcategory] = useState(null);
+
+  const handleSelectCategory = (cat) => {
+    setSelectedCategory(cat);
+    setSelectedSubcategory(null);
+  };
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
 
@@ -22,8 +28,14 @@ export default function ShopSection() {
           : selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1'
           ? !!prod.isBogo
           : prod.category === selectedCategory;
+      const matchesSubcategory =
+        selectedCategory === 'all' || selectedCategory === 'Trending' || selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1'
+          ? true
+          : !selectedSubcategory
+          ? true
+          : prod.subcategory === selectedSubcategory;
       const matchesSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
+      return matchesCategory && matchesSubcategory && matchesSearch;
     })
     .sort((a, b) => {
       if (sortBy === 'price-low') return a.price - b.price;
@@ -41,7 +53,9 @@ export default function ShopSection() {
         {/* Category Showcase Pills */}
         <CategoryShowcase
           selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
+          onSelectCategory={handleSelectCategory}
+          selectedSubcategory={selectedSubcategory}
+          onSelectSubcategory={setSelectedSubcategory}
         />
 
         {/* Search & Sort Controls Bar */}

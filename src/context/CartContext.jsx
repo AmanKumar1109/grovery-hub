@@ -17,6 +17,7 @@ function transformDoc(d) {
     id: d.id,
     name: data.name || 'Grocery Item',
     category: data.category || 'General',
+    subcategory: data.subcategory || '',
     price: salePrice,
     originalPrice,
     offPercentage: offPct,
@@ -155,6 +156,7 @@ export const initialProducts = [
 export function CartProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [dbCategories, setDbCategories] = useState([]);
+  const [categoryDocs, setCategoryDocs] = useState([]);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [lastDoc, setLastDoc] = useState(null);
   const [hasMore, setHasMore] = useState(true);
@@ -175,7 +177,13 @@ export function CartProvider({ children }) {
 
     const unsubCat = onSnapshot(collection(db, 'categories'), (snap) => {
       const loadedCats = snap.docs.map(d => d.data().name || d.id);
+      const docs = snap.docs.map(d => ({
+        id: d.id,
+        name: d.data().name || d.id,
+        subcategories: d.data().subcategories || []
+      }));
       setDbCategories(loadedCats);
+      setCategoryDocs(docs);
     });
 
     return () => {
@@ -445,6 +453,7 @@ export function CartProvider({ children }) {
       value={{
         products,
         categoriesList,
+        categoryDocs,
         isLoadingProducts,
         loadMoreProducts,
         hasMore,
