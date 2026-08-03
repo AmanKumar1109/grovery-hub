@@ -22,6 +22,7 @@ import ComplaintPage from './pages/ComplaintPage';
 import DynamicPage from './pages/DynamicPage';
 import MyComplaints from './pages/dashboard/MyComplaints';
 import FloatingWhatsApp from './components/ui/FloatingWhatsApp';
+import GlobalPopup from './components/ui/GlobalPopup';
 import OrderNotificationListener from './components/ui/OrderNotificationListener';
 import { useAuth } from './context/AuthContext';
 
@@ -67,6 +68,7 @@ function App() {
             </Route>
           </Routes>
           <FloatingWhatsApp />
+          <GlobalPopup />
           <GlobalNotification />
         </CartProvider>
       </SettingsProvider>

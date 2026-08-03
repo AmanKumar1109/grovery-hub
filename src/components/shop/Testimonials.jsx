@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { Star, CheckCircle, Quote } from 'lucide-react';
+import { useSettings } from '../../context/SettingsContext';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const reviews = [
+const defaultReviews = [
   {
     id: 1,
     name: 'Abhijeet Ghosh',
@@ -39,7 +40,13 @@ const reviews = [
 ];
 
 export default function Testimonials() {
+  const { globalSettings } = useSettings();
   const sectionRef = useRef(null);
+
+  const reviews = globalSettings?.testimonialsList || defaultReviews;
+  const badgeText = globalSettings?.testimonialsBadge || 'Happy Shoppers';
+  const titleText = globalSettings?.testimonialsTitle || 'Loved By 1000+ Indian Customers 🌟';
+  const subtitleText = globalSettings?.testimonialsSubtitle || 'Real feedback from verified buyers who enjoy fresh organic groceries every day.';
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -92,13 +99,13 @@ export default function Testimonials() {
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="text-center space-y-2 max-w-xl mx-auto">
           <div className="testimonials-heading">
-            <span className="text-xs font-black text-amber-500 uppercase tracking-widest">Happy Shoppers</span>
+            <span className="text-xs font-black text-amber-500 uppercase tracking-widest">{badgeText}</span>
             <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-              Loved By 1000+ Indian Customers 🌟
+              {titleText}
             </h2>
           </div>
           <p className="testimonials-subtitle text-xs sm:text-sm font-medium text-slate-500">
-            Real feedback from verified buyers who enjoy fresh organic groceries every day.
+            {subtitleText}
           </p>
         </div>
 

@@ -32,6 +32,55 @@ export default function Footer() {
   const footerRef = useRef(null);
   const [openAccordion, setOpenAccordion] = useState(null);
 
+  const footerTitle = globalSettings?.footerTitle || 'Get Fresh Groceries in 15 Minutes!';
+  const footerEmoji = globalSettings?.footerEmoji || '🚀';
+  const footerSubtitle = globalSettings?.footerSubtitle || 'Shop online for superfast delivery of everyday essentials.';
+  const brandDesc = globalSettings?.footerBrandDescription || 'Your premier online shop for farm-fresh vegetables, fruits, dairy, and everyday household essentials delivered in 15 minutes.';
+
+  const defaultFooterCols = [
+    {
+      id: 'col1',
+      title: 'Account & Shop',
+      links: [
+        { id: 1, label: 'Shop Items', url: '#shop' },
+        { id: 2, label: 'User Dashboard', url: '/dashboard' },
+        { id: 3, label: 'My Orders', url: '/dashboard/orders' },
+        { id: 4, label: 'Saved Wishlist', url: '/dashboard/wishlist' },
+        { id: 5, label: 'Saved Addresses', url: '/dashboard/addresses' }
+      ]
+    },
+    {
+      id: 'col2',
+      title: 'Categories',
+      links: [
+        { id: 1, label: 'Dairy & Fresh Milk', url: '/?category=Dairy & Fresh Milk#shop' },
+        { id: 2, label: 'Bakery & Breads', url: '/?category=Bakery & Breads#shop' },
+        { id: 3, label: 'Rice, Atta & Dals', url: '/?category=Rice, Atta & Dals#shop' },
+        { id: 4, label: 'Oils, Ghee & Masalas', url: '/?category=Oils, Ghee & Masalas#shop' },
+        { id: 5, label: 'Snacks & Beverages', url: '/?category=Snacks & Beverages#shop' }
+      ]
+    },
+    {
+      id: 'col3',
+      title: 'Customer Support',
+      links: [
+        { id: 1, label: 'Lodge a Complaint', url: '/complaint' },
+        { id: 2, label: 'Help Center & FAQ', url: '/dashboard/help' },
+        { id: 3, label: '15-Min Delivery Policy', url: '#shop' },
+        { id: 4, label: 'Quality Standards', url: '#shop' },
+        { id: 5, label: 'About Us', url: '/about-us' },
+        { id: 6, label: 'Refund & Returns Policy', url: '/refund-policy' },
+        { id: 7, label: 'Cancellation Policy', url: '/cancellation-policy' },
+        { id: 8, label: 'Disclaimer', url: '/disclaimer' },
+        { id: 9, label: 'Shipping & Delivery Policy', url: '/shipping-policy' },
+        { id: 10, label: 'Terms and Conditions', url: '/terms-of-service' },
+        { id: 11, label: 'Privacy Policy', url: '/privacy-policy' }
+      ]
+    }
+  ];
+
+  const footerColumns = globalSettings?.footerColumns || defaultFooterCols;
+
   const toggleAccordion = (section) => {
     setOpenAccordion(openAccordion === section ? null : section);
   };
@@ -92,10 +141,10 @@ export default function Footer() {
         <div className="footer-promo bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 rounded-3xl p-8 text-slate-950 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
           <div className="space-y-1 text-center md:text-left">
             <h3 className="text-2xl sm:text-3xl font-black tracking-tight flex flex-wrap items-center justify-center md:justify-start gap-1">
-              Get Fresh Groceries in 15 Minutes! <span className="inline-block animate-bounce">🚀</span>
+              {footerTitle} <span className="inline-block animate-bounce">{footerEmoji}</span>
             </h3>
             <p className="text-xs sm:text-sm font-bold text-slate-900/80">
-              Shop online for superfast delivery of everyday essentials.
+              {footerSubtitle}
             </p>
           </div>
 
@@ -125,7 +174,7 @@ export default function Footer() {
             </div>
 
             <p className="text-xs font-medium text-slate-400 leading-relaxed max-w-sm">
-              Your premier online shop for farm-fresh vegetables, fruits, dairy, and everyday household essentials delivered in 15 minutes.
+              {brandDesc}
             </p>
 
             <div className="space-y-2 text-xs font-bold text-slate-400">
@@ -173,56 +222,30 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
-          <div className="footer-col border-b border-slate-800/50 md:border-none pb-4 md:pb-0">
-            <button onClick={() => toggleAccordion('account')} className="w-full flex items-center justify-between md:cursor-default md:pointer-events-none group focus:outline-none">
-              <h4 className="text-xs font-black text-white uppercase tracking-wider">Account & Shop</h4>
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform md:hidden ${openAccordion === 'account' ? 'rotate-180' : ''}`} />
-            </button>
-            <ul className={`mt-3 space-y-2 text-xs font-semibold text-slate-400 overflow-hidden md:!block ${openAccordion === 'account' ? 'block' : 'hidden'}`}>
-              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Shop Items</a></li>
-              <li><Link to="/dashboard" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">User Dashboard</Link></li>
-              <li><Link to="/dashboard/orders" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">My Orders</Link></li>
-              <li><Link to="/dashboard/wishlist" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Saved Wishlist</Link></li>
-              <li><Link to="/dashboard/addresses" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Saved Addresses</Link></li>
-            </ul>
-          </div>
-
-          {/* Categories */}
-          <div className="footer-col border-b border-slate-800/50 md:border-none pb-4 md:pb-0">
-            <button onClick={() => toggleAccordion('categories')} className="w-full flex items-center justify-between md:cursor-default md:pointer-events-none group focus:outline-none">
-              <h4 className="text-xs font-black text-white uppercase tracking-wider">Categories</h4>
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform md:hidden ${openAccordion === 'categories' ? 'rotate-180' : ''}`} />
-            </button>
-            <ul className={`mt-3 space-y-2 text-xs font-semibold text-slate-400 overflow-hidden md:!block ${openAccordion === 'categories' ? 'block' : 'hidden'}`}>
-              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Dairy & Fresh Milk</a></li>
-              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Bakery & Breads</a></li>
-              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Rice, Atta & Dals</a></li>
-              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Oils, Ghee & Masalas</a></li>
-              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Snacks & Beverages</a></li>
-            </ul>
-          </div>
-
-          {/* Customer Service */}
-          <div className="footer-col border-b border-slate-800/50 md:border-none pb-4 md:pb-0">
-            <button onClick={() => toggleAccordion('support')} className="w-full flex items-center justify-between md:cursor-default md:pointer-events-none group focus:outline-none">
-              <h4 className="text-xs font-black text-white uppercase tracking-wider">Customer Support</h4>
-              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform md:hidden ${openAccordion === 'support' ? 'rotate-180' : ''}`} />
-            </button>
-            <ul className={`mt-3 space-y-2 text-xs font-semibold text-slate-400 overflow-hidden md:!block ${openAccordion === 'support' ? 'block' : 'hidden'}`}>
-              <li><Link to="/complaint" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Lodge a Complaint</Link></li>
-              <li><Link to="/dashboard/help" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Help Center & FAQ</Link></li>
-              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">15-Min Delivery Policy</a></li>
-              <li><a href="#shop" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Quality Standards</a></li>
-              <li><Link to="/about-us" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">About Us</Link></li>
-              <li><Link to="/refund-policy" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Refund & Returns Policy</Link></li>
-              <li><Link to="/cancellation-policy" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Cancellation Policy</Link></li>
-              <li><Link to="/disclaimer" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Disclaimer</Link></li>
-              <li><Link to="/shipping-policy" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Shipping & Delivery Policy</Link></li>
-              <li><Link to="/terms-of-service" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Terms and Conditions</Link></li>
-              <li><Link to="/privacy-policy" className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">Privacy Policy</Link></li>
-            </ul>
-          </div>
+          {/* Dynamic Navigation Columns */}
+          {footerColumns.map((col, idx) => (
+            <div key={col.id || idx} className="footer-col border-b border-slate-800/50 md:border-none pb-4 md:pb-0">
+              <button onClick={() => toggleAccordion(col.id || idx)} className="w-full flex items-center justify-between md:cursor-default md:pointer-events-none group focus:outline-none">
+                <h4 className="text-xs font-black text-white uppercase tracking-wider">{col.title}</h4>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform md:hidden ${openAccordion === (col.id || idx) ? 'rotate-180' : ''}`} />
+              </button>
+              <ul className={`mt-3 space-y-2 text-xs font-semibold text-slate-400 overflow-hidden md:!block ${openAccordion === (col.id || idx) ? 'block' : 'hidden'}`}>
+                {col.links?.map((link, linkIdx) => (
+                  <li key={link.id || linkIdx}>
+                    {(link.url?.startsWith('http') || link.url?.startsWith('#')) ? (
+                      <a href={link.url} className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link to={link.url} className="inline-block hover:text-amber-400 hover:translate-x-1.5 transition-all duration-300">
+                        {link.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
         {/* Bottom Bar */}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import Header from '../components/header/Header';
 import Footer from '../components/shop/Footer';
 import CartDrawer from '../components/shop/CartDrawer';
@@ -8,11 +9,24 @@ import { useCart } from '../context/CartContext';
 import { Search, SlidersHorizontal, Package, Check, Filter, ChevronDown, ChevronUp, X, Loader2 } from 'lucide-react';
 
 export default function CatalogPage() {
+  const location = useLocation();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
   const [onlyDiscounted, setOnlyDiscounted] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const cat = params.get('category');
+    if (cat) {
+      setSelectedCategory(cat);
+      // Auto-open filters if a category is pre-selected
+      if (cat !== 'all') {
+        setIsFilterOpen(true);
+      }
+    }
+  }, [location.search]);
 
   const {
     toastMessage,

@@ -1,21 +1,46 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useSettings } from '../../context/SettingsContext';
+import { CheckCircle2 } from 'lucide-react';
 import FloatingReviewsCard from './FloatingReviewsCard';
 import gsap from 'gsap';
 
 export default function HeroContent() {
+  const { globalSettings } = useSettings();
+  const textRaw = globalSettings?.heroRotatingTexts || "Fresh Fruits\nFarm Veggies\nDaily Dairy\nHealthy Snacks\nDaily Needs";
+  const words = textRaw.split('\n').filter(line => line.trim() !== '');
+  const rotationInterval = globalSettings?.heroRotatingInterval || 2;
+  const prefixText = globalSettings?.heroPrefixText || 'Delivering';
+  const suffixText = globalSettings?.heroSuffixText || 'In 15 Minutes';
+  const subtitleText = globalSettings?.heroSubtitleText || 'This year, our new summer collection will shelter you harsh elements of a world that .';
+  
+  const featureRaw = globalSettings?.heroFeatureTexts || 'Genuine Product\nFast Delivery\nSecure Payment\nBest Prices';
+  const features = featureRaw.split('\n').filter(line => line.trim() !== '');
+  const featureInterval = globalSettings?.heroFeatureInterval || 3;
+
   const taglineRef = useRef(null);
   const titleRef = useRef(null);
   const descRef = useRef(null);
   const buttonRef = useRef(null);
+  const featureRef = useRef(null);
+  
   const [currentWord, setCurrentWord] = useState(0);
-  const words = ["Fresh Fruits", "Farm Veggies", "Daily Dairy", "Healthy Snacks", "Daily Needs"];
+  const [currentFeature, setCurrentFeature] = useState(0);
 
   useEffect(() => {
+    if (words.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentWord((prev) => (prev + 1) % words.length);
-    }, 2000);
+    }, rotationInterval * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [words.length, rotationInterval]);
+
+  useEffect(() => {
+    if (features.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentFeature((prev) => (prev + 1) % features.length);
+    }, featureInterval * 1000);
+    return () => clearInterval(interval);
+  }, [features.length, featureInterval]);
 
   useEffect(() => {
     const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
@@ -23,7 +48,8 @@ export default function HeroContent() {
     tl.fromTo(taglineRef.current, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, delay: 0.2 })
       .fromTo(titleRef.current, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8 }, '-=0.4')
       .fromTo(descRef.current, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.4')
-      .fromTo(buttonRef.current, { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.7)' }, '-=0.2');
+      .fromTo(buttonRef.current, { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: 'back.out(1.7)' }, '-=0.2')
+      .fromTo(featureRef.current, { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, '-=0.3');
   }, []);
 
   return (
@@ -55,11 +81,11 @@ export default function HeroContent() {
         ref={titleRef}
         className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-[1.12] tracking-tight mb-5 min-h-[140px] sm:min-h-[160px] lg:min-h-[200px]"
       >
-        Delivering <br />
+        {prefixText} <br />
         <span className="text-[#3f6212] inline-block transition-colors duration-500">
-          {words[currentWord]}
+          {words[currentWord % words.length] || ''}
         </span> <br />
-        In 15 Minutes
+        {suffixText}
       </h1>
 
       {/* Paragraph Subtitle */}
@@ -67,17 +93,42 @@ export default function HeroContent() {
         ref={descRef}
         className="text-xs sm:text-sm text-gray-600 font-medium leading-relaxed max-w-md mb-8"
       >
-        This year, our new summer collection will shelter you harsh elements of a world that .
+        {subtitleText}
       </p>
 
-      {/* CTA Button */}
-      <div ref={buttonRef} className="mb-12">
-        <button
-          type="button"
-          className="bg-amber-400 hover:bg-amber-500 text-gray-900 text-xs sm:text-sm font-extrabold px-8 py-3.5 rounded-full shadow-lg shadow-amber-300/50 hover:shadow-xl hover:shadow-amber-400/50 transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200"
-        >
-          Shop Now
-        </button>
+      {/* CTA and Features Row */}
+      <div className="flex flex-wrap items-center gap-4 mb-10">
+        <div ref={buttonRef}>
+          <button
+            type="button"
+            className="bg-amber-400 hover:bg-amber-500 text-gray-900 text-xs sm:text-sm font-extrabold px-8 py-3.5 rounded-full shadow-lg shadow-amber-300/50 hover:shadow-xl hover:shadow-amber-400/50 transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shrink-0"
+          >
+            Shop Now
+          </button>
+        </div>
+
+        {/* Features Banner */}
+        <div ref={featureRef}>
+          <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-white/50 overflow-hidden">
+            <div className="w-6 h-6 shrink-0 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+            </div>
+            <div className="relative h-5 flex items-center min-w-[120px]">
+              {features.map((feature, idx) => (
+                <span
+                  key={idx}
+                  className={`absolute inset-0 flex items-center text-[11px] sm:text-xs font-bold text-slate-700 transition-all duration-500 ${
+                    idx === (currentFeature % features.length)
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 translate-y-3'
+                  }`}
+                >
+                  {feature}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Bottom Floating Reviews Card */}

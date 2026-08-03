@@ -174,10 +174,7 @@ export default function ProductCard({ product }) {
               <Flame className="w-3 h-3 fill-white" /> Trending
             </div>
           )}
-
-
         </div>
-
         {/* Content area with padding */}
         <div className="p-3 sm:p-4 pb-0">
           {/* Star Rating Row */}

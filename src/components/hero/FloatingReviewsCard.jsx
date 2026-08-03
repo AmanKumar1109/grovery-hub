@@ -1,10 +1,28 @@
 import React, { useEffect, useRef } from 'react';
+import { useSettings } from '../../context/SettingsContext';
 import customerAvatars from '../../assets/images/customer-avatars.png';
 import userAvatar from '../../assets/images/user-avatar.png';
 import gsap from 'gsap';
 
 export default function FloatingReviewsCard() {
+  const { globalSettings } = useSettings();
   const cardRef = useRef(null);
+
+  const rawText = globalSettings?.heroReviewText || 'The Grocery Hub- Satisfied Around\n*the* Baharagora';
+
+  const renderText = () => {
+    return rawText.split('\n').map((line, i) => (
+      <React.Fragment key={i}>
+        {line.split(/(\*.*?\*)/g).map((part, j) => {
+          if (part.startsWith('*') && part.endsWith('*')) {
+            return <span key={j} className="text-emerald-600">{part.slice(1, -1)}</span>;
+          }
+          return <span key={j} className="text-gray-800">{part}</span>;
+        })}
+        {i !== rawText.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    ));
+  };
 
   useEffect(() => {
     gsap.fromTo(
@@ -40,9 +58,7 @@ export default function FloatingReviewsCard() {
 
       {/* Review Text */}
       <div className="text-xs font-bold leading-snug text-gray-800">
-        The Grocery Hub- Satisfied Around <br />
-        <span className="text-emerald-600">the </span>
-        <span className="text-gray-800">Baharagora</span>
+        {renderText()}
       </div>
     </div>
   );

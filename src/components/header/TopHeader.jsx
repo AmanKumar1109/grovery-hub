@@ -6,12 +6,30 @@ import SearchBar from '../ui/SearchBar';
 import userAvatar from '../../assets/images/user-avatar.png';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useSettings } from '../../context/SettingsContext';
 import gsap from 'gsap';
 
 const UrgencyBanner = () => {
+  const { globalSettings } = useSettings();
+  const isActive = globalSettings?.isUrgencyBannerActive ?? true;
+  const bannerTextRaw = globalSettings?.urgencyBannerText || 'High Demand | Order in next {timer} to get it by {time}';
+  const rotationInterval = globalSettings?.urgencyBannerInterval || 3;
+
+  const bannerLines = bannerTextRaw.split('\n').filter(line => line.trim() !== '');
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(14 * 60 + 59);
   const [deliveryTime, setDeliveryTime] = useState('');
 
+  // Rotation Timer
+  useEffect(() => {
+    if (bannerLines.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex(prev => (prev + 1) % bannerLines.length);
+    }, rotationInterval * 1000);
+    return () => clearInterval(interval);
+  }, [bannerLines.length, rotationInterval]);
+
+  // Countdown Timer
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => (prev <= 1 ? 15 * 60 : prev - 1));
@@ -19,6 +37,7 @@ const UrgencyBanner = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Delivery Time Calculation
   useEffect(() => {
     const dt = new Date(Date.now() + 15 * 60000);
     setDeliveryTime(dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
@@ -26,6 +45,25 @@ const UrgencyBanner = () => {
 
   const mins = Math.floor(timeLeft / 60).toString().padStart(2, '0');
   const secs = (timeLeft % 60).toString().padStart(2, '0');
+  const timerString = `${mins}:${secs}`;
+
+  if (!isActive || bannerLines.length === 0) return null;
+
+  const activeLine = bannerLines[currentIndex % bannerLines.length] || '';
+
+  const renderText = () => {
+    if (!activeLine) return null;
+    const parts = activeLine.split(/(\{timer\}|\{time\})/g);
+    return parts.map((part, index) => {
+      if (part === '{timer}') {
+        return <span key={index} className="bg-slate-800 text-white px-1.5 py-0.5 rounded shadow-sm border border-slate-700 font-black font-mono tracking-wider animate-pulse mx-1">{timerString}</span>;
+      }
+      if (part === '{time}') {
+        return <span key={index} className="text-emerald-400 font-black mx-1">{deliveryTime}</span>;
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
 
   return (
     <div className="w-full bg-slate-950 text-slate-200 text-[10px] sm:text-[11px] font-bold py-1.5 px-2 flex items-center justify-center gap-1 sm:gap-2 overflow-hidden relative shadow-inner z-50">
@@ -34,13 +72,8 @@ const UrgencyBanner = () => {
         <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
       </span>
       
-      <span className="tracking-wide relative z-10 flex items-center flex-wrap justify-center gap-1">
-        <span className="text-amber-400 font-extrabold uppercase hidden sm:inline">High Demand</span> 
-        <span className="hidden sm:inline text-slate-700">|</span>
-        <span>Order in next</span> 
-        <span className="bg-slate-800 text-white px-1.5 py-0.5 rounded shadow-sm border border-slate-700 font-black font-mono tracking-wider animate-pulse">{mins}:{secs}</span> 
-        <span>to get it by</span> 
-        <span className="text-emerald-400 font-black">{deliveryTime}</span>
+      <span className="tracking-wide relative z-10 flex items-center flex-wrap justify-center gap-0.5">
+        {renderText()}
       </span>
     </div>
   );

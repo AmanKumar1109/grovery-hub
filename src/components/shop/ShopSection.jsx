@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import CategoryShowcase from './CategoryShowcase';
 import ProductCard from './ProductCard';
 import ProductSkeleton from './ProductSkeleton';
@@ -7,9 +7,18 @@ import { useCart } from '../../context/CartContext';
 import { Search, SlidersHorizontal, Package, ArrowRight } from 'lucide-react';
 
 export default function ShopSection() {
+  const location = useLocation();
   const { products, isLoadingProducts } = useCart();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const cat = params.get('category');
+    if (cat) {
+      setSelectedCategory(cat);
+    }
+  }, [location.search]);
 
   const handleSelectCategory = (cat) => {
     setSelectedCategory(cat);
