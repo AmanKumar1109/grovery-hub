@@ -12,14 +12,39 @@ export default function CatalogPage() {
   const location = useLocation();
   const { categoryName } = useParams();
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
   const [onlyDiscounted, setOnlyDiscounted] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
+  const {
+    toastMessage,
+    products,
+    isLoadingProducts,
+    categoriesList,
+    categoryDocs,
+    loadMoreProducts,
+    hasMore,
+    isLoadingMore,
+  } = useCart();
+
+  const lastProcessedUrl = useRef('');
+
   useEffect(() => {
-    // Priority 1: Clean URL parameter (e.g. /category/Dairy)
-    // Priority 2: Query parameter (e.g. /catalog?category=Dairy)
+    const currentUrl = location.pathname + location.search;
+
+    const searchParam = new URLSearchParams(location.search).get('search');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+    } else {
+      setSearchQuery('');
+    }
+
+    if (lastProcessedUrl.current === currentUrl && categoryDocs?.length > 0) {
+       return;
+    }
+
     let cat = null;
     if (categoryName) {
       cat = decodeURIComponent(categoryName);
@@ -28,34 +53,54 @@ export default function CatalogPage() {
       cat = params.get('category');
     }
 
-    if (cat) {
-      setSelectedCategory(cat);
-      // Auto-open filters if a category is pre-selected
-      if (cat !== 'all') {
-        setIsFilterOpen(true);
+    if (!cat) {
+      setSelectedCategory('all');
+      setSelectedSubcategory('all');
+      lastProcessedUrl.current = currentUrl;
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      return;
+    }
+
+    if (['all', 'Trending', 'BOGO', 'Buy 1 Get 1'].includes(cat)) {
+       setSelectedCategory(cat);
+       setSelectedSubcategory('all');
+       if (cat !== 'all') setIsFilterOpen(true);
+       lastProcessedUrl.current = currentUrl;
+       window.scrollTo({ top: 0, behavior: 'instant' });
+       return;
+    }
+
+    if (!categoryDocs || categoryDocs.length === 0) {
+      setSelectedCategory(cat); 
+      return; 
+    }
+
+    let isSub = false;
+    let parentCat = null;
+    for (const doc of categoryDocs) {
+      if (doc.subcategories?.includes(cat)) {
+        isSub = true;
+        parentCat = doc.name;
+        break;
       }
     }
 
-    const searchParam = new URLSearchParams(location.search).get('search');
-    if (searchParam) {
-      setSearchQuery(searchParam);
+    if (isSub) {
+      setSelectedCategory(parentCat);
+      setSelectedSubcategory(cat);
+      setIsFilterOpen(true);
     } else {
-      setSearchQuery('');
+      setSelectedCategory(cat);
+      setSelectedSubcategory('all');
+      if (cat !== 'all') setIsFilterOpen(true);
     }
-    
-    // Always scroll to top when category changes
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, [location.search, categoryName]);
 
-  const {
-    toastMessage,
-    products,
-    isLoadingProducts,
-    categoriesList,
-    loadMoreProducts,
-    hasMore,
-    isLoadingMore,
-  } = useCart();
+    lastProcessedUrl.current = currentUrl;
+    window.scrollTo({ top: 0, behavior: 'instant' });
+
+  }, [location.pathname, location.search, categoryName, categoryDocs]);
+
+
 
   const sentinelRef = useRef(null);
 
@@ -69,9 +114,13 @@ export default function CatalogPage() {
           : selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1'
           ? !!prod.isBogo
           : prod.category === selectedCategory;
+      const matchesSubcategory = 
+        selectedSubcategory === 'all'
+          ? true
+          : prod.subcategory === selectedSubcategory;
       const matchesSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesDiscount = !onlyDiscounted || prod.originalPrice > prod.price;
-      return matchesCategory && matchesSearch && matchesDiscount;
+      return matchesCategory && matchesSubcategory && matchesSearch && matchesDiscount;
     })
     .sort((a, b) => {
       if (sortBy === 'price-low') return a.price - b.price;
@@ -81,7 +130,7 @@ export default function CatalogPage() {
     });
 
   const activeFiltersCount =
-    (selectedCategory !== 'all' ? 1 : 0) + (onlyDiscounted ? 1 : 0);
+    (selectedCategory !== 'all' ? 1 : 0) + (selectedSubcategory !== 'all' ? 1 : 0) + (onlyDiscounted ? 1 : 0);
 
   // IntersectionObserver for infinite scrolling on Catalog page
   useEffect(() => {
@@ -191,6 +240,7 @@ export default function CatalogPage() {
                   <button
                     onClick={() => {
                       setSelectedCategory('all');
+                      setSelectedSubcategory('all');
                       setOnlyDiscounted(false);
                     }}
                     className="text-xs font-extrabold text-amber-600 hover:text-amber-700 underline cursor-pointer flex items-center gap-1"
@@ -207,7 +257,10 @@ export default function CatalogPage() {
                   return (
                     <button
                       key={cat.id}
-                      onClick={() => setSelectedCategory(cat.id)}
+                      onClick={() => {
+                        setSelectedCategory(cat.id);
+                        setSelectedSubcategory('all'); // Reset subcategory when category changes
+                      }}
                       className={`px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
                         isActive
                           ? 'bg-emerald-700 text-white shadow-sm'
@@ -219,6 +272,42 @@ export default function CatalogPage() {
                   );
                 })}
               </div>
+
+              {/* Subcategory Pills (Only visible if the selected category has subcategories) */}
+              {selectedCategory !== 'all' && (() => {
+                const activeCatDoc = (categoryDocs || []).find(c => c.name === selectedCategory);
+                if (activeCatDoc && activeCatDoc.subcategories && activeCatDoc.subcategories.length > 0) {
+                  return (
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 pt-1">
+                      <span className="text-[10px] font-black text-slate-400 uppercase mr-1 flex-shrink-0">Subcategories:</span>
+                      <button
+                        onClick={() => setSelectedSubcategory('all')}
+                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
+                          selectedSubcategory === 'all'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        All in {selectedCategory}
+                      </button>
+                      {activeCatDoc.subcategories.map(sub => (
+                        <button
+                          key={sub}
+                          onClick={() => setSelectedSubcategory(sub)}
+                          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
+                            selectedSubcategory === sub
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                          }`}
+                        >
+                          {sub}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                }
+                return null;
+              })()}
 
               {/* Checkbox Toggles */}
               <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-2">
