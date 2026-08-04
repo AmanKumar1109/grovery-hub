@@ -118,7 +118,7 @@ export default function ProductCard({ product }) {
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+            className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700 ease-out"
           />
 
           {/* Dark gradient overlay at bottom of image */}
