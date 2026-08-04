@@ -3,6 +3,7 @@ import Header from '../components/header/Header';
 import HeroSection from '../components/hero/HeroSection';
 import ShopSection from '../components/shop/ShopSection';
 import PromoBanners from '../components/shop/PromoBanners';
+import WhyShopFromUs from '../components/shop/WhyShopFromUs';
 import TrustFeatures from '../components/shop/TrustFeatures';
 import Testimonials from '../components/shop/Testimonials';
 import Footer from '../components/shop/Footer';
@@ -38,6 +39,9 @@ export default function HomePage() {
 
         {/* Promotional Deal Banners */}
         <PromoBanners />
+
+        {/* Why Shop From The Grocery Hub */}
+        <WhyShopFromUs />
 
         {/* Trust Features & Guarantees */}
         <TrustFeatures />
