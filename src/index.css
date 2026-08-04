@@ -23,7 +23,7 @@
 html, body {
   background-color: #ffffff !important;
   color: #1f2937;
-  overflow-x: hidden;
+  overflow-x: clip;
   min-height: 100vh;
   margin: 0;
   padding: 0;

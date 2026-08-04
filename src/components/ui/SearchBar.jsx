@@ -45,10 +45,10 @@ export default function SearchBar() {
 
   useEffect(() => {
     if (placeholders.length === 0) return;
-    
+
     const currentWord = placeholders[currentPlaceholderIndex] || 'Search...';
     let typingSpeed = 50; // ms per character
-    
+
     if (isDeleting) {
       typingSpeed = 25; // faster deleting
     }
@@ -108,10 +108,10 @@ export default function SearchBar() {
     popularProducts = products?.length > 0
       ? products.slice(0, 4)
       : [
-          { name: "Organic Whole Milk", price: "65", image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=100&h=100&fit=crop&q=80" },
-          { name: "Fresh Red Onions", price: "45", image: "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=100&h=100&fit=crop&q=80" },
-          { name: "Farm Brown Eggs", price: "85", image: "https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=100&h=100&fit=crop&q=80" },
-        ];
+        { name: "Organic Whole Milk", price: "65", image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=100&h=100&fit=crop&q=80" },
+        { name: "Fresh Red Onions", price: "45", image: "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=100&h=100&fit=crop&q=80" },
+        { name: "Farm Brown Eggs", price: "85", image: "https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?w=100&h=100&fit=crop&q=80" },
+      ];
   }
 
   return (
@@ -158,9 +158,8 @@ export default function SearchBar() {
                       navigate(`/category/${encodeURIComponent(cat)}`);
                     }
                   }}
-                  className={`w-full text-left px-4 py-2.5 text-xs hover:bg-amber-50 hover:text-amber-700 font-bold transition-colors cursor-pointer ${
-                    category === cat ? 'text-amber-600 bg-amber-50/50' : 'text-slate-600'
-                  }`}
+                  className={`w-full text-left px-4 py-2.5 text-xs hover:bg-amber-50 hover:text-amber-700 font-bold transition-colors cursor-pointer ${category === cat ? 'text-amber-600 bg-amber-50/50' : 'text-slate-600'
+                    }`}
                 >
                   {cat}
                 </button>
@@ -183,7 +182,7 @@ export default function SearchBar() {
       {/* Smart Visual Search Dropdown Overlay */}
       {isSearchFocused && (
         <div className="absolute left-0 right-0 top-[110%] mt-2 bg-white/95 backdrop-blur-2xl rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300">
-          
+
           {/* Trending Searches */}
           <div className="p-4 sm:p-5 border-b border-slate-50">
             <h4 className="text-[11px] font-black uppercase text-slate-400 tracking-wider flex items-center gap-1.5 mb-3">
@@ -191,8 +190,8 @@ export default function SearchBar() {
             </h4>
             <div className="flex flex-wrap gap-2">
               {trendingSearches.map((term, i) => (
-                <button 
-                  key={i} 
+                <button
+                  key={i}
                   onClick={() => handleSearch(term)}
                   className="flex items-center gap-1.5 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-300 text-slate-600 hover:text-amber-700 text-xs font-bold px-3 py-1.5 rounded-full transition-all cursor-pointer hover:shadow-sm"
                 >
@@ -209,8 +208,8 @@ export default function SearchBar() {
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {popularProducts.map((prod, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   onClick={() => handleSearch(prod.name)}
                   className="flex items-center gap-3 p-2 rounded-2xl hover:bg-white border border-transparent hover:border-slate-200 hover:shadow-sm transition-all cursor-pointer group"
                 >
@@ -223,7 +222,7 @@ export default function SearchBar() {
               ))}
             </div>
           </div>
-          
+
         </div>
       )}
     </div>

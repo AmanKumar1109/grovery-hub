@@ -1,9 +1,16 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, LayoutDashboard, Store } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useSettings } from '../../context/SettingsContext';
 
 export default function CategoryNav() {
   const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const { globalSettings } = useSettings();
+
+  const searchCategoriesRaw = globalSettings?.searchDropdownCategories || 'All Categories\nRice & Atta\nDals & Pulses\nOils & Ghee\nSpices & Masalas\nSnacks & Biscuits';
+  const categories = searchCategoriesRaw.split('\n').filter(c => c.trim() !== '');
 
   const navLinks = [
     { name: 'Home', path: '/', exact: true },
@@ -14,17 +21,51 @@ export default function CategoryNav() {
     { name: 'Saved Addresses', path: '/dashboard/addresses' },
   ];
 
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-8 px-4 sm:px-8 lg:px-12 py-2.5 bg-white border-b border-gray-100 w-full overflow-x-auto no-scrollbar">
+    <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-8 px-4 sm:px-8 lg:px-12 py-1.5 sm:py-2.5 bg-white border-b border-gray-100 w-full relative z-40">
       {/* Category Dropdown Pill */}
-      <button
-        type="button"
-        onClick={() => navigate('/catalog')}
-        className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-700 font-extrabold text-xs hover:bg-emerald-100 transition-colors shadow-sm flex-shrink-0 cursor-pointer"
-      >
-        <span>All Categories</span>
-        <ChevronDown className="w-3.5 h-3.5 text-emerald-600" />
-      </button>
+      <div className="relative flex-shrink-0" ref={dropdownRef}>
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-700 font-extrabold text-[11px] sm:text-xs hover:bg-emerald-100 transition-colors shadow-sm cursor-pointer"
+        >
+          <span>All Categories</span>
+          <ChevronDown className={`w-3.5 h-3.5 text-emerald-600 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+
+        {isOpen && (
+          <div className="absolute left-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 max-h-[60vh] overflow-y-auto">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => {
+                  setIsOpen(false);
+                  if (cat.toLowerCase() === 'all categories') {
+                    navigate('/catalog');
+                  } else {
+                    navigate(`/category/${encodeURIComponent(cat)}`);
+                  }
+                }}
+                className="w-full text-left px-4 py-2.5 text-xs hover:bg-emerald-50 hover:text-emerald-700 font-bold text-slate-600 transition-colors cursor-pointer"
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Main Navigation Links */}
       <nav className="hidden lg:flex items-center gap-6 flex-shrink-0">
@@ -34,10 +75,9 @@ export default function CategoryNav() {
             to={link.path}
             end={link.exact}
             className={({ isActive }) =>
-              `flex items-center gap-1.5 text-xs font-bold transition-all duration-150 py-1 ${
-                isActive
-                  ? 'text-emerald-700 font-extrabold border-b-2 border-amber-400'
-                  : 'text-gray-600 hover:text-emerald-700'
+              `flex items-center gap-1.5 text-xs font-bold transition-all duration-150 py-1 ${isActive
+                ? 'text-emerald-700 font-extrabold border-b-2 border-amber-400'
+                : 'text-gray-600 hover:text-emerald-700'
               }`
             }
           >

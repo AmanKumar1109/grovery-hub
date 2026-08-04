@@ -42,7 +42,7 @@ export default function CatalogPage() {
     }
 
     if (lastProcessedUrl.current === currentUrl && categoryDocs?.length > 0) {
-       return;
+      return;
     }
 
     let cat = null;
@@ -62,17 +62,17 @@ export default function CatalogPage() {
     }
 
     if (['all', 'Trending', 'BOGO', 'Buy 1 Get 1'].includes(cat)) {
-       setSelectedCategory(cat);
-       setSelectedSubcategory('all');
-       if (cat !== 'all') setIsFilterOpen(true);
-       lastProcessedUrl.current = currentUrl;
-       window.scrollTo({ top: 0, behavior: 'instant' });
-       return;
+      setSelectedCategory(cat);
+      setSelectedSubcategory('all');
+      if (cat !== 'all') setIsFilterOpen(true);
+      lastProcessedUrl.current = currentUrl;
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      return;
     }
 
     if (!categoryDocs || categoryDocs.length === 0) {
-      setSelectedCategory(cat); 
-      return; 
+      setSelectedCategory(cat);
+      return;
     }
 
     let isSub = false;
@@ -110,11 +110,11 @@ export default function CatalogPage() {
         selectedCategory === 'all'
           ? true
           : selectedCategory === 'Trending'
-          ? !!prod.isTrending
-          : selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1'
-          ? !!prod.isBogo
-          : prod.category === selectedCategory;
-      const matchesSubcategory = 
+            ? !!prod.isTrending
+            : selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1'
+              ? !!prod.isBogo
+              : prod.category === selectedCategory;
+      const matchesSubcategory =
         selectedSubcategory === 'all'
           ? true
           : prod.subcategory === selectedSubcategory;
@@ -153,6 +153,21 @@ export default function CatalogPage() {
     return () => observer.disconnect();
   }, [hasMore, isLoadingMore, loadMoreProducts]);
 
+  // Measure header height for sticky controls offset
+  const headerContainerRef = useRef(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  useEffect(() => {
+    const updateHeight = () => {
+      if (headerContainerRef.current) {
+        setHeaderHeight(headerContainerRef.current.offsetHeight);
+      }
+    };
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
+  }, []);
+
   return (
     <div className="min-h-screen w-full bg-slate-50 flex flex-col font-sans text-slate-800 antialiased selection:bg-amber-300 selection:text-slate-900">
       {/* Toast Notification */}
@@ -165,167 +180,173 @@ export default function CatalogPage() {
         </div>
       )}
 
-      {/* Website Header */}
-      <Header />
+      {/* Website Header - Sticky at top */}
+      <div ref={headerContainerRef} className="sticky top-0 z-50">
+        <Header />
+      </div>
 
-      {/* Main Catalog Content Area */}
-      <main className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 space-y-5 sm:space-y-6">
-        {/* Controls Bar: Search, Toggle Filter Dropdown, and Sort Dropdown */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 p-4 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            {/* Quick Search */}
-            <div className="relative w-full sm:w-80">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search catalog items..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:outline-none focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-400/20 transition-all"
-              />
-            </div>
+      {/* Sticky Controls Bar - sticks right below header */}
+      <div
+        className="sticky z-40 bg-slate-50/95 backdrop-blur-md border-b border-slate-200/50"
+        style={{ top: `${headerHeight}px` }}
+      >
+        <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 sm:py-3">
+          <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-2.5 sm:p-4 shadow-xs space-y-2 sm:space-y-3">
+            <div className="flex items-center justify-between gap-2 sm:gap-3">
+              {/* Quick Search */}
+              <div className="relative flex-1 sm:flex-none sm:w-80">
+                <Search className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 w-3.5 sm:w-4 h-3.5 sm:h-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search catalog items..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-bold text-slate-800 focus:outline-none focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-400/20 transition-all"
+                />
+              </div>
 
-            {/* Filter Toggle Button & Sort Selector */}
-            <div className="flex items-center justify-between w-full sm:w-auto gap-3">
-              {/* Collapsible Filter Toggle Button */}
-              <button
-                type="button"
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all cursor-pointer ${
-                  isFilterOpen || activeFiltersCount > 0
-                    ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-300/40'
-                    : 'bg-slate-100 hover:bg-slate-200 text-slate-800'
-                }`}
-              >
-                <Filter className="w-4 h-4" />
-                <span>Filters</span>
-                {activeFiltersCount > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-slate-950 text-white text-[10px] flex items-center justify-center font-black">
-                    {activeFiltersCount}
-                  </span>
-                )}
-                {isFilterOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              </button>
-
-              {/* Items Counter */}
-              <span className="text-xs font-extrabold text-slate-500 hidden md:inline">
-                Showing <span className="text-slate-900 font-black">{filteredProducts.length}</span> Items
-              </span>
-
-              {/* Sort Selector */}
-              <div className="flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-amber-500 hidden sm:inline" />
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-extrabold text-slate-800 focus:outline-none focus:border-amber-400 cursor-pointer"
+              {/* Filter Toggle & Sort */}
+              <div className="flex items-center gap-1.5 sm:gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-xl sm:rounded-2xl text-[11px] sm:text-xs font-extrabold transition-all cursor-pointer ${
+                    isFilterOpen || activeFiltersCount > 0
+                      ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-300/40'
+                      : 'bg-slate-100 hover:bg-slate-200 text-slate-800'
+                  }`}
                 >
-                  <option value="featured">Featured Catalogue</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="rating">Highest Rated</option>
-                </select>
+                  <Filter className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+                  <span className="hidden sm:inline">Filters</span>
+                  {activeFiltersCount > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-slate-950 text-white text-[10px] flex items-center justify-center font-black">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                  {isFilterOpen ? <ChevronUp className="w-3 sm:w-3.5 h-3 sm:h-3.5" /> : <ChevronDown className="w-3 sm:w-3.5 h-3 sm:h-3.5" />}
+                </button>
+
+                <span className="text-xs font-extrabold text-slate-500 hidden md:inline">
+                  Showing <span className="text-slate-900 font-black">{filteredProducts.length}</span> Items
+                </span>
+
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-amber-500 hidden sm:inline" />
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-extrabold text-slate-800 focus:outline-none focus:border-amber-400 cursor-pointer"
+                  >
+                    <option value="featured">Featured Catalogue</option>
+                    <option value="price-low">Price: Low → High</option>
+                    <option value="price-high">Price: High → Low</option>
+                    <option value="rating">Highest Rated</option>
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Collapsible Filter Dropdown Card */}
-          {isFilterOpen && (
-            <div className="pt-4 border-t border-slate-100 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider">
-                  Filter Catalogue Products
-                </h4>
-                {activeFiltersCount > 0 && (
-                  <button
-                    onClick={() => {
-                      setSelectedCategory('all');
-                      setSelectedSubcategory('all');
-                      setOnlyDiscounted(false);
-                    }}
-                    className="text-xs font-extrabold text-amber-600 hover:text-amber-700 underline cursor-pointer flex items-center gap-1"
-                  >
-                    <X className="w-3.5 h-3.5" /> Clear Filters
-                  </button>
-                )}
-              </div>
-
-              {/* Category Pills inside Dropdown */}
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-                {categoriesList.map((cat) => {
-                  const isActive = selectedCategory === cat.id;
-                  return (
+            {/* Collapsible Filter Dropdown */}
+            {isFilterOpen && (
+              <div className="pt-2 sm:pt-3 border-t border-slate-100 space-y-2 sm:space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[10px] sm:text-xs font-black text-slate-400 uppercase tracking-wider">
+                    Filter Catalogue Products
+                  </h4>
+                  {activeFiltersCount > 0 && (
                     <button
-                      key={cat.id}
                       onClick={() => {
-                        setSelectedCategory(cat.id);
-                        setSelectedSubcategory('all'); // Reset subcategory when category changes
+                        setSelectedCategory('all');
+                        setSelectedSubcategory('all');
+                        setOnlyDiscounted(false);
                       }}
-                      className={`px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
-                        isActive
-                          ? 'bg-emerald-700 text-white shadow-sm'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
+                      className="text-[10px] sm:text-xs font-extrabold text-amber-600 hover:text-amber-700 underline cursor-pointer flex items-center gap-1"
                     >
-                      {cat.name} ({cat.count})
+                      <X className="w-3 sm:w-3.5 h-3 sm:h-3.5" /> Clear
                     </button>
-                  );
-                })}
-              </div>
+                  )}
+                </div>
 
-              {/* Subcategory Pills (Only visible if the selected category has subcategories) */}
-              {selectedCategory !== 'all' && (() => {
-                const activeCatDoc = (categoryDocs || []).find(c => c.name === selectedCategory);
-                if (activeCatDoc && activeCatDoc.subcategories && activeCatDoc.subcategories.length > 0) {
-                  return (
-                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 pt-1">
-                      <span className="text-[10px] font-black text-slate-400 uppercase mr-1 flex-shrink-0">Subcategories:</span>
+                {/* Category Pills */}
+                <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-1">
+                  {categoriesList.map((cat) => {
+                    const isActive = selectedCategory === cat.id;
+                    return (
                       <button
-                        onClick={() => setSelectedSubcategory('all')}
-                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
-                          selectedSubcategory === 'all'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                        key={cat.id}
+                        onClick={() => {
+                          setSelectedCategory(cat.id);
+                          setSelectedSubcategory('all');
+                        }}
+                        className={`px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-extrabold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
+                          isActive
+                            ? 'bg-emerald-700 text-white shadow-sm'
+                            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                         }`}
                       >
-                        All in {selectedCategory}
+                        {cat.name} ({cat.count})
                       </button>
-                      {activeCatDoc.subcategories.map(sub => (
+                    );
+                  })}
+                </div>
+
+                {/* Subcategory Pills */}
+                {selectedCategory !== 'all' && (() => {
+                  const activeCatDoc = (categoryDocs || []).find(c => c.name === selectedCategory);
+                  if (activeCatDoc && activeCatDoc.subcategories && activeCatDoc.subcategories.length > 0) {
+                    return (
+                      <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar pb-1">
+                        <span className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase mr-0.5 flex-shrink-0">Sub:</span>
                         <button
-                          key={sub}
-                          onClick={() => setSelectedSubcategory(sub)}
-                          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
-                            selectedSubcategory === sub
+                          onClick={() => setSelectedSubcategory('all')}
+                          className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
+                            selectedSubcategory === 'all'
                               ? 'bg-emerald-100 text-emerald-800'
                               : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                           }`}
                         >
-                          {sub}
+                          All in {selectedCategory}
                         </button>
-                      ))}
-                    </div>
-                  );
-                }
-                return null;
-              })()}
+                        {activeCatDoc.subcategories.map(sub => (
+                          <button
+                            key={sub}
+                            onClick={() => setSelectedSubcategory(sub)}
+                            className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer flex-shrink-0 ${
+                              selectedSubcategory === sub
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                            }`}
+                          >
+                            {sub}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
 
-              {/* Checkbox Toggles */}
-              <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-2">
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-extrabold text-slate-700 select-none">
-                  <input
-                    type="checkbox"
-                    checked={onlyDiscounted}
-                    onChange={(e) => setOnlyDiscounted(e.target.checked)}
-                    className="w-4 h-4 rounded-md accent-amber-400 cursor-pointer"
-                  />
-                  <span>🔥 On Discount Only</span>
-                </label>
+                {/* Discount Toggle */}
+                <div className="flex items-center gap-3 sm:gap-6 pt-0.5 sm:pt-1">
+                  <label className="flex items-center gap-1.5 sm:gap-2 cursor-pointer text-[11px] sm:text-xs font-extrabold text-slate-700 select-none">
+                    <input
+                      type="checkbox"
+                      checked={onlyDiscounted}
+                      onChange={(e) => setOnlyDiscounted(e.target.checked)}
+                      className="w-3.5 sm:w-4 h-3.5 sm:h-4 rounded-md accent-amber-400 cursor-pointer"
+                    />
+                    <span>🔥 On Discount Only</span>
+                  </label>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
+      </div>
 
-        {/* Catalog Products Grid: 2 columns on Mobile (grid-cols-2), 3 on Tablet, 4 on Desktop */}
+      {/* Main Catalog Content - Scrollable Products */}
+      <main className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1 space-y-4 sm:space-y-6">
+        {/* Catalog Products Grid */}
         {isLoadingProducts ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {[...Array(12)].map((_, index) => (

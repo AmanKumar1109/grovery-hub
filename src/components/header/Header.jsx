@@ -4,7 +4,7 @@ import CategoryNav from './CategoryNav';
 
 export default function Header() {
   return (
-    <header className="w-full">
+    <header className="sticky top-0 z-50 w-full shadow-sm">
       <TopHeader />
       <CategoryNav />
     </header>
