@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import Header from '../components/header/Header';
 import Footer from '../components/shop/Footer';
@@ -6,6 +6,7 @@ import CartDrawer from '../components/shop/CartDrawer';
 import ProductCard from '../components/shop/ProductCard';
 import ProductSkeleton from '../components/shop/ProductSkeleton';
 import { useCart } from '../context/CartContext';
+import { buildSearchIndex, smartSearch } from '../utils/searchEngine';
 import { Search, SlidersHorizontal, Package, Check, Filter, ChevronDown, ChevronUp, X, Loader2 } from 'lucide-react';
 
 export default function CatalogPage() {
@@ -104,8 +105,25 @@ export default function CatalogPage() {
 
   const sentinelRef = useRef(null);
 
-  const filteredProducts = (products || [])
-    .filter((prod) => {
+  // Build search index for smart search (memoized, rebuilds only when products change)
+  const searchIndex = useMemo(() => buildSearchIndex(products || []), [products]);
+
+  const filteredProducts = useMemo(() => {
+    let filtered = products || [];
+
+    // Smart search: use fuzzy/typo/synonym/Hindi engine when there's a search query
+    if (searchQuery && searchQuery.trim().length > 0) {
+      const smartResults = smartSearch(searchQuery, searchIndex, 100);
+      const smartIds = new Set(smartResults.map(p => p.id));
+      filtered = filtered.filter(p => smartIds.has(p.id));
+      // Apply smart ranking order
+      const idToScore = {};
+      smartResults.forEach(p => { idToScore[p.id] = p._score || 0; });
+      filtered.sort((a, b) => (idToScore[b.id] || 0) - (idToScore[a.id] || 0));
+    }
+
+    // Category/subcategory/discount filters
+    filtered = filtered.filter((prod) => {
       const matchesCategory =
         selectedCategory === 'all'
           ? true
@@ -118,16 +136,30 @@ export default function CatalogPage() {
         selectedSubcategory === 'all'
           ? true
           : prod.subcategory === selectedSubcategory;
-      const matchesSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesDiscount = !onlyDiscounted || prod.originalPrice > prod.price;
-      return matchesCategory && matchesSubcategory && matchesSearch && matchesDiscount;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'price-low') return a.price - b.price;
-      if (sortBy === 'price-high') return b.price - a.price;
-      if (sortBy === 'rating') return b.rating - a.rating;
-      return 0;
+      return matchesCategory && matchesSubcategory && matchesDiscount;
     });
+
+    // Sort (only if no search query, since search results are already ranked)
+    if (!searchQuery || searchQuery.trim().length === 0) {
+      filtered = [...filtered].sort((a, b) => {
+        if (sortBy === 'price-low') return a.price - b.price;
+        if (sortBy === 'price-high') return b.price - a.price;
+        if (sortBy === 'rating') return b.rating - a.rating;
+        return 0;
+      });
+    } else if (sortBy !== 'featured') {
+      // If user explicitly chose a sort while searching, apply it
+      filtered = [...filtered].sort((a, b) => {
+        if (sortBy === 'price-low') return a.price - b.price;
+        if (sortBy === 'price-high') return b.price - a.price;
+        if (sortBy === 'rating') return b.rating - a.rating;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [products, searchQuery, searchIndex, selectedCategory, selectedSubcategory, onlyDiscounted, sortBy]);
 
   const activeFiltersCount =
     (selectedCategory !== 'all' ? 1 : 0) + (selectedSubcategory !== 'all' ? 1 : 0) + (onlyDiscounted ? 1 : 0);

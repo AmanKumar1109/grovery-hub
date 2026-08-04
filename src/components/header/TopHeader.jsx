@@ -151,16 +151,16 @@ export default function TopHeader() {
           </button>
 
           {/* Brand Logo */}
-          <Link to="/" className="flex items-center gap-2.5 cursor-pointer select-none group">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 bg-amber-400 rounded-xl flex items-center justify-center shadow-md shadow-amber-200 group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
+          <Link to="/" className="flex items-center gap-2 sm:gap-2.5 cursor-pointer select-none group">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-400 rounded-xl flex items-center justify-center shadow-md shadow-amber-200 group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
               <svg
-                className="w-5 h-5 sm:w-6 sm:h-6 text-white fill-current"
+                className="w-4 h-4 sm:w-6 sm:h-6 text-white fill-current"
                 viewBox="0 0 24 24"
               >
                 <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zm-9-1a2 2 0 0 1 4 0v1h-4V6zm8 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v10z" />
               </svg>
             </div>
-            <span className="text-lg sm:text-2xl font-extrabold tracking-tight text-gray-900">
+            <span className="text-base sm:text-2xl font-extrabold tracking-tight text-gray-900 whitespace-nowrap">
               The <span className="text-emerald-700">Grocery</span> Hub
             </span>
           </Link>
