@@ -1,8 +1,11 @@
-import React, { useEffect, useRef } from 'react';
-import { Star, CheckCircle, Quote } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Star, CheckCircle, Quote, PenLine } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
+import { db } from '../../firebase';
+import { collection, query, where, orderBy, getDocs, limit } from 'firebase/firestore';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import ReviewSubmissionModal from './ReviewSubmissionModal';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -42,8 +45,38 @@ const defaultReviews = [
 export default function Testimonials() {
   const { globalSettings } = useSettings();
   const sectionRef = useRef(null);
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [liveReviews, setLiveReviews] = useState([]);
+
+  // Fetch approved customer reviews
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const q = query(
+          collection(db, 'customer_reviews'),
+          where('status', '==', 'approved'),
+          orderBy('createdAt', 'desc'),
+          limit(6)
+        );
+        const snapshot = await getDocs(q);
+        const fetched = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.data().userName || 'Customer')}&background=0D8B4E&color=fff&bold=true`
+        }));
+        setLiveReviews(fetched);
+      } catch (err) {
+        console.error("Error fetching live reviews:", err);
+      }
+    };
+    fetchReviews();
+  }, []);
 
   const reviews = globalSettings?.testimonialsList || defaultReviews;
+  // Combine live reviews with default/global settings reviews
+  const allReviews = liveReviews.length > 0 ? [...liveReviews, ...reviews].slice(0, 6) : reviews;
+
   const badgeText = globalSettings?.testimonialsBadge || 'Happy Shoppers';
   const titleText = globalSettings?.testimonialsTitle || 'Loved By 1000+ Indian Customers 🌟';
   const subtitleText = globalSettings?.testimonialsSubtitle || 'Real feedback from verified buyers who enjoy fresh organic groceries every day.';
@@ -59,101 +92,100 @@ export default function Testimonials() {
         },
       });
 
-      // Section heading
-      tl.fromTo(
-        '.testimonials-heading',
-        { y: -20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.55 }
-      );
+      tl.from('.testi-header', {
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+      });
 
-      // Subtitle
-      tl.fromTo(
-        '.testimonials-subtitle',
-        { y: 15, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.45 },
-        '-=0.25'
-      );
-
-      // Review cards stagger
-      tl.fromTo(
-        '.review-card',
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.55, stagger: 0.12 },
-        '-=0.2'
-      );
-
-      // Stars pop in
-      tl.fromTo(
-        '.review-star',
-        { scale: 0, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 0.25, ease: 'back.out(1.7)', stagger: 0.03 },
-        '-=0.3'
-      );
+      tl.from('.review-card', {
+        y: 40,
+        opacity: 0,
+        duration: 0.7,
+        stagger: 0.15,
+        clearProps: 'all',
+      }, '-=0.4');
     }, sectionRef);
-
     return () => ctx.revert();
-  }, []);
+  }, [allReviews]);
 
   return (
-    <section ref={sectionRef} className="w-full px-4 sm:px-8 lg:px-12 py-12 lg:py-16 bg-white">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="text-center space-y-2 max-w-xl mx-auto">
-          <div className="testimonials-heading">
-            <span className="text-xs font-black text-amber-500 uppercase tracking-widest">{badgeText}</span>
-            <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-              {titleText}
-            </h2>
-          </div>
-          <p className="testimonials-subtitle text-xs sm:text-sm font-medium text-slate-500">
+    <section 
+      ref={sectionRef} 
+      className="py-16 sm:py-24 bg-gradient-to-b from-white to-slate-50 relative overflow-hidden"
+    >
+      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-200/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-200/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="testi-header text-center max-w-3xl mx-auto mb-16 space-y-4">
+          <span className="inline-block px-4 py-1.5 bg-amber-100 text-amber-800 text-xs font-black uppercase tracking-wider rounded-full shadow-sm">
+            {badgeText}
+          </span>
+          <h2 className="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+            {titleText}
+          </h2>
+          <p className="text-base sm:text-lg text-slate-500 font-semibold leading-relaxed">
             {subtitleText}
           </p>
         </div>
 
         {/* Reviews Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {reviews.map((rev) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {allReviews.map((rev) => (
             <div
               key={rev.id}
-              className="review-card bg-slate-50/80 rounded-3xl p-6 border border-slate-200/70 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4 relative"
+              className="review-card bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/70 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between space-y-6 relative"
             >
-              <Quote className="w-8 h-8 text-amber-300 absolute top-4 right-4 opacity-50" />
+              <Quote className="w-10 h-10 text-amber-100 absolute top-6 right-6" />
 
-              <div className="space-y-3">
+              <div className="space-y-4 relative z-10">
                 <div className="flex items-center gap-1">
-                  {[...Array(rev.rating)].map((_, i) => (
-                    <Star key={i} className="review-star w-4 h-4 text-amber-400 fill-amber-400" />
+                  {[...Array(rev.rating || 5)].map((_, i) => (
+                    <Star key={i} className="review-star w-4 h-4 sm:w-5 sm:h-5 text-amber-400 fill-amber-400" />
                   ))}
                 </div>
 
-                <p className="text-xs sm:text-sm font-bold text-slate-800 leading-relaxed italic">
+                <p className="text-sm sm:text-base font-bold text-slate-700 leading-relaxed italic">
                   "{rev.comment}"
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-slate-200/60 flex items-center justify-between">
+              <div className="pt-5 border-t border-slate-100 flex items-center justify-between mt-auto">
                 <div className="flex items-center gap-3">
                   <img
                     src={rev.avatar}
-                    alt={rev.name}
-                    className="w-10 h-10 rounded-full object-cover border border-amber-300 shadow-xs"
+                    alt={rev.userName || rev.name}
+                    className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-emerald-100 shadow-sm"
                   />
                   <div>
-                    <h4 className="text-xs font-black text-slate-900 flex items-center gap-1">
-                      {rev.name}
-                      {rev.verified && <CheckCircle className="w-3.5 h-3.5 text-emerald-600 fill-emerald-100" />}
+                    <h4 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1">
+                      {rev.userName || rev.name}
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-500 fill-emerald-100" />
                     </h4>
-                    <p className="text-[10px] font-semibold text-slate-400">{rev.location}</p>
+                    <p className="text-[10px] sm:text-xs font-semibold text-slate-400">
+                      {rev.location || 'Baharagora, Jharkhand'}
+                    </p>
                   </div>
                 </div>
-
-                <span className="px-2.5 py-1 bg-amber-100 text-amber-900 text-[10px] font-extrabold rounded-full">
-                  Verified Purchase
-                </span>
               </div>
             </div>
           ))}
         </div>
+
+        {/* Write a Review Button */}
+        <div className="text-center">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="inline-flex items-center gap-2 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-black rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all cursor-pointer"
+          >
+            <PenLine className="w-4 h-4" />
+            Write a Review
+          </button>
+        </div>
       </div>
+      
+      <ReviewSubmissionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </section>
   );
 }
