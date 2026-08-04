@@ -2,6 +2,7 @@ import React from 'react';
 import { Sparkles, Carrot, Apple, Milk, Croissant, Coffee, Cookie, Drumstick, Package, ArrowRight, Flame, Gift } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
+import { useSettings } from '../../context/SettingsContext';
 
 const getCategoryIcon = (categoryName) => {
   const lower = (categoryName || '').toLowerCase();
@@ -29,6 +30,7 @@ export const initialCategoriesList = [
 
 export default function CategoryShowcase({ selectedCategory, onSelectCategory, selectedSubcategory, onSelectSubcategory }) {
   const { categoriesList: dynamicCategories, categoryDocs } = useCart();
+  const { globalSettings } = useSettings() || {};
   const listToRender = dynamicCategories && dynamicCategories.length > 0 ? dynamicCategories : initialCategoriesList;
 
   const currentCatDoc = categoryDocs?.find(c => c.name === selectedCategory);
@@ -38,9 +40,9 @@ export default function CategoryShowcase({ selectedCategory, onSelectCategory, s
     <div className="w-full py-4 space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
         <div>
-          <span className="text-xs font-black text-amber-500 uppercase tracking-widest">Explore Categories</span>
+          <span className="text-xs font-black text-amber-500 uppercase tracking-widest">{globalSettings?.categorySectionSubtitle || 'Explore Categories'}</span>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-0.5">
-            Shop Fresh Organic Produce
+            {globalSettings?.categorySectionTitle || 'Shop Fresh Organic Produce'}
           </h2>
         </div>
 

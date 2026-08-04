@@ -18,7 +18,9 @@ export function SettingsProvider({ children }) {
     twitterUrl: '',
     minOrderFreeDelivery: 500,
     standardDeliveryFee: 40,
-    taxPercentage: 0
+    taxPercentage: 0,
+    categorySectionSubtitle: 'Explore Categories',
+    categorySectionTitle: 'Shop Fresh Organic Produce'
   });
   
   const [banners, setBanners] = useState([]);
