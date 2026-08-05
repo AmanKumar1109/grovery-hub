@@ -214,6 +214,8 @@ export function CartProvider({ children }) {
     }
   }, [hasMore, isLoadingMore, lastDoc]);
 
+  const { globalSettings } = useSettings();
+
   // Compute dynamic categories list with product counts
   const categoriesList = useMemo(() => {
     const catCounts = {};
@@ -227,25 +229,41 @@ export function CartProvider({ children }) {
       }
     });
 
-    const allCategoryNames = Array.from(new Set([...dbCategories, ...Object.keys(catCounts)]));
+    const list = [];
+    const pushCategory = (id, name, countOverride) => {
+      if (id === 'all') {
+        list.push({ id: 'all', name: 'All Products', count: `${products.length} Items` });
+      } else if (id === 'Trending') {
+        list.push({ id: 'Trending', name: 'Trending', count: `${trendingCount} Item${trendingCount === 1 ? '' : 's'}` });
+      } else if (id === 'BOGO') {
+        list.push({ id: 'BOGO', name: 'Buy 1 Get 1', count: `${bogoCount} Item${bogoCount === 1 ? '' : 's'}` });
+      } else {
+        const count = countOverride ?? (catCounts[id] || 0);
+        list.push({ id, name, count: `${count} Item${count === 1 ? '' : 's'}` });
+      }
+    };
 
-    const list = [
-      { id: 'all', name: 'All Products', count: `${products.length} Items` },
-      { id: 'Trending', name: 'Trending', count: `${trendingCount} Item${trendingCount === 1 ? '' : 's'}` },
-      { id: 'BOGO', name: 'Buy 1 Get 1', count: `${bogoCount} Item${bogoCount === 1 ? '' : 's'}` }
-    ];
+    const displayOrder = globalSettings?.categoryDisplayOrder || [];
+    
+    // Push categories in the exact order specified by the Admin
+    displayOrder.forEach(catId => pushCategory(catId, catId));
+
+    // For any remaining categories not explicitly ordered by Admin, push them to the end
+    const allCategoryNames = Array.from(new Set([...dbCategories, ...Object.keys(catCounts)]));
+    
+    // If the admin order doesn't have the defaults, push them first to fallback
+    if (!displayOrder.includes('all')) pushCategory('all', 'All Products');
+    if (!displayOrder.includes('Trending')) pushCategory('Trending', 'Trending');
+    if (!displayOrder.includes('BOGO')) pushCategory('BOGO', 'Buy 1 Get 1');
 
     allCategoryNames.forEach(catName => {
-      const count = catCounts[catName] || 0;
-      list.push({
-        id: catName,
-        name: catName,
-        count: `${count} Item${count === 1 ? '' : 's'}`
-      });
+      if (!displayOrder.includes(catName)) {
+        pushCategory(catName, catName);
+      }
     });
 
     return list;
-  }, [products, dbCategories]);
+  }, [products, dbCategories, globalSettings?.categoryDisplayOrder]);
 
   // Ultra-fast state management with localStorage persistence (starts empty by default)
   const [cartItems, setCartItems] = useState(() => {
@@ -414,8 +432,6 @@ export function CartProvider({ children }) {
     }
     setDiscountAmount(discount);
   }, [cartTotal, appliedCoupon]);
-
-  const { globalSettings } = useSettings();
   
   let deliveryFee = 0;
   if (cartTotal > 0 && globalSettings) {
