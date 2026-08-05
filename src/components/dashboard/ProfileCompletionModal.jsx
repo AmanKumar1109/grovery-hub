@@ -20,6 +20,8 @@ export default function ProfileCompletionModal() {
   }, [userProfile?.email]);
 
   const [addressForm, setAddressForm] = useState({
+    name: '',
+    phone: '',
     street: '',
     locality: '',
     city: 'Baharagora',
@@ -210,6 +212,17 @@ export default function ProfileCompletionModal() {
                 </button>
               </div>
                 
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Full Name *</label>
+                    <input type="text" name="name" value={addressForm.name || ''} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="Your Name" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Phone *</label>
+                    <input type="tel" name="phone" value={addressForm.phone || ''} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="Mobile Number" />
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5">Street Address / House No. *</label>
                   <input type="text" name="street" value={addressForm.street} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="House/Flat No., Building Name" />
