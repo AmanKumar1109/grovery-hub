@@ -218,23 +218,52 @@ export default function CartDrawer() {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
+              {isBelowMin && (
+                <div className="bg-rose-50 border border-rose-100/80 rounded-2xl p-3.5 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                    <ShoppingBag className="w-16 h-16" />
+                  </div>
+                  <div className="flex items-start gap-3 relative z-10">
+                    <div className="w-7 h-7 bg-white rounded-full flex items-center justify-center shrink-0 shadow-sm border border-rose-100">
+                      <ShoppingBag className="w-3.5 h-3.5 text-rose-500" />
+                    </div>
+                    <div className="flex-1 pt-0.5">
+                      <p className="text-[11px] font-bold text-slate-700 leading-relaxed">
+                        Add items worth <span className="text-rose-600 font-black text-xs">₹{(minOrderAmount - cartTotal).toFixed(2)}</span> more to place your order.
+                      </p>
+                      
+                      <div className="w-full bg-rose-200/50 h-1.5 rounded-full mt-2.5 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-rose-400 to-rose-500 h-full rounded-full transition-all duration-700 ease-out"
+                          style={{ width: `${Math.min((cartTotal / minOrderAmount) * 100, 100)}%` }}
+                        />
+                      </div>
+                      
+                      <div className="flex justify-between items-center mt-1.5">
+                        <span className="text-[9px] font-extrabold text-rose-400 uppercase tracking-widest">
+                          Cart Total
+                        </span>
+                        <span className="text-[9px] font-extrabold text-rose-400 uppercase tracking-widest">
+                          Min ₹{minOrderAmount}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={handleCheckout}
-                className={`w-full py-3.5 font-extrabold text-xs rounded-2xl flex items-center justify-center gap-2 transition-all ${
+                className={`w-full py-3.5 font-extrabold text-xs rounded-2xl flex items-center justify-center gap-2 transition-all duration-300 ${
                   isBelowMin 
-                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed' 
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200' 
                     : 'bg-amber-400 hover:bg-amber-500 text-slate-950 shadow-lg shadow-amber-300/40 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer'
                 }`}
               >
                 <span>Proceed to Checkout</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
-              {isBelowMin && (
-                <p className="text-[10px] text-rose-500 font-bold text-center">
-                  Add ₹{(minOrderAmount - cartTotal).toFixed(2)} more to reach minimum order (₹{minOrderAmount})
-                </p>
-              )}
             </div>
           </div>
         )}
