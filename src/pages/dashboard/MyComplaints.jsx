@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { db } from '../../firebase';
-import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { MessageSquareWarning, Clock, CheckCircle2, ChevronRight, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -11,47 +11,64 @@ export default function MyComplaints() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchComplaints = async () => {
-      if (!currentUser) return;
-      try {
-        const docsMap = new Map();
+    if (!currentUser) return;
 
-        // Fetch by userId
-        const qUser = query(
-          collection(db, 'complaints'),
-          where('userId', '==', currentUser.uid)
-        );
-        const snapUser = await getDocs(qUser);
-        snapUser.docs.forEach(doc => {
+    let unsubUser = () => {};
+    let unsubPhone = () => {};
+    const docsMap = new Map();
+
+    const updateState = () => {
+      const allDocs = Array.from(docsMap.values());
+      setComplaints(allDocs.sort((a, b) => {
+        const timeA = a.createdAt?.toDate?.()?.getTime() || 0;
+        const timeB = b.createdAt?.toDate?.()?.getTime() || 0;
+        return timeB - timeA;
+      }));
+      setIsLoading(false);
+    };
+
+    try {
+      // Listen by userId
+      const qUser = query(
+        collection(db, 'complaints'),
+        where('userId', '==', currentUser.uid)
+      );
+      unsubUser = onSnapshot(qUser, (snap) => {
+        snap.docs.forEach(doc => {
           docsMap.set(doc.id, { id: doc.id, ...doc.data() });
         });
+        updateState();
+      }, (err) => {
+        console.error("Error listening to user complaints:", err);
+      });
 
-        // Also fetch by phone number (for older complaints before userId was added)
-        if (userProfile?.phone) {
-          const qPhone = query(
-            collection(db, 'complaints'),
-            where('phone', '==', userProfile.phone)
-          );
-          const snapPhone = await getDocs(qPhone);
-          snapPhone.docs.forEach(doc => {
+      // Also listen by phone number (for older complaints before userId was added)
+      if (userProfile?.phone) {
+        const qPhone = query(
+          collection(db, 'complaints'),
+          where('phone', '==', userProfile.phone)
+        );
+        unsubPhone = onSnapshot(qPhone, (snap) => {
+          snap.docs.forEach(doc => {
             docsMap.set(doc.id, { id: doc.id, ...doc.data() });
           });
-        }
-
-        const allDocs = Array.from(docsMap.values());
-
-        setComplaints(allDocs.sort((a, b) => {
-          const timeA = a.createdAt?.toDate?.()?.getTime() || 0;
-          const timeB = b.createdAt?.toDate?.()?.getTime() || 0;
-          return timeB - timeA;
-        }));
-      } catch (err) {
-        console.error("Error fetching complaints:", err);
-      } finally {
-        setIsLoading(false);
+          updateState();
+        }, (err) => {
+          console.error("Error listening to phone complaints:", err);
+        });
+      } else {
+        // if no phone, at least we will trigger a state update once if qUser was empty
+        setTimeout(updateState, 500); 
       }
+    } catch (err) {
+      console.error("Error setting up complaint listeners:", err);
+      setIsLoading(false);
+    }
+
+    return () => {
+      unsubUser();
+      unsubPhone();
     };
-    fetchComplaints();
   }, [currentUser, userProfile]);
 
   if (isLoading) {
