@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User, UserPlus, AlertCircle, ArrowRight, Eye, EyeOff, MapPin } from 'lucide-react';
+import { Mail, Lock, User, UserPlus, AlertCircle, ArrowRight, Eye, EyeOff, MapPin, Phone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/header/Header';
 import Footer from '../components/shop/Footer';
