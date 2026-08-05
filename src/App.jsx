@@ -26,6 +26,8 @@ import GlobalPopup from './components/ui/GlobalPopup';
 import OrderNotificationListener from './components/ui/OrderNotificationListener';
 import { useAuth } from './context/AuthContext';
 
+import ScrollToTop from './components/ui/ScrollToTop';
+
 function GlobalNotification() {
   const { currentUser } = useAuth();
   return currentUser ? <OrderNotificationListener userId={currentUser.uid} /> : null;
@@ -36,6 +38,7 @@ function App() {
     <AuthProvider>
       <SettingsProvider>
         <CartProvider>
+          <ScrollToTop />
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/catalog" element={<CatalogPage />} />

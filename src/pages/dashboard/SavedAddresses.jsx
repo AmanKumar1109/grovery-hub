@@ -189,25 +189,47 @@ export default function SavedAddresses() {
       </div>
 
       {showAddForm && (
-        <div className="address-card bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-black text-slate-900">Add New Address</h2>
-            <div className="flex items-center gap-2">
+        <div className="address-card bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100 relative">
+          <button onClick={() => { setShowAddForm(false); setAddressForm(prev => ({...prev, lat: null})); }} className="absolute top-4 right-4 p-2 bg-slate-100 text-slate-500 hover:text-slate-900 rounded-full transition-colors cursor-pointer z-10">
+            <X className="w-5 h-5" />
+          </button>
+          
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center">
+              <MapPin className="w-6 h-6" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Delivery Address</h2>
+          </div>
+          
+          {!addressForm.lat && !addressForm.manualMode ? (
+            <div className="bg-slate-50 p-8 rounded-3xl border-2 border-dashed border-slate-200 text-center space-y-4">
+              <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner">
+                <MapPin className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-black text-slate-900">Where should we deliver?</h3>
+              <p className="text-sm font-medium text-slate-500 max-w-xs mx-auto">Please select your exact delivery location on the map to continue.</p>
               <button 
                 type="button" 
                 onClick={() => setShowLocationPickerModal(true)}
-                className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-200 transition-all active:scale-95 cursor-pointer"
+                className="mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-black shadow-lg shadow-emerald-200 transition-all active:scale-95 cursor-pointer"
               >
-                <Navigation className="w-3.5 h-3.5" />
-                <span>🎯 Select Location on Map</span>
-              </button>
-              <button onClick={() => setShowAddForm(false)} className="p-2 bg-slate-100 text-slate-500 hover:text-slate-900 rounded-full transition-colors cursor-pointer">
-                <X className="w-5 h-5" />
+                <Navigation className="w-4 h-4" />
+                <span>🎯 Select Exact Delivery Point</span>
               </button>
             </div>
-          </div>
-          
-          <form onSubmit={handleSaveAddress} className="space-y-4">
+          ) : (
+            <form onSubmit={handleSaveAddress} className="space-y-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-4">
+                <p className="text-sm font-bold text-slate-500">Please enter your delivery details to proceed.</p>
+                <button 
+                  type="button" 
+                  onClick={() => setShowLocationPickerModal(true)}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-200 transition-all active:scale-95 cursor-pointer"
+                >
+                  <Navigation className="w-4 h-4" />
+                  <span>🎯 {addressForm.lat ? 'Edit Map Location' : 'Select on Map'}</span>
+                </button>
+              </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">Full Name *</label>
@@ -266,7 +288,8 @@ export default function SavedAddresses() {
             <button type="submit" disabled={isProcessing} className="mt-4 w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm rounded-xl transition-all cursor-pointer">
               {isProcessing ? 'Saving...' : 'Save Address'}
             </button>
-          </form>
+            </form>
+          )}
         </div>
       )}
 

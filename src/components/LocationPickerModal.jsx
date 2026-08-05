@@ -61,7 +61,8 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
     floor: initialLocation?.floor || '',
     street: initialLocation?.street || '',
     landmark: initialLocation?.landmark || '',
-    deliveryInstructions: initialLocation?.deliveryInstructions || ''
+    deliveryInstructions: initialLocation?.deliveryInstructions || '',
+    type: initialLocation?.type || 'Home'
   });
 
   // Autocomplete Search State
@@ -358,7 +359,8 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
         confirmedByUser: true,
         confirmedAt: new Date().toISOString()
       },
-      addressDetails: { ...addressDetails }
+      addressDetails: { ...addressDetails },
+      type: addressDetails.type
     };
 
     onConfirm(confirmedData);
@@ -589,6 +591,29 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
                 placeholder="e.g. Call when you reach gate, leave at door"
                 className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-400"
               />
+            </div>
+
+            {/* Address Label Picker */}
+            <div className="pt-2">
+              <label className="block text-[11px] font-extrabold text-slate-600 mb-2">Save Address As</label>
+              <div className="grid grid-cols-3 gap-3">
+                {['Home', 'Office', 'Other'].map((type) => {
+                  const Icon = type === 'Home' ? Home : type === 'Office' ? Building : FileText;
+                  const isActive = addressDetails.type === type;
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setAddressDetails({ ...addressDetails, type })}
+                      className={`flex items-center justify-center gap-2 py-2 rounded-xl border-2 font-extrabold text-[11px] transition-all cursor-pointer ${
+                        isActive ? 'border-amber-400 bg-amber-50 text-slate-950 shadow-sm' : 'border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5 text-amber-600" /> {type}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

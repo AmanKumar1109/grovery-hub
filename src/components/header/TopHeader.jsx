@@ -135,7 +135,7 @@ export default function TopHeader() {
   return (
     <header
       ref={headerRef}
-      className="relative z-50 w-full flex flex-col transition-all duration-300"
+      className="relative z-[60] w-full flex flex-col transition-all duration-300"
     >
       <UrgencyBanner />
       <div className="flex items-center justify-between px-4 sm:px-8 lg:px-12 py-2.5 sm:py-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-md w-full">
@@ -229,7 +229,7 @@ export default function TopHeader() {
 
               {/* Interactive Profile Dropdown Menu */}
               {dropdownOpen && (
-                <div className="absolute right-0 mt-3 w-56 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-0 mt-4 w-56 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Account</p>
                     <p className="text-sm font-extrabold text-slate-900 truncate">{userName}</p>
