@@ -3,6 +3,7 @@ import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, CheckCircle2, Tag } fr
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { useSettings } from '../../context/SettingsContext';
 export default function CartDrawer() {
   const { 
     isCartOpen, setIsCartOpen, cartItems, cartTotal, updateQuantity, removeFromCart, clearCart, showToast,
@@ -10,13 +11,21 @@ export default function CartDrawer() {
     discountAmount, deliveryFee, finalTotal, handleApplyPromo, handleRemovePromo 
   } = useCart();
   const { currentUser, userProfile } = useAuth();
+  const { globalSettings } = useSettings();
   const navigate = useNavigate();
 
   if (!isCartOpen) {
     return null;
   }
 
+  const minOrderAmount = globalSettings?.minOrderAmount || 100;
+  const isBelowMin = cartTotal > 0 && cartTotal < minOrderAmount;
+
   const handleCheckout = () => {
+    if (isBelowMin) {
+      showToast(`Minimum order amount is ₹${minOrderAmount}. Please add more items.`);
+      return;
+    }
     if (!currentUser) {
       showToast('Please sign in to complete your checkout!');
       navigate('/login');
@@ -209,13 +218,24 @@ export default function CartDrawer() {
               </div>
             </div>
 
-            <button
-              onClick={handleCheckout}
-              className="w-full py-3.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-extrabold text-xs rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-amber-300/40 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer"
-            >
-              <span>Proceed to Checkout</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={handleCheckout}
+                className={`w-full py-3.5 font-extrabold text-xs rounded-2xl flex items-center justify-center gap-2 transition-all ${
+                  isBelowMin 
+                    ? 'bg-slate-200 text-slate-500 cursor-not-allowed' 
+                    : 'bg-amber-400 hover:bg-amber-500 text-slate-950 shadow-lg shadow-amber-300/40 hover:-translate-y-0.5 active:translate-y-0 cursor-pointer'
+                }`}
+              >
+                <span>Proceed to Checkout</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              {isBelowMin && (
+                <p className="text-[10px] text-rose-500 font-bold text-center">
+                  Add ₹{(minOrderAmount - cartTotal).toFixed(2)} more to reach minimum order (₹{minOrderAmount})
+                </p>
+              )}
+            </div>
           </div>
         )}
       </div>

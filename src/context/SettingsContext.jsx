@@ -16,6 +16,7 @@ export function SettingsProvider({ children }) {
     instagramUrl: '',
     facebookUrl: '',
     twitterUrl: '',
+    minOrderAmount: 100,
     minOrderFreeDelivery: 500,
     standardDeliveryFee: 40,
     taxPercentage: 0,

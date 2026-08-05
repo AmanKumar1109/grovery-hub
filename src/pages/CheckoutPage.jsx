@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useSettings } from '../context/SettingsContext';
 import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft, Tag, X, AlertTriangle, ShieldAlert, Navigation } from 'lucide-react';
 import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -11,6 +12,7 @@ import LocationPickerModal from '../components/LocationPickerModal';
 
 export default function CheckoutPage() {
   const { currentUser, userProfile, addAddress } = useAuth();
+  const { globalSettings } = useSettings();
   const { 
     cartItems, 
     cartTotal, 
@@ -163,10 +165,14 @@ export default function CheckoutPage() {
     if (!currentUser) {
       navigate('/login');
     }
+    const minOrderAmount = globalSettings?.minOrderAmount || 100;
     if (cartItems.length === 0 && !isOrderConfirmed) {
       navigate('/catalog');
+    } else if (cartTotal > 0 && cartTotal < minOrderAmount && !isOrderConfirmed) {
+      showToast(`Minimum order amount is ₹${minOrderAmount}. Please add more items.`);
+      navigate('/catalog');
     }
-  }, [currentUser, cartItems, isOrderConfirmed, navigate]);
+  }, [currentUser, cartItems, cartTotal, isOrderConfirmed, navigate, globalSettings?.minOrderAmount, showToast]);
 
   const handleInputChange = (e) => {
     setAddressForm({ ...addressForm, [e.target.name]: e.target.value });
