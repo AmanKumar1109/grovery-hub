@@ -179,12 +179,25 @@ export default function TrackOrder() {
             </div>
             
             <div className="flex gap-3">
-              <button className="flex-1 flex items-center justify-center gap-2 py-3 bg-amber-400 hover:bg-amber-500 text-slate-950 font-extrabold text-xs rounded-2xl transition-all shadow-md shadow-amber-300/40 cursor-pointer">
-                <Phone className="w-4 h-4 stroke-[2.5]" /> Call Partner
-              </button>
-              <button className="flex-1 flex items-center justify-center gap-2 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs rounded-2xl transition-colors cursor-pointer">
-                <MessageSquare className="w-4 h-4 stroke-[2.5]" /> Message
-              </button>
+              {order?.assignedPartnerPhone ? (
+                <>
+                  <a href={`tel:${order.assignedPartnerPhone}`} className="flex-1 flex items-center justify-center gap-2 py-3 bg-amber-400 hover:bg-amber-500 text-slate-950 font-extrabold text-xs rounded-2xl transition-all shadow-md shadow-amber-300/40 cursor-pointer">
+                    <Phone className="w-4 h-4 stroke-[2.5]" /> Call Partner
+                  </a>
+                  <a href={`sms:${order.assignedPartnerPhone}`} className="flex-1 flex items-center justify-center gap-2 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs rounded-2xl transition-colors cursor-pointer">
+                    <MessageSquare className="w-4 h-4 stroke-[2.5]" /> Message
+                  </a>
+                </>
+              ) : (
+                <>
+                  <button disabled className="flex-1 flex items-center justify-center gap-2 py-3 bg-slate-100 text-slate-400 font-extrabold text-xs rounded-2xl cursor-not-allowed">
+                    <Phone className="w-4 h-4 stroke-[2.5]" /> Call Partner
+                  </button>
+                  <button disabled className="flex-1 flex items-center justify-center gap-2 py-3 bg-slate-100 text-slate-400 font-extrabold text-xs rounded-2xl cursor-not-allowed">
+                    <MessageSquare className="w-4 h-4 stroke-[2.5]" /> Message
+                  </button>
+                </>
+              )}
             </div>
           </div>
           
