@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import farmerImg from '../../assets/images/hero-farmer.png';
+import heroImg from '../../assets/images/hero.png';
 import FloatingDeliveryBadge from './FloatingDeliveryBadge';
 import gsap from 'gsap';
 
@@ -56,12 +56,12 @@ export default function HeroVisual() {
       {/* Hero Character Image - Slanted Overlay */}
       <div
         ref={farmerRef}
-        className="relative z-10 w-full max-w-md lg:max-w-lg xl:max-w-xl h-full flex items-end justify-center pt-6 -translate-x-12 sm:-translate-x-24 lg:-translate-x-36"
+        className="relative z-10 w-full max-w-md lg:max-w-xl xl:max-w-2xl h-full flex items-end justify-center pt-6 -translate-x-10 sm:-translate-x-16 lg:-translate-x-32"
       >
         <img
-          src={farmerImg}
-          alt="The Grocery Hub Fresh Farmer"
-          className="w-auto h-[440px] sm:h-[520px] lg:h-[600px] object-contain object-bottom transition-all duration-300 hover:scale-[1.02] filter drop-shadow-[0_0_2px_rgba(255,255,255,0.9)] drop-shadow-[0_25px_35px_rgba(0,0,0,0.38)]"
+          src={heroImg}
+          alt="The Grocery Hub Hero"
+          className="w-auto h-[460px] sm:h-[560px] lg:h-[680px] object-contain object-bottom transition-all duration-500 hover:scale-[1.03] hover:-translate-y-2 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] drop-shadow-[0_30px_40px_rgba(0,0,0,0.45)]"
         />
       </div>
     </div>
