@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSettings } from '../../context/SettingsContext';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, ShoppingCart } from 'lucide-react';
 import FloatingReviewsCard from './FloatingReviewsCard';
 import gsap from 'gsap';
+import timeImage from '../../assets/images/time.png';
 
 export default function HeroContent() {
   const { globalSettings } = useSettings();
@@ -77,16 +78,27 @@ export default function HeroContent() {
       </div>
 
       {/* Main Headline */}
-      <h1
-        ref={titleRef}
-        className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-[1.12] tracking-tight mb-5 min-h-[140px] sm:min-h-[160px] lg:min-h-[200px]"
-      >
-        {prefixText} <br />
-        <span className="text-[#3f6212] inline-block transition-colors duration-500">
-          {words[currentWord % words.length] || ''}
-        </span> <br />
-        {suffixText}
-      </h1>
+      <div className="relative w-full">
+        <h1
+          ref={titleRef}
+          className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-[1.12] tracking-tight mb-5 min-h-[140px] sm:min-h-[160px] lg:min-h-[200px] relative z-10"
+        >
+          {prefixText} <br />
+          <span className="text-[#3f6212] inline-block transition-colors duration-500">
+            {words[currentWord % words.length] || ''}
+          </span> <br />
+          {suffixText}
+        </h1>
+        {/* Floating Time Icon positioned independently on the right like the UI design */}
+        <div className="absolute right-0 top-[5%] sm:top-[10%] lg:top-[5%] translate-x-4 sm:translate-x-20 lg:translate-x-48 z-20 pointer-events-none">
+          <img 
+            src={timeImage} 
+            alt="Fast Delivery" 
+            className="w-24 h-24 sm:w-32 sm:h-32 lg:w-60 lg:h-60 object-contain drop-shadow-xl opacity-100 animate-pulse"
+            style={{ animationDuration: '3s' }}
+          />
+        </div>
+      </div>
 
       {/* Paragraph Subtitle */}
       <p
@@ -98,12 +110,19 @@ export default function HeroContent() {
 
       {/* CTA and Features Row */}
       <div className="flex flex-wrap items-center gap-4 mb-10">
-        <div ref={buttonRef}>
+        <div ref={buttonRef} className="relative group inline-block">
+          {/* Premium Animated Glow */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-amber-300 to-amber-500 rounded-full blur-md opacity-40 group-hover:opacity-70 transition duration-300"></div>
+          
           <button
             type="button"
-            className="bg-amber-400 hover:bg-amber-500 text-gray-900 text-xs sm:text-sm font-extrabold px-8 py-3.5 rounded-full shadow-lg shadow-amber-300/50 hover:shadow-xl hover:shadow-amber-400/50 transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shrink-0"
+            className="relative flex items-center justify-center gap-3 sm:gap-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-orange-500 text-gray-900 text-sm sm:text-base font-extrabold pl-2 pr-7 sm:pr-9 py-2 sm:py-2.5 rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:translate-y-0.5 transition-all duration-300 shrink-0 border border-amber-300/30"
           >
-            Shop Now
+            {/* Trolley Icon in a Premium White Circular Badge */}
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.15)] transform group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300">
+              <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500 drop-shadow-sm" strokeWidth={2} fill="currentColor" />
+            </div>
+            <span className="tracking-wide pr-2">Shop Now</span>
           </button>
         </div>
 
