@@ -146,7 +146,8 @@ export default function CatalogPage() {
         if (sortBy === 'price-low') return a.price - b.price;
         if (sortBy === 'price-high') return b.price - a.price;
         if (sortBy === 'rating') return b.rating - a.rating;
-        return 0;
+        // featured: sort by the sortOrder configured in the dashboard
+        return (a.sortOrder ?? 999999) - (b.sortOrder ?? 999999);
       });
     } else if (sortBy !== 'featured') {
       // If user explicitly chose a sort while searching, apply it

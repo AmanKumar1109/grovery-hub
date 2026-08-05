@@ -32,7 +32,8 @@ function transformDoc(d) {
     isTrending: data.isTrending === true || data.isTrending === 'true' || data.badge === 'Trending',
     isBogo: data.isBogo === true || data.isBogo === 'true' || data.badge === 'Buy 1 Get 1' || data.isBOGO === true,
     recentBuyers: data.recentBuyers || 0,
-    image: data.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&auto=format&fit=crop&q=80'
+    image: data.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&auto=format&fit=crop&q=80',
+    sortOrder: data.sortOrder ?? 999999
   };
 }
 
@@ -166,7 +167,8 @@ export function CartProvider({ children }) {
   useEffect(() => {
     const unsubItems = onSnapshot(collection(db, 'items'), (snap) => {
       if (!snap.empty) {
-        const loaded = snap.docs.map(transformDoc).filter(item => item.isVisible);
+        let loaded = snap.docs.map(transformDoc).filter(item => item.isVisible);
+        loaded.sort((a, b) => a.sortOrder - b.sortOrder);
         setProducts(loaded);
       }
       setIsLoadingProducts(false);
@@ -201,7 +203,11 @@ export function CartProvider({ children }) {
       const snap = await getDocs(q);
       if (!snap.empty) {
         const loaded = snap.docs.map(transformDoc).filter(item => item.isVisible);
-        setProducts(prev => [...prev, ...loaded]);
+        setProducts(prev => {
+          const combined = [...prev, ...loaded];
+          combined.sort((a, b) => a.sortOrder - b.sortOrder);
+          return combined;
+        });
         setLastDoc(snap.docs[snap.docs.length - 1]);
         setHasMore(snap.docs.length === PAGE_SIZE);
       } else {
