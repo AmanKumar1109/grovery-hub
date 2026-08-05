@@ -265,7 +265,13 @@ export default function CheckoutPage() {
         paymentStatus: 'Pending (COD)',
         orderTime: formattedTime,
         createdAt: timestamp,
-        updatedAt: timestamp
+        updatedAt: timestamp,
+        // Delivery OTP Verification
+        deliveryOtp: String(Math.floor(100000 + Math.random() * 900000)),
+        deliveryOtpVerified: false,
+        riderOtpVerified: false,
+        adminOtpVerified: false,
+        otpFailedAttempts: 0
       };
 
       const sanitizedOrderData = JSON.parse(JSON.stringify(orderData, (k, v) => v === undefined ? null : v));

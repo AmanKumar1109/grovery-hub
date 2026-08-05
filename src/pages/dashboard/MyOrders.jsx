@@ -281,6 +281,21 @@ export default function MyOrders() {
                   </div>
                 </div>
 
+                {/* Delivery OTP Section - Only for active orders */}
+                {!isCancelled && order.status !== 'Delivered' && order.deliveryOtp && (
+                  <div className="mt-3 p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/60">
+                    <p className="text-[10px] font-extrabold text-amber-700 uppercase tracking-wider mb-1.5">
+                      🔐 Delivery OTP
+                    </p>
+                    <p className="text-2xl font-black text-slate-900 tracking-[0.3em] font-mono">
+                      {order.deliveryOtp}
+                    </p>
+                    <p className="text-[10px] font-bold text-amber-600/80 mt-1.5">
+                      Share this OTP only after receiving your order.
+                    </p>
+                  </div>
+                )}
+
                 {isCancelled && order.cancelReason && (
                   <div className="mb-2 mt-4 p-3 rounded-2xl bg-slate-900/5 border border-slate-900/10 flex items-start gap-3">
                     <div className="p-1.5 bg-red-100 text-red-600 rounded-lg shrink-0 mt-0.5">
