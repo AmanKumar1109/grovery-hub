@@ -114,6 +114,11 @@ export default function MyComplaints() {
                       <CheckCircle2 className="w-4 h-4" />
                       <span className="text-xs font-extrabold">Resolved</span>
                     </div>
+                  ) : comp.status === 'in_progress' ? (
+                    <div className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100">
+                      <MessageCircle className="w-4 h-4 animate-pulse" />
+                      <span className="text-xs font-extrabold">In Progress</span>
+                    </div>
                   ) : (
                     <div className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-100">
                       <Clock className="w-4 h-4" />
