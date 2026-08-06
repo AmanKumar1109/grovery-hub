@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Phone, MessageSquare, CheckCircle2, Map, Star, Clock, Package, Truck, Check } from 'lucide-react';
+import { ArrowLeft, Phone, MessageSquare, CheckCircle2, Map, Star, Clock, Package, Truck, Check, ClipboardList, Home } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import gsap from 'gsap';
 import { db } from '../../firebase';
@@ -105,57 +105,55 @@ export default function TrackOrder() {
               </span>
             </div>
 
-            <div className="relative pl-8 space-y-8">
+            <div className="relative pt-4 pb-4 space-y-0">
               {/* Progress Line */}
-              <div className="absolute left-3 top-2 bottom-6 w-0.5 bg-slate-100"></div>
+              <div className="absolute left-[1.5rem] sm:left-[2rem] top-10 bottom-16 w-0.5 border-l-[2px] border-dashed border-slate-200 z-0"></div>
               <div
-                className="absolute left-3 top-2 w-0.5 bg-emerald-600 z-0 transition-all duration-700 origin-top"
-                style={{ height: `${((currentStep - 1) / 3) * 100}%` }}
+                className="absolute left-[1.5rem] sm:left-[2rem] top-10 w-0.5 bg-emerald-500 z-0 transition-all duration-1000 origin-top shadow-[0_0_8px_rgba(16,185,129,0.8)]"
+                style={{ height: `${((currentStep - 1) / 3) * 100}%`, width: '2px' }}
               ></div>
 
-              {/* Step 1: Order Placed */}
-              <div className="track-item relative z-10">
-                <div className={`absolute -left-11 top-1 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center shadow-sm ${
-                  currentStep >= 1 ? 'bg-emerald-600' : 'bg-slate-200'
-                }`}>
-                  <CheckCircle2 className="w-3 h-3 text-white stroke-[3]" />
-                </div>
-                <h4 className="font-extrabold text-slate-900 text-base">Order Received</h4>
-                <p className="text-xs font-bold text-slate-400 mt-0.5">Order confirmed & synced with store</p>
-              </div>
+              {[
+                { step: 1, title: 'Order Received', desc: 'Order confirmed & synced with store', icon: ClipboardList },
+                { step: 2, title: 'Packed with Care', desc: 'Items checked and packaged for dispatch', icon: Package },
+                { step: 3, title: 'Out for Delivery', desc: 'Express delivery executive is in route', icon: Truck },
+                { step: 4, title: 'Delivered', desc: 'Handed over to customer', icon: Home }
+              ].map((s, idx) => {
+                const Icon = s.icon;
+                const isActive = currentStep === s.step;
+                const isCompleted = currentStep > s.step;
+                const isFuture = currentStep < s.step;
 
-              {/* Step 2: Packing */}
-              <div className={`track-item relative z-10 ${currentStep < 2 ? 'opacity-50' : ''}`}>
-                <div className={`absolute -left-11 top-1 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center shadow-sm ${
-                  currentStep >= 2 ? 'bg-emerald-600' : 'bg-slate-200'
-                }`}>
-                  <CheckCircle2 className="w-3 h-3 text-white stroke-[3]" />
-                </div>
-                <h4 className="font-extrabold text-slate-900 text-base">Packed with Care</h4>
-                <p className="text-xs font-bold text-slate-400 mt-0.5">Items checked and packaged for dispatch</p>
-              </div>
-
-              {/* Step 3: Out for Delivery */}
-              <div className={`track-item relative z-10 ${currentStep < 3 ? 'opacity-50' : ''}`}>
-                <div className={`absolute -left-11 top-1 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center shadow-sm ${
-                  currentStep >= 3 ? 'bg-emerald-600' : 'bg-slate-200'
-                }`}>
-                  <CheckCircle2 className="w-3 h-3 text-white stroke-[3]" />
-                </div>
-                <h4 className="font-extrabold text-slate-900 text-base">Out for Delivery</h4>
-                <p className="text-xs font-bold text-slate-400 mt-0.5">Express delivery executive is in route</p>
-              </div>
-
-              {/* Step 4: Delivered */}
-              <div className={`track-item relative z-10 ${currentStep < 4 ? 'opacity-40' : ''}`}>
-                <div className={`absolute -left-11 top-1 w-6 h-6 rounded-full border-4 border-white flex items-center justify-center ${
-                  currentStep >= 4 ? 'bg-emerald-600' : 'bg-slate-200'
-                }`}>
-                  {currentStep >= 4 && <CheckCircle2 className="w-3 h-3 text-white stroke-[3]" />}
-                </div>
-                <h4 className="font-bold text-slate-900 text-base">Delivered</h4>
-                <p className="text-xs font-semibold text-slate-400 mt-0.5">Handed over to customer</p>
-              </div>
+                return (
+                  <div key={s.step} className={`track-item relative z-10 flex items-start gap-4 sm:gap-6 ${isFuture ? 'opacity-60 grayscale' : ''} ${idx !== 3 ? 'pb-10 sm:pb-12' : ''}`}>
+                    <div className="relative shrink-0">
+                      {isActive && (
+                        <span className="absolute -inset-2 sm:-inset-2.5 rounded-full bg-amber-400/40 animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite] z-0"></span>
+                      )}
+                      <div className={`relative z-10 w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shadow-lg border-[3px] border-white transition-all duration-500 ${
+                        isActive ? 'bg-gradient-to-br from-amber-400 to-amber-500 text-slate-900 scale-110 rotate-3 shadow-amber-400/50'
+                        : isCompleted ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-emerald-500/40'
+                        : 'bg-slate-100 text-slate-400 shadow-none'
+                      }`}>
+                        <Icon className="w-5 h-5 sm:w-7 sm:h-7 stroke-[2.5]" />
+                        {isCompleted && (
+                          <div className="absolute -top-1.5 -right-1.5 w-5 h-5 sm:w-6 sm:h-6 bg-emerald-500 rounded-full flex items-center justify-center border-2 border-white shadow-md">
+                            <Check className="w-3 h-3 sm:w-4 sm:h-4 text-white stroke-[3]" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className={`flex-1 pt-1.5 sm:pt-3 transition-all duration-500 ${isActive ? 'translate-x-2 sm:translate-x-3' : ''}`}>
+                      <h4 className={`font-black text-base sm:text-xl tracking-tight transition-colors duration-300 ${isActive ? 'text-amber-600' : isCompleted ? 'text-emerald-700' : 'text-slate-700'}`}>
+                        {s.title}
+                      </h4>
+                      <p className={`text-xs sm:text-sm font-bold mt-1 transition-colors duration-300 ${isActive ? 'text-slate-600' : isCompleted ? 'text-emerald-600/80' : 'text-slate-400'}`}>
+                        {s.desc}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
