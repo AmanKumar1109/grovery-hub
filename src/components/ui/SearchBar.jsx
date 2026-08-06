@@ -55,7 +55,7 @@ export default function SearchBar() {
         executeSearch(transcript);
       }, 400);
     },
-    lang: 'hi-IN',
+    lang: 'en-IN',
   });
 
   // Close overlays when clicking outside

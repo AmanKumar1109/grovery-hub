@@ -140,14 +140,14 @@ export default function SmartSearchOverlay({
                   return (
                     <div className="flex items-center justify-between bg-emerald-600 text-white rounded-lg h-7 w-20 px-1 shadow-sm border border-emerald-700">
                       <button
-                        onClick={() => updateQuantity(product.id, quantityInCart - 1)}
+                        onClick={() => updateQuantity(product.id, -1)}
                         className="p-1 hover:bg-emerald-500 rounded-md transition-colors"
                       >
                         <Minus className="w-3 h-3 stroke-[3]" />
                       </button>
                       <span className="text-[11px] font-black">{quantityInCart}</span>
                       <button
-                        onClick={() => updateQuantity(product.id, quantityInCart + 1)}
+                        onClick={() => updateQuantity(product.id, 1)}
                         className="p-1 hover:bg-emerald-500 rounded-md transition-colors"
                       >
                         <Plus className="w-3 h-3 stroke-[3]" />

@@ -1,10 +1,67 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
+// Advanced dictionary for grocery-specific NLP correction to make voice search "100% accurate"
+const groceryCorrections = {
+  "aata": "atta",
+  "attah": "atta",
+  "daal": "dal",
+  "dall": "dal",
+  "panir": "paneer",
+  "shakkar": "sugar",
+  "chini": "sugar",
+  "chawal": "rice",
+  "dudh": "milk",
+  "sabji": "vegetables",
+  "sabzi": "vegetables",
+  "froot": "fruits",
+  "biskut": "biscuit",
+  "biscut": "biscuit",
+  "maggi": "maggi",
+  "megi": "maggi",
+  "maggie": "maggi",
+  "soyabin": "soyabean",
+  "ghi": "ghee",
+  "tel": "oil",
+  "masale": "masala",
+  "haldi": "turmeric",
+  "mirch": "chilli",
+  "mirchi": "chilli",
+  "dhaniya": "coriander",
+  "jeera": "cumin",
+  "jira": "cumin",
+  "sarso": "mustard",
+  "sarson": "mustard",
+  "adrak": "ginger",
+  "lehsun": "garlic",
+  "lasun": "garlic",
+  "pyaaz": "onion",
+  "pyaz": "onion",
+  "alu": "potato",
+  "aloo": "potato",
+  "tamatar": "tomato"
+};
+
+const enhanceTranscript = (text) => {
+  if (!text) return '';
+  // Remove punctuation
+  let cleanText = text.replace(/[.,?!]/g, '').trim();
+  
+  // Replace words based on dictionary
+  const words = cleanText.split(/\s+/);
+  const enhancedWords = words.map(word => {
+    const lower = word.toLowerCase();
+    return groceryCorrections[lower] || word;
+  });
+  
+  const finalString = enhancedWords.join(' ');
+  return finalString.charAt(0).toUpperCase() + finalString.slice(1);
+};
+
 /**
  * useVoiceSearch — Web Speech API hook for voice-to-text search.
  * Supports English, Hindi, and Hinglish. Auto-stops on silence.
  */
-export default function useVoiceSearch({ onResult, lang = 'hi-IN' } = {}) {
+export default function useVoiceSearch({ onResult, lang = 'en-IN' } = {}) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [status, setStatus] = useState('idle'); // idle | listening | processing | error
@@ -14,8 +71,6 @@ export default function useVoiceSearch({ onResult, lang = 'hi-IN' } = {}) {
   const recognitionRef = useRef(null);
   const onResultRef = useRef(onResult);
   onResultRef.current = onResult;
-
-  // Check browser support
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -68,11 +123,11 @@ export default function useVoiceSearch({ onResult, lang = 'hi-IN' } = {}) {
       }
 
       const currentText = finalTranscript || interimTranscript;
-      setTranscript(currentText);
+      setTranscript(enhanceTranscript(currentText) || currentText);
 
       // Auto-trigger search when we get a final result
       if (finalTranscript && onResultRef.current) {
-        onResultRef.current(finalTranscript.trim());
+        onResultRef.current(enhanceTranscript(finalTranscript));
       }
     };
 
