@@ -8,6 +8,7 @@ import ProductSkeleton from '../components/shop/ProductSkeleton';
 import { useCart } from '../context/CartContext';
 import { buildSearchIndex, smartSearch } from '../utils/searchEngine';
 import { Search, SlidersHorizontal, Package, Check, Filter, ChevronDown, ChevronUp, X, Loader2 } from 'lucide-react';
+import SEO from '../components/seo/SEO';
 
 export default function CatalogPage() {
   const location = useLocation();
@@ -201,8 +202,21 @@ export default function CatalogPage() {
     return () => window.removeEventListener('resize', updateHeight);
   }, []);
 
+  const catalogSchema = {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Shop Fresh Groceries & Essentials - The Grocery Hub",
+    "url": "https://thegroceryhub.example.com/catalog"
+  };
+
   return (
     <div className="min-h-screen w-full bg-slate-50 flex flex-col font-sans text-slate-800 antialiased selection:bg-amber-300 selection:text-slate-900">
+      <SEO 
+        title={categoryName ? `${decodeURIComponent(categoryName)}` : "Shop Fresh Groceries & Essentials"}
+        description="Browse our complete catalog of fresh organic groceries, daily essentials, and personal care products. Enjoy unbeatable prices and fast 15-minute delivery."
+        url={`/catalog${categoryName ? `/${categoryName}` : ''}`}
+        schema={catalogSchema}
+      />
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-slate-950 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-800 flex items-center gap-2.5 text-xs font-black animate-in fade-in slide-in-from-bottom-3 duration-200">

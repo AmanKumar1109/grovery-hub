@@ -13,7 +13,7 @@ export default function HeroContent() {
   const prefixText = globalSettings?.heroPrefixText || 'Delivering';
   const suffixText = globalSettings?.heroSuffixText || 'In 15 Minutes';
   const subtitleText = globalSettings?.heroSubtitleText || 'This year, our new summer collection will shelter you harsh elements of a world that .';
-  
+
   const featureRaw = globalSettings?.heroFeatureTexts || 'Genuine Product\nFast Delivery\nSecure Payment\nBest Prices';
   const features = featureRaw.split('\n').filter(line => line.trim() !== '');
   const featureInterval = globalSettings?.heroFeatureInterval || 3;
@@ -23,7 +23,7 @@ export default function HeroContent() {
   const descRef = useRef(null);
   const buttonRef = useRef(null);
   const featureRef = useRef(null);
-  
+
   const [currentWord, setCurrentWord] = useState(0);
   const [currentFeature, setCurrentFeature] = useState(0);
 
@@ -91,9 +91,9 @@ export default function HeroContent() {
         </h1>
         {/* Floating Time Icon positioned independently on the right like the UI design */}
         <div className="absolute right-0 top-[5%] sm:top-[10%] lg:top-[5%] translate-x-4 sm:translate-x-20 lg:translate-x-48 z-20 pointer-events-none">
-          <img 
-            src={timeImage} 
-            alt="Fast Delivery" 
+          <img
+            src={timeImage}
+            alt="Fast Delivery"
             className="w-24 h-24 sm:w-32 sm:h-32 lg:w-60 lg:h-60 object-contain drop-shadow-xl opacity-100 animate-pulse"
             style={{ animationDuration: '3s' }}
           />
@@ -113,7 +113,7 @@ export default function HeroContent() {
         <div ref={buttonRef} className="relative group inline-block">
           {/* Premium Animated Glow */}
           <div className="absolute -inset-1 bg-gradient-to-r from-amber-300 to-amber-500 rounded-full blur-md opacity-40 group-hover:opacity-70 transition duration-300"></div>
-          
+
           <button
             type="button"
             className="relative flex items-center justify-center gap-3 sm:gap-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-orange-500 text-gray-900 text-sm sm:text-base font-extrabold pl-2 pr-7 sm:pr-9 py-2 sm:py-2.5 rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:translate-y-0.5 transition-all duration-300 shrink-0 border border-amber-300/30"
@@ -136,11 +136,10 @@ export default function HeroContent() {
               {features.map((feature, idx) => (
                 <span
                   key={idx}
-                  className={`absolute inset-0 flex items-center text-[11px] sm:text-xs font-bold text-slate-700 transition-all duration-500 ${
-                    idx === (currentFeature % features.length)
-                      ? 'opacity-100 translate-y-0'
-                      : 'opacity-0 translate-y-3'
-                  }`}
+                  className={`absolute inset-0 flex items-center text-[11px] sm:text-xs font-bold text-slate-700 transition-all duration-500 ${idx === (currentFeature % features.length)
+                    ? 'opacity-100 translate-y-0'
+                    : 'opacity-0 translate-y-3'
+                    }`}
                 >
                   {feature}
                 </span>

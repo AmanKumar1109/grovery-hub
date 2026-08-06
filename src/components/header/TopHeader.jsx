@@ -151,7 +151,7 @@ export default function TopHeader() {
       className="relative z-[60] w-full flex flex-col transition-all duration-300"
     >
       <UrgencyBanner />
-      <div className="flex items-center justify-between px-4 sm:px-8 lg:px-12 py-2.5 sm:py-4 border-b border-slate-200/50 bg-white/80 backdrop-blur-md w-full">
+      <div className="flex items-center justify-between px-4 sm:px-8 lg:px-12 py-2.5 sm:py-4 border-b border-slate-200/30 bg-transparent w-full">
         {/* Left: 3-Lines Hamburger Menu Button (Mobile/Tablet) & Brand Logo */}
         <div className="flex items-center gap-3">
           <button
@@ -165,7 +165,7 @@ export default function TopHeader() {
 
           {/* Brand Logo */}
           <Link to="/" className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer select-none group">
-            <img src={logoImg} alt="The Grocery Hub" className="w-6 h-6 sm:w-8 sm:h-8 lg:w-9 lg:h-9 object-contain shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0" />
+            <img src={logoImg} fetchpriority="high" alt="The Grocery Hub logo" className="w-6 h-6 sm:w-8 sm:h-8 lg:w-9 lg:h-9 object-contain shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0" />
             <div className="flex flex-col leading-none ml-0.5">
               <span 
                 className="text-[9px] sm:text-[11px] lg:text-xs text-amber-500 -rotate-3 transform -mb-0.5 sm:-mb-1 ml-0.5 drop-shadow-sm"
@@ -358,7 +358,7 @@ export default function TopHeader() {
                   {/* Mobile Menu Top Bar */}
                   <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div className="flex items-center gap-2.5">
-                      <img src={logoImg} alt="Menu" className="w-9 h-9 object-contain shadow-sm" />
+                      <img src={logoImg} loading="lazy" alt="The Grocery Hub Menu" className="w-9 h-9 object-contain shadow-sm" />
                       <span className="font-extrabold text-slate-900 text-sm">Navigation Menu</span>
                     </div>
                     <button
@@ -401,7 +401,7 @@ export default function TopHeader() {
                   {currentUser ? (
                     <>
                       <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/60">
-                        <img src={userAvatar} alt={userName} className="w-10 h-10 rounded-full object-cover border border-amber-400 shadow-xs" />
+                        <img src={userAvatar} loading="lazy" alt={`Avatar of ${userName}`} className="w-10 h-10 rounded-full object-cover border border-amber-400 shadow-xs" />
                         <div className="min-w-0">
                           <p className="text-xs font-black text-slate-900 truncate">{userName}</p>
                           <p className="text-[10px] text-emerald-700 font-extrabold">Verified Member 🌿</p>

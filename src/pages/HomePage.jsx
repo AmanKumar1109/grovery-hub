@@ -10,12 +10,31 @@ import Footer from '../components/shop/Footer';
 import CartDrawer from '../components/shop/CartDrawer';
 import { useCart } from '../context/CartContext';
 import { Check } from 'lucide-react';
+import SEO from '../components/seo/SEO';
 
 export default function HomePage() {
   const { toastMessage } = useCart();
 
+  const homeSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "The Grocery Hub",
+    "url": "https://thegroceryhub.example.com",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://thegroceryhub.example.com/catalog?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <div className="min-h-screen w-full bg-white flex flex-col font-sans text-slate-800 antialiased selection:bg-amber-300 selection:text-slate-900">
+      <SEO 
+        title="Fresh Organic Groceries in 15 Minutes"
+        description="Shop fresh organic groceries, daily essentials, and personal care products online. Unbeatable prices with lightning-fast 15-minute delivery."
+        url="/"
+        schema={homeSchema}
+      />
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 bg-slate-950 text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-800 flex items-center gap-2.5 text-xs font-black animate-in fade-in slide-in-from-bottom-3 duration-200">

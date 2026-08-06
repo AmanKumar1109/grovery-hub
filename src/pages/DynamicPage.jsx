@@ -5,6 +5,7 @@ import Header from '../components/header/Header';
 import Footer from '../components/shop/Footer';
 import { Loader2, ArrowLeft, Clock, FileText, ChevronRight, Home } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
+import SEO from '../components/seo/SEO';
 
 export default function DynamicPage({ documentId, title }) {
   const [content, setContent] = useState('');
@@ -50,6 +51,11 @@ export default function DynamicPage({ documentId, title }) {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-800 selection:bg-emerald-200 selection:text-emerald-900">
+      <SEO 
+        title={title}
+        description={`Read the ${title} of The Grocery Hub.`}
+        url={`/${documentId}`}
+      />
       <Header />
 
       <main className="flex-1 w-full relative pb-20">

@@ -33,11 +33,13 @@ export default function CategoryNav() {
   }, []);
 
   return (
-    <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-8 px-4 sm:px-8 lg:px-12 py-1.5 sm:py-2.5 bg-white border-b border-gray-100 w-full relative z-40">
+    <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-8 px-4 sm:px-8 lg:px-12 py-1.5 sm:py-2.5 bg-transparent w-full relative z-40">
       {/* Category Dropdown Pill */}
       <div className="relative flex-shrink-0" ref={dropdownRef}>
         <button
           type="button"
+          aria-expanded={isOpen}
+          aria-label="Toggle Categories Dropdown"
           onClick={() => setIsOpen(!isOpen)}
           className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-700 font-extrabold text-[11px] sm:text-xs hover:bg-emerald-100 transition-colors shadow-sm cursor-pointer"
         >

@@ -8,6 +8,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>The Grocery Hub - Fresh Organic Groceries Delivered in 15 Mins</title>
     
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Shop quality groceries, household essentials, snacks, beverages & personal care products-all at unbeatable prices. Delivered in 15 minutes." />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Security & CSP -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!-- Note: CSP is basic. Adjust frame-ancestors if iframe embedding is needed -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval'; img-src 'self' https: data: blob:;" />
+
+    <!-- Open Graph (Default) -->
+    <meta property="og:site_name" content="The Grocery Hub" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="The Grocery Hub - Fresh Organic Groceries Delivered in 15 Mins" />
+    <meta property="og:description" content="Shop quality groceries, household essentials, snacks, beverages & personal care products-all at unbeatable prices. Delivered in 15 minutes." />
+    
     <!-- Preconnect for Fast Font and Asset Loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,6 +32,32 @@
     <link rel="preconnect" href="https://images.unsplash.com" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
+    <!-- Schema.org Organization JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "The Grocery Hub",
+      "url": "https://thegroceryhub.example.com",
+      "logo": "https://thegroceryhub.example.com/favicon.png",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+1-800-555-0199",
+        "contactType": "customer service"
+      }
+    }
+    </script>
+    
+    <!-- Google Analytics (GA4) / Tag Manager Placeholder -->
+    <!-- 
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    -->
     <style>
       html, body {
         background-color: #ffffff !important;
