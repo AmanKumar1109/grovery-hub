@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
-import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft, Tag, X, AlertTriangle, ShieldAlert, Navigation } from 'lucide-react';
+import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft, Tag, X, AlertTriangle, ShieldAlert, Navigation, Moon } from 'lucide-react';
 import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 import { checkAddressServiceability } from '../utils/locationUtils';
@@ -161,6 +161,10 @@ export default function CheckoutPage() {
   // Baharagora 5 KM Delivery Radius Check
   const serviceability = checkAddressServiceability(activeAddress || addressForm);
 
+  // Time-based Delivery Logic (9:00 AM to 9:00 PM is normal, else Next Morning)
+  const currentHour = new Date().getHours();
+  const isLateOrder = currentHour >= 21 || currentHour < 9;
+
   useEffect(() => {
     if (!currentUser) {
       navigate('/login');
@@ -277,7 +281,10 @@ export default function CheckoutPage() {
         deliveryOtpVerified: false,
         riderOtpVerified: false,
         adminOtpVerified: false,
-        otpFailedAttempts: 0
+        otpFailedAttempts: 0,
+        // Delivery Timing Logic
+        isNextMorningDelivery: isLateOrder,
+        deliverySlot: isLateOrder ? 'Next Morning (9:00 AM - 12:00 PM)' : 'Standard (As soon as possible)'
       };
 
       const sanitizedOrderData = JSON.parse(JSON.stringify(orderData, (k, v) => v === undefined ? null : v));
@@ -605,6 +612,20 @@ export default function CheckoutPage() {
                   <span>₹{finalTotal}</span>
                 </div>
               </div>
+
+              {/* Next Morning Delivery Warning */}
+              {isLateOrder && (
+                <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 shadow-sm animate-in fade-in slide-in-from-bottom-2">
+                  <div className="flex items-center gap-2 font-black text-indigo-700 mb-1.5">
+                    <Moon className="w-5 h-5" />
+                    <span className="uppercase tracking-widest text-[11px]">Night Mode On</span>
+                  </div>
+                  <p className="text-xs font-bold text-indigo-800 leading-relaxed">
+                    Our standard delivery hours are <span className="font-black text-indigo-900 bg-indigo-100 px-1 rounded">9:00 AM - 9:00 PM</span>.<br />
+                    Orders placed now will be delivered fresh <span className="font-black text-emerald-700">Tomorrow Morning</span>!
+                  </p>
+                </div>
+              )}
 
               <button
                 onClick={handlePlaceOrder}

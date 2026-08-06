@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Package, Clock, CheckCircle2, XCircle, Search, Loader2, AlertCircle } from 'lucide-react';
+import { Package, Clock, CheckCircle2, XCircle, Search, Loader2, AlertCircle, Moon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import EmptyState from '../../components/dashboard/EmptyState';
 import OrderSkeleton from '../../components/dashboard/OrderSkeleton';
@@ -280,6 +280,14 @@ export default function MyOrders() {
                     <p className="text-xs font-bold text-slate-500 mt-1">{itemCount} Items • Payment Verified</p>
                   </div>
                 </div>
+
+                {/* Next Morning Delivery Badge */}
+                {order.isNextMorningDelivery && !isCancelled && (
+                  <div className="flex items-center gap-2.5 mb-5 px-3.5 py-2.5 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl shadow-sm">
+                    <Moon className="w-4 h-4 text-indigo-500" />
+                    <span className="text-[11px] font-black text-indigo-700 uppercase tracking-widest">Next Morning Delivery (9 AM - 12 PM)</span>
+                  </div>
+                )}
 
                 {/* Delivery OTP Section - Only for active orders */}
                 {!isCancelled && order.status !== 'Delivered' && order.deliveryOtp && (
