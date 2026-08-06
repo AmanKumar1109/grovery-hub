@@ -281,7 +281,7 @@ export default function CatalogPage() {
           <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 p-2.5 sm:p-4 shadow-xs space-y-2 sm:space-y-3">
             <div className="flex items-center justify-between gap-2 sm:gap-3">
               {/* Quick Search */}
-              <div className="relative flex-1 sm:flex-none sm:w-80">
+              <div className="relative flex-1 sm:flex-none sm:w-96">
                 <Search className="absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 w-3.5 sm:w-4 h-3.5 sm:h-4 text-slate-400" />
                 <input
                   type="text"
@@ -317,17 +317,17 @@ export default function CatalogPage() {
                   Showing <span className="text-slate-900 font-black">{filteredProducts.length}</span> Items
                 </span>
 
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <SlidersHorizontal className="w-4 h-4 text-amber-500 hidden sm:inline" />
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-amber-500 hidden sm:inline" />
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl px-2 sm:px-3 py-1.5 sm:py-2 text-[11px] sm:text-xs font-extrabold text-slate-800 focus:outline-none focus:border-amber-400 cursor-pointer"
+                    className="bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl px-1 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-extrabold text-slate-800 focus:outline-none focus:border-amber-400 cursor-pointer w-20 sm:w-auto truncate"
                   >
-                    <option value="featured">Featured Catalogue</option>
-                    <option value="price-low">Price: Low → High</option>
-                    <option value="price-high">Price: High → Low</option>
-                    <option value="rating">Highest Rated</option>
+                    <option value="featured">Sort</option>
+                    <option value="price-low">Low - High</option>
+                    <option value="price-high">High - Low</option>
+                    <option value="rating">Top Rated</option>
                   </select>
                 </div>
               </div>

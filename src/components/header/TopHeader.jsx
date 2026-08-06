@@ -162,24 +162,24 @@ export default function TopHeader() {
           <Link to="/" className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer select-none group">
             <img src={logoImg} fetchPriority="high" alt="The Grocery Hub logo" className="w-6 h-6 sm:w-8 sm:h-8 lg:w-9 lg:h-9 object-contain shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0" />
             <div className="flex flex-col leading-none ml-0.5">
-              <span 
+              <span
                 className="text-[9px] sm:text-[11px] lg:text-xs text-amber-500 -rotate-3 transform -mb-0.5 sm:-mb-1 ml-0.5 drop-shadow-sm"
                 style={{ fontFamily: "'Pacifico', cursive" }}
               >
                 The
               </span>
-              <span 
-                className="text-lg sm:text-2xl lg:text-[1.75rem] font-extrabold tracking-tight whitespace-nowrap flex items-center gap-0.5 sm:gap-1" 
+              <span
+                className="text-lg sm:text-2xl lg:text-[1.75rem] font-extrabold tracking-tight whitespace-nowrap flex items-center gap-0.5 sm:gap-1"
                 style={{ fontFamily: "'Plus Jakarta Sans', 'Outfit', system-ui, sans-serif", letterSpacing: '-0.03em' }}
               >
-                <span 
+                <span
                   ref={brandTextRef}
                   className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600"
                   style={{ WebkitTextStroke: '0.3px rgba(16,185,129,0.15)' }}
                 >
                   Grocery
                 </span>
-                <span 
+                <span
                   className="text-slate-800"
                   style={{ WebkitTextStroke: '0.2px rgba(15,23,42,0.1)' }}
                 >

@@ -131,10 +131,50 @@ export default function SearchBar() {
 
   return (
     <>
-      <div ref={searchContainerRef} className="relative flex-1 w-full max-w-xl lg:mx-8 z-50">
-        <div className={`flex items-center bg-[#f8f9fa] border rounded-full px-2 py-1 transition-all duration-300 ${
-          isSearchFocused ? 'border-amber-400 ring-4 ring-amber-400/20 shadow-lg bg-white' : 'border-gray-200/80 shadow-inner hover:border-amber-300'
-        }`}>
+      <style>
+        {`
+          @keyframes spinFluid {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+          }
+          
+          .gemini-border-smoke {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200%;
+            padding-bottom: 200%;
+            background: conic-gradient(from 0deg, transparent 0%, rgba(52, 211, 153, 0.8) 25%, rgba(251, 191, 36, 0.8) 50%, rgba(249, 115, 22, 0.8) 75%, transparent 100%);
+            animation: spinFluid 4s linear infinite;
+            filter: blur(12px);
+            z-index: -1;
+            pointer-events: none;
+          }
+          
+          .gemini-container {
+            overflow: hidden;
+            border-radius: 9999px;
+            position: absolute;
+            inset: -3px; /* border thickness */
+            z-index: -1;
+            opacity: 0.4;
+            transition: opacity 0.5s ease;
+          }
+          .group:focus-within .gemini-container {
+            opacity: 1;
+          }
+        `}
+      </style>
+      <div ref={searchContainerRef} className="relative flex-1 w-full max-w-2xl lg:mx-8 z-50 group">
+        
+        {/* Gemini Smokey Flowing Border */}
+        <div className="gemini-container">
+          <div className="gemini-border-smoke"></div>
+        </div>
+
+        {/* Main Search Bar Container */}
+        <div className={`relative flex items-center bg-white rounded-full px-1.5 py-1 transition-all duration-500 ease-out border-2 ${isSearchFocused ? 'shadow-2xl scale-[1.02] border-transparent' : 'shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border-white/50'
+          }`}>
           <input
             ref={inputRef}
             type="text"
@@ -149,7 +189,7 @@ export default function SearchBar() {
             aria-label="Search products"
             aria-expanded={isSearchFocused}
             aria-autocomplete="list"
-            className="w-full bg-transparent px-4 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none font-bold"
+            className="w-full bg-transparent px-4 py-1.5 text-[14px] text-slate-800 placeholder-slate-400 focus:outline-none font-semibold tracking-wide"
           />
 
           {/* Voice search button */}
@@ -158,26 +198,29 @@ export default function SearchBar() {
               type="button"
               aria-label="Voice Search"
               onClick={openVoiceModal}
-              className="p-2 rounded-full hover:bg-amber-50 text-slate-400 hover:text-amber-600 transition-colors cursor-pointer flex-shrink-0"
+              className={`p-2 rounded-full transition-all duration-300 cursor-pointer flex-shrink-0 ${isSearchFocused
+                  ? 'bg-emerald-50/80 text-emerald-600 hover:bg-emerald-100 hover:shadow-md hover:scale-105'
+                  : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+                }`}
             >
-              <Mic className="w-4 h-4" />
+              <Mic className="w-4.5 h-4.5" />
             </button>
           )}
 
           {/* Category selector dropdown (desktop) */}
-          <div className="relative flex items-center hidden sm:flex">
-            <div className="h-5 w-[1px] bg-gray-200 mx-1"></div>
+          <div className="relative flex items-center hidden sm:flex ml-1">
+            <div className="h-5 w-[1.5px] bg-slate-200/80 mx-1.5 rounded-full"></div>
             <button
               type="button"
               onClick={() => { setIsCatDropdownOpen(!isCatDropdownOpen); setIsSearchFocused(false); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-gray-600 hover:text-gray-900 whitespace-nowrap focus:outline-none cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1 text-[12.5px] font-bold text-slate-500 hover:text-slate-800 whitespace-nowrap transition-colors focus:outline-none cursor-pointer rounded-xl hover:bg-slate-50"
             >
-              <span className="truncate max-w-[100px]">{category}</span>
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${isCatDropdownOpen ? 'rotate-180' : ''}`} />
+              <span className="truncate max-w-[110px]">{category}</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-300 ${isCatDropdownOpen ? 'rotate-180 text-amber-500' : ''}`} />
             </button>
 
             {isCatDropdownOpen && (
-              <div className="absolute right-0 top-11 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200 max-h-[300px] overflow-y-auto custom-scrollbar">
+              <div className="absolute right-0 top-11 w-52 bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)] border border-slate-100/80 py-2 z-50 animate-in fade-in slide-in-from-top-4 duration-300 max-h-[320px] overflow-y-auto custom-scrollbar">
                 {categories.map((cat) => (
                   <button
                     key={cat}
@@ -190,9 +233,10 @@ export default function SearchBar() {
                         navigate(`/category/${encodeURIComponent(cat)}`);
                       }
                     }}
-                    className={`w-full text-left px-4 py-2.5 text-xs hover:bg-amber-50 hover:text-amber-700 font-bold transition-colors cursor-pointer ${
-                      category === cat ? 'text-amber-600 bg-amber-50/50' : 'text-slate-600'
-                    }`}
+                    className={`w-full text-left px-4 py-2.5 text-[13px] font-bold transition-all cursor-pointer flex items-center gap-2 ${category === cat
+                        ? 'text-amber-600 bg-amber-50/70 border-l-2 border-amber-500'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 hover:pl-5'
+                      }`}
                   >
                     {cat}
                   </button>
@@ -201,14 +245,14 @@ export default function SearchBar() {
             )}
           </div>
 
-          {/* Search button */}
+          {/* Search button (Premium Gradient) */}
           <button
             type="button"
             aria-label="Search"
             onClick={() => executeSearch()}
-            className="bg-amber-400 hover:bg-amber-500 text-slate-950 p-2.5 rounded-full flex items-center justify-center shadow-md shadow-amber-300/30 transition-transform active:scale-95 ml-1 cursor-pointer"
+            className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white p-2.5 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30 transition-all duration-300 hover:shadow-orange-500/40 hover:-translate-y-0.5 active:scale-95 ml-1.5 cursor-pointer"
           >
-            <Search className="w-4 h-4" />
+            <Search className="w-4.5 h-4.5" />
           </button>
         </div>
 
