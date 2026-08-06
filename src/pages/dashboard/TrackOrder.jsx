@@ -143,7 +143,7 @@ export default function TrackOrder() {
                   <CheckCircle2 className="w-3 h-3 text-white stroke-[3]" />
                 </div>
                 <h4 className="font-extrabold text-slate-900 text-base">Out for Delivery</h4>
-                <p className="text-xs font-bold text-slate-400 mt-0.5">Express delivery executive is en route</p>
+                <p className="text-xs font-bold text-slate-400 mt-0.5">Express delivery executive is in route</p>
               </div>
 
               {/* Step 4: Delivered */}
