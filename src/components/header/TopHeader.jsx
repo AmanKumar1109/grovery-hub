@@ -4,6 +4,7 @@ import { ShoppingBag, Heart, ChevronDown, LayoutDashboard, ShoppingCart, User, M
 import { Link, useNavigate } from 'react-router-dom';
 import SearchBar from '../ui/SearchBar';
 import userAvatar from '../../assets/images/user-avatar.png';
+import logoImg from '../../assets/images/logo.png';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useSettings } from '../../context/SettingsContext';
@@ -81,6 +82,7 @@ const UrgencyBanner = () => {
 
 export default function TopHeader() {
   const headerRef = useRef(null);
+  const brandTextRef = useRef(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -94,6 +96,17 @@ export default function TopHeader() {
       { y: -30, opacity: 0 },
       { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }
     );
+    
+    if (brandTextRef.current) {
+      gsap.to(brandTextRef.current, {
+        y: -3,
+        rotation: 2,
+        duration: 1.5,
+        yoyo: true,
+        repeat: -1,
+        ease: 'power1.inOut'
+      });
+    }
   }, []);
 
   // Close dropdown on click outside
@@ -151,18 +164,34 @@ export default function TopHeader() {
           </button>
 
           {/* Brand Logo */}
-          <Link to="/" className="flex items-center gap-2 sm:gap-2.5 cursor-pointer select-none group">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-amber-400 rounded-xl flex items-center justify-center shadow-md shadow-amber-200 group-hover:scale-105 transition-transform duration-200 flex-shrink-0">
-              <svg
-                className="w-4 h-4 sm:w-6 sm:h-6 text-white fill-current"
-                viewBox="0 0 24 24"
+          <Link to="/" className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer select-none group">
+            <img src={logoImg} alt="The Grocery Hub" className="w-6 h-6 sm:w-8 sm:h-8 lg:w-9 lg:h-9 object-contain shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0" />
+            <div className="flex flex-col leading-none ml-0.5">
+              <span 
+                className="text-[9px] sm:text-[11px] lg:text-xs text-amber-500 -rotate-3 transform -mb-0.5 sm:-mb-1 ml-0.5 drop-shadow-sm"
+                style={{ fontFamily: "'Pacifico', cursive" }}
               >
-                <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zm-9-1a2 2 0 0 1 4 0v1h-4V6zm8 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v10z" />
-              </svg>
+                The
+              </span>
+              <span 
+                className="text-lg sm:text-2xl lg:text-[1.75rem] font-extrabold tracking-tight whitespace-nowrap flex items-center gap-0.5 sm:gap-1" 
+                style={{ fontFamily: "'Plus Jakarta Sans', 'Outfit', system-ui, sans-serif", letterSpacing: '-0.03em' }}
+              >
+                <span 
+                  ref={brandTextRef}
+                  className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600"
+                  style={{ WebkitTextStroke: '0.3px rgba(16,185,129,0.15)' }}
+                >
+                  Grocery
+                </span>
+                <span 
+                  className="text-slate-800"
+                  style={{ WebkitTextStroke: '0.2px rgba(15,23,42,0.1)' }}
+                >
+                  Hub
+                </span>
+              </span>
             </div>
-            <span className="text-base sm:text-2xl font-extrabold tracking-tight text-gray-900 whitespace-nowrap">
-              The <span className="text-emerald-700">Grocery</span> Hub
-            </span>
           </Link>
         </div>
 
@@ -329,9 +358,7 @@ export default function TopHeader() {
                   {/* Mobile Menu Top Bar */}
                   <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 bg-amber-400 rounded-xl flex items-center justify-center text-slate-950 font-black shadow-sm">
-                        🌿
-                      </div>
+                      <img src={logoImg} alt="Menu" className="w-9 h-9 object-contain shadow-sm" />
                       <span className="font-extrabold text-slate-900 text-sm">Navigation Menu</span>
                     </div>
                     <button

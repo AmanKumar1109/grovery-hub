@@ -24,6 +24,7 @@ const Linkedin = ({ className }) => (
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useSettings } from '../../context/SettingsContext';
+import logoImg from '../../assets/images/logo.png';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -163,11 +164,7 @@ export default function Footer() {
           {/* Brand Info */}
           <div className="footer-brand lg:col-span-2 space-y-4">
             <div className="flex items-center gap-2.5 select-none">
-              <div className="w-10 h-10 bg-amber-400 rounded-xl flex items-center justify-center shadow-md">
-                <svg className="w-6 h-6 text-slate-950 fill-current" viewBox="0 0 24 24">
-                  <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zm-9-1a2 2 0 0 1 4 0v1h-4V6zm8 13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v10z" />
-                </svg>
-              </div>
+              <img src={logoImg} alt="The Grocery Hub" className="w-10 h-10 object-contain shadow-md" />
               <span className="text-2xl font-black text-white tracking-tight">
                 The <span className="text-emerald-500">Grocery</span> Hub
               </span>
