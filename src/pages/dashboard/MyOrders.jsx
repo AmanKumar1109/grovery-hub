@@ -169,7 +169,15 @@ export default function MyOrders() {
   };
 
   return (
-    <div ref={containerRef} className="pb-24 md:pb-8 space-y-6">
+    <div className="relative min-h-screen">
+      {/* Ambient Auroras */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-emerald-300/20 blur-[100px] rounded-full mix-blend-multiply animate-blob"></div>
+        <div className="absolute top-[20%] -right-[10%] w-[50%] h-[50%] bg-amber-300/20 blur-[120px] rounded-full mix-blend-multiply animate-blob animation-delay-2000"></div>
+        <div className="absolute -bottom-[10%] left-[20%] w-[60%] h-[60%] bg-blue-300/20 blur-[120px] rounded-full mix-blend-multiply animate-blob animation-delay-4000"></div>
+      </div>
+      
+      <div ref={containerRef} className="relative z-10 pb-24 md:pb-8 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">My Orders</h1>
@@ -194,13 +202,16 @@ export default function MyOrders() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`snap-start px-5 py-2.5 rounded-full text-xs font-extrabold capitalize whitespace-nowrap transition-all duration-200 cursor-pointer ${
+            className={`relative snap-start px-6 py-3 rounded-[1.25rem] text-xs font-black capitalize whitespace-nowrap transition-all duration-300 overflow-hidden ${
               activeTab === tab 
-                ? 'bg-amber-400 text-slate-950 shadow-md shadow-amber-300/40 scale-100' 
-                : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-100 scale-95 hover:scale-100'
+                ? 'text-slate-900 shadow-lg shadow-amber-500/20 scale-100' 
+                : 'bg-white/50 backdrop-blur-md text-slate-500 border border-white/60 hover:bg-white/80 scale-95 hover:scale-100'
             }`}
           >
-            {tab === 'all' ? 'All Orders' : tab}
+            {activeTab === tab && (
+              <div className="absolute inset-0 bg-gradient-to-r from-amber-300 to-orange-400"></div>
+            )}
+            <span className="relative z-10">{tab === 'all' ? 'All Orders' : tab}</span>
           </button>
         ))}
       </div>
@@ -246,28 +257,35 @@ export default function MyOrders() {
 
             
             return (
-              <div key={order.id} className={`order-card backdrop-blur-xl border rounded-3xl p-5 sm:p-6 transition-all ${
+              <div key={order.id} className={`group relative order-card backdrop-blur-2xl border rounded-[2rem] p-5 sm:p-7 transition-all duration-500 overflow-hidden ${
                   isCancelled 
-                    ? 'bg-red-50/30 border-red-100/50 opacity-60 grayscale-[0.4]' 
-                    : 'bg-white/90 border-slate-200/80 shadow-sm hover:shadow-md'
+                    ? 'bg-red-50/40 border-red-200/50 grayscale-[0.5] opacity-75' 
+                    : 'bg-white/60 border-white/80 hover:bg-white/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] hover:-translate-y-1'
                 }`}>
-                <div className="flex flex-wrap items-center justify-between gap-4 mb-4 pb-4 border-b border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className={`p-2.5 rounded-xl ${statusConfig.bg} ${statusConfig.color}`}>
-                      <StatusIcon className="w-5 h-5" />
+                
+                {/* Shimmer Effect */}
+                {!isCancelled && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                )}
+                
+                <div className="relative z-10">
+                  <div className="flex flex-wrap items-center justify-between gap-4 mb-5 pb-5 border-b border-slate-200/50">
+                    <div className="flex items-center gap-3.5">
+                      <div className={`p-3 rounded-2xl ${statusConfig.bg} ${statusConfig.color} shadow-inner`}>
+                        <StatusIcon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-slate-900 tracking-tight">#{order.id.slice(0, 8).toUpperCase()}</p>
+                        <p className="text-[11px] font-bold text-slate-400 mt-0.5">{orderDate}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-black text-slate-900">#{order.id.slice(0, 8).toUpperCase()}</p>
-                      <p className="text-xs font-bold text-slate-400">{orderDate}</p>
+                    <div className="text-right">
+                      <p className="text-xl font-black bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">₹{orderAmount.toFixed(2)}</p>
+                      <span className={`inline-block mt-1 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${statusConfig.bg} ${statusConfig.color}`}>
+                        {statusConfig.label}
+                      </span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-black text-slate-900">₹{orderAmount.toFixed(2)}</p>
-                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-extrabold ${statusConfig.bg} ${statusConfig.color}`}>
-                      {statusConfig.label}
-                    </span>
-                  </div>
-                </div>
 
                 <div className="flex items-center gap-4 mb-5">
                   <div className="w-16 h-16 rounded-2xl bg-slate-100 flex-shrink-0 overflow-hidden border border-slate-200/60">
@@ -376,6 +394,7 @@ export default function MyOrders() {
                     View Invoice
                   </Link>
                 </div>
+                </div>
               </div>
             );
           })
@@ -452,6 +471,7 @@ export default function MyOrders() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
