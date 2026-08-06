@@ -91,7 +91,7 @@ export default function TrackOrder() {
               <div>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Order #{order?.id || id}</h2>
                 <p className="text-emerald-700 font-extrabold text-xs mt-1">
-                  {currentStatus === 'Delivered' ? 'Delivered successfully 🎉' : 'Guaranteed 15-Minute Express Delivery 🛵'}
+                  {currentStatus === 'Delivered' ? 'Delivered successfully 🎉' : '15-Minute Express Delivery 🛵'}
                 </p>
               </div>
               <span className={`px-3.5 py-1 text-xs font-extrabold rounded-full shadow-sm ${
