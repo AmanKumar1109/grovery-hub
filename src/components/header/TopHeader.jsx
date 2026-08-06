@@ -91,12 +91,7 @@ export default function TopHeader() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    gsap.fromTo(
-      headerRef.current,
-      { y: -30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 0.8, ease: 'power3.out' }
-    );
-    
+    // Only animate the brand text, not the entire header so navigation feels instant
     if (brandTextRef.current) {
       gsap.to(brandTextRef.current, {
         y: -3,

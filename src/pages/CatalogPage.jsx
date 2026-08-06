@@ -106,8 +106,17 @@ export default function CatalogPage() {
 
   const sentinelRef = useRef(null);
 
-  // Build search index for smart search (memoized, rebuilds only when products change)
-  const searchIndex = useMemo(() => buildSearchIndex(products || []), [products]);
+  // Build search index asynchronously to prevent blocking the main thread on page load
+  const [searchIndex, setSearchIndex] = useState([]);
+  useEffect(() => {
+    if (products && products.length > 0) {
+      // Yield to main thread so navigation feels instant
+      const timer = setTimeout(() => {
+        setSearchIndex(buildSearchIndex(products));
+      }, 10);
+      return () => clearTimeout(timer);
+    }
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     let filtered = products || [];
