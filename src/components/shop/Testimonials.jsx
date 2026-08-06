@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Star, CheckCircle, Quote, PenLine } from 'lucide-react';
 import { useSettings } from '../../context/SettingsContext';
 import { db } from '../../firebase';
-import { collection, query, where, orderBy, getDocs, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ReviewSubmissionModal from './ReviewSubmissionModal';
@@ -49,29 +50,36 @@ export default function Testimonials() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [liveReviews, setLiveReviews] = useState([]);
 
-  // Fetch approved customer reviews
+  // Fetch approved customer reviews (no orderBy = no composite index needed)
   useEffect(() => {
     const fetchReviews = async () => {
       try {
         const q = query(
           collection(db, 'customer_reviews'),
           where('status', '==', 'approved'),
-          orderBy('createdAt', 'desc'),
-          limit(6)
+          limit(10)
         );
         const snapshot = await getDocs(q);
-        const fetched = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.data().userName || 'Customer')}&background=0D8B4E&color=fff&bold=true`
-        }));
+        const fetched = snapshot.docs
+          .map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(doc.data().userName || 'Customer')}&background=0D8B4E&color=fff&bold=true`
+          }))
+          .sort((a, b) => {
+            const ta = a.createdAt?.toMillis?.() ?? 0;
+            const tb = b.createdAt?.toMillis?.() ?? 0;
+            return tb - ta;
+          })
+          .slice(0, 6);
         setLiveReviews(fetched);
       } catch (err) {
-        console.error("Error fetching live reviews:", err);
+        console.error('Error fetching live reviews:', err);
       }
     };
     fetchReviews();
   }, []);
+
 
   const reviews = globalSettings?.testimonialsList || defaultReviews;
   // Combine live reviews with default/global settings reviews

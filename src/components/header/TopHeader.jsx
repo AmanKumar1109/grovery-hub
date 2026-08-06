@@ -160,7 +160,7 @@ export default function TopHeader() {
 
           {/* Brand Logo */}
           <Link to="/" className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer select-none group">
-            <img src={logoImg} fetchpriority="high" alt="The Grocery Hub logo" className="w-6 h-6 sm:w-8 sm:h-8 lg:w-9 lg:h-9 object-contain shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0" />
+            <img src={logoImg} fetchPriority="high" alt="The Grocery Hub logo" className="w-6 h-6 sm:w-8 sm:h-8 lg:w-9 lg:h-9 object-contain shadow-md group-hover:scale-110 transition-transform duration-300 flex-shrink-0" />
             <div className="flex flex-col leading-none ml-0.5">
               <span 
                 className="text-[9px] sm:text-[11px] lg:text-xs text-amber-500 -rotate-3 transform -mb-0.5 sm:-mb-1 ml-0.5 drop-shadow-sm"

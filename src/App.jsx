@@ -10,9 +10,12 @@ import OrderNotificationListener from './components/ui/OrderNotificationListener
 import { useAuth } from './context/AuthContext';
 import ScrollToTop from './components/ui/ScrollToTop';
 
-// Code Splitting (Lazy Loading) for Performance
-const HomePage = lazy(() => import('./pages/HomePage'));
-const CatalogPage = lazy(() => import('./pages/CatalogPage'));
+// CatalogPage & HomePage are eagerly imported — these are the two most-visited
+// pages and must open instantly without any JS-chunk download delay.
+import CatalogPage from './pages/CatalogPage';
+import HomePage from './pages/HomePage';
+
+// Code Splitting (Lazy Loading) for less-visited pages
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const SignupPage = lazy(() => import('./pages/SignupPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import Header from '../components/header/Header';
 import Footer from '../components/shop/Footer';
@@ -19,6 +19,14 @@ export default function CatalogPage() {
   const [sortBy, setSortBy] = useState('featured');
   const [onlyDiscounted, setOnlyDiscounted] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  // Always show skeleton on first paint — even if products are already in memory.
+  // This ensures instant navigation: page opens → skeleton shows → products appear.
+  const [isMounted, setIsMounted] = useState(false);
+  useLayoutEffect(() => {
+    const raf = requestAnimationFrame(() => setIsMounted(true));
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   const {
     toastMessage,
@@ -106,6 +114,10 @@ export default function CatalogPage() {
 
   const sentinelRef = useRef(null);
 
+  // --- Client-side lazy loading state ---
+  const ITEMS_PER_PAGE = 10;
+  const [displayCount, setDisplayCount] = useState(ITEMS_PER_PAGE);
+
   // Build search index asynchronously to prevent blocking the main thread on page load
   const [searchIndex, setSearchIndex] = useState([]);
   useEffect(() => {
@@ -172,17 +184,36 @@ export default function CatalogPage() {
     return filtered;
   }, [products, searchQuery, searchIndex, selectedCategory, selectedSubcategory, onlyDiscounted, sortBy]);
 
+  // --- Client-side lazy loading (must be AFTER filteredProducts) ---
+  // Reset displayCount whenever filters / search change so user starts fresh
+  useEffect(() => {
+    setDisplayCount(ITEMS_PER_PAGE);
+  }, [selectedCategory, selectedSubcategory, searchQuery, onlyDiscounted, sortBy]);
+
+  const visibleProducts = useMemo(
+    () => filteredProducts.slice(0, displayCount),
+    [filteredProducts, displayCount]
+  );
+
+  const hasMoreVisible = displayCount < filteredProducts.length;
+
+  const loadMoreVisible = useCallback(() => {
+    setDisplayCount(prev => Math.min(prev + ITEMS_PER_PAGE, filteredProducts.length));
+  }, [filteredProducts.length]);
+
   const activeFiltersCount =
     (selectedCategory !== 'all' ? 1 : 0) + (selectedSubcategory !== 'all' ? 1 : 0) + (onlyDiscounted ? 1 : 0);
 
-  // IntersectionObserver for infinite scrolling on Catalog page
+  // IntersectionObserver for client-side lazy loading (display more from already-loaded products)
+  // NOTE: isMounted in deps is critical — sentinel only renders after isMounted=true,
+  // so observer must re-attach at that moment, otherwise it observes null and never fires.
   useEffect(() => {
     if (!sentinelRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
-          loadMoreProducts();
+        if (entries[0].isIntersecting && hasMoreVisible) {
+          loadMoreVisible();
         }
       },
       {
@@ -194,7 +225,7 @@ export default function CatalogPage() {
 
     observer.observe(sentinelRef.current);
     return () => observer.disconnect();
-  }, [hasMore, isLoadingMore, loadMoreProducts]);
+  }, [hasMoreVisible, loadMoreVisible, isMounted]);
 
   // Measure header height for sticky controls offset
   const headerContainerRef = useRef(null);
@@ -403,7 +434,7 @@ export default function CatalogPage() {
       {/* Main Catalog Content - Scrollable Products */}
       <main className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 flex-1 space-y-4 sm:space-y-6">
         {/* Catalog Products Grid */}
-        {isLoadingProducts ? (
+        {(!isMounted || isLoadingProducts) ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {[...Array(12)].map((_, index) => (
               <ProductSkeleton key={index} />
@@ -412,26 +443,25 @@ export default function CatalogPage() {
         ) : filteredProducts.length > 0 ? (
           <>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-              {filteredProducts.map((product) => (
+              {visibleProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
 
-            {/* Sentinel div for infinite scroll */}
+            {/* Sentinel div for client-side lazy loading */}
             <div ref={sentinelRef} className="w-full h-4" aria-hidden="true" />
 
-            {/* Loading Spinner for infinite scroll */}
-            {isLoadingMore && (
+            {/* Loading Spinner — show while revealing next batch */}
+            {hasMoreVisible && (
               <div className="flex items-center justify-center gap-2 py-6 text-slate-500 text-xs font-bold">
                 <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
-                <span>Loading more catalog products...</span>
+                <span>Loading more products...</span>
               </div>
             )}
 
-            {/* All items loaded indicator */}
-            {!hasMore && (
+            {!hasMoreVisible && (
               <p className="text-center text-xs font-bold text-slate-400 py-4">
-                ✅ All catalog products loaded
+                Showing all {filteredProducts.length} products
               </p>
             )}
           </>
