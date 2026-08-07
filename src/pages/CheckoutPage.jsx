@@ -250,6 +250,7 @@ export default function CheckoutPage() {
         orderId: orderId,
         userId: currentUser ? currentUser.uid : 'guest',
         customerName: custName,
+        customerEmail: currentUser ? currentUser.email : '',
         customerPhone: phone,
         address: addrStr,
         deliveryAddress: addrStr,
