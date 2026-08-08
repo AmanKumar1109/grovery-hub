@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
 import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft, Tag, X, AlertTriangle, ShieldAlert, Navigation, Moon } from 'lucide-react';
-import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs, updateDoc, increment } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
+import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs, updateDoc, increment, getDoc } from 'firebase/firestore';
 import { checkAddressServiceability } from '../utils/locationUtils';
 import { loadGoogleMaps } from '../utils/googleMapsLoader';
 import LocationPickerModal from '../components/LocationPickerModal';
@@ -101,25 +101,26 @@ export default function CheckoutPage() {
                 }
               });
               
-              street = streetParts.join(', ');
-              locality = localityParts.join(', ');
+              const street = streetParts.join(', ');
+              const locality = localityParts.join(', ');
               
               // Fallback to formatted address if street is entirely empty
-              if (!street) {
+              let finalStreet = street;
+              if (!finalStreet) {
                 const parts = results[0].formatted_address.split(',');
-                street = parts[0] + (parts[1] && !parts[1].includes(city) ? ', ' + parts[1] : '');
+                finalStreet = parts[0] + (parts[1] && !parts[1].includes(city) ? ', ' + parts[1] : '');
               }
               
-              if (!city) city = 'Baharagora';
-              if (!pincode) pincode = '832101';
+              const finalCity = city || 'Baharagora';
+              const finalPincode = pincode || '832101';
               
               setAddressForm(prev => ({
                 ...prev,
-                street: street || prev.street,
+                street: finalStreet || prev.street,
                 locality: locality || prev.locality,
-                city: city || prev.city,
+                city: finalCity || prev.city,
                 state: state || prev.state,
-                pincode: pincode || prev.pincode,
+                pincode: finalPincode || prev.pincode,
                 lat: latitude,
                 lng: longitude
               }));
@@ -291,6 +292,88 @@ export default function CheckoutPage() {
       const sanitizedOrderData = JSON.parse(JSON.stringify(orderData, (k, v) => v === undefined ? null : v));
 
       await setDoc(doc(db, 'orders', orderId), sanitizedOrderData);
+
+      // Trigger Order Received Email
+      const targetEmail = currentUser ? currentUser.email : '';
+      if (targetEmail) {
+        try {
+          const notifDoc = await getDoc(doc(db, 'settings', 'notifications'));
+          let template = null;
+          
+          if (notifDoc.exists()) {
+            template = notifDoc.data().templates?.Pending;
+          }
+
+          if (template) {
+            const formatMoney = (amt) => Number(amt).toFixed(2);
+            const formatAddress = (addr) => addr ? `${addr.street || ''}, ${addr.locality || ''}, ${addr.city || ''} - ${addr.pincode || ''}` : 'N/A';
+            const formatTime = (ts) => ts ? new Date(ts).toLocaleString() : 'N/A';
+            const formatOrderItems = (items, totalAmount, address) => {
+              if (!items || items.length === 0) return '';
+              let html = `<table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">`;
+              html += `<tr><th style="background: #f8fafc; padding: 12px 15px; text-align: left; font-size: 13px; color: #64748b; border-bottom: 2px solid #e2e8f0;">Item</th><th style="background: #f8fafc; padding: 12px 15px; text-align: right; font-size: 13px; color: #64748b; border-bottom: 2px solid #e2e8f0;">Total</th></tr>`;
+              items.forEach(item => {
+                const qty = item.quantity || 1;
+                const name = item.name || 'Item';
+                const price = item.finalPrice || item.price || 0;
+                const total = (price * qty).toFixed(2);
+                html += `<tr>
+                  <td style="padding: 12px 15px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px;"><strong>${qty}x</strong> ${name}</td>
+                  <td style="padding: 12px 15px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; text-align: right; font-weight: 600;">₹${total}</td>
+                </tr>`;
+              });
+              
+              if (totalAmount !== undefined) {
+                html += `<tr>
+                  <td style="padding: 12px 15px; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-size: 15px; font-weight: 800; text-align: right;">Total</td>
+                  <td style="padding: 12px 15px; border-bottom: 1px solid #e2e8f0; color: #059669; font-size: 16px; text-align: right; font-weight: 800;">₹${parseFloat(totalAmount).toFixed(2)}</td>
+                </tr>`;
+              }
+              
+              if (address) {
+                html += `<tr>
+                  <td colspan="2" style="padding: 15px; background: #f8fafc; color: #475569; font-size: 13px; line-height: 1.5;">
+                    <strong style="color: #0f172a; display: block; margin-bottom: 4px;">Delivery Address:</strong>
+                    ${address}
+                  </td>
+                </tr>`;
+              }
+
+              html += `</table>`;
+              return html.replace(/\n/g, '');
+            };
+
+            const rawBody = template.body || '';
+            let replacedHtmlBody = rawBody.replace(/\n/g, '<br>');
+            replacedHtmlBody = replacedHtmlBody
+              .replace(/\[Customer Name\]/gi, custName)
+              .replace(/\[Order ID\]/gi, orderId)
+              .replace(/\[Amount\]/gi, formatMoney(finalTotal))
+              .replace(/\[Address\]/gi, formatAddress(activeAddress))
+              .replace(/\[Time\]/gi, formatTime(sanitizedOrderData.createdAt))
+              .replace(/\[Cancel Reason\]/gi, 'N/A')
+              .replace(/\[Order Items?\]/gi, formatOrderItems(sanitizedOrderData.items, finalTotal, formatAddress(activeAddress)));
+
+            const emailSubject = template.subject.replace(/\[Order ID\]/g, orderId);
+
+            const htmlWithWrapper = `
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>body{font-family:'Inter',sans-serif;background-color:#f4fdf8;margin:0;padding:0;color:#334155;line-height:1.6;}.container{max-width:600px;margin:40px auto;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);border:1px solid #e2e8f0;}.header{background:linear-gradient(135deg, #059669 0%, #10b981 100%);padding:30px 20px;text-align:center;}.header h1{color:#ffffff;margin:0;font-size:28px;font-weight:800;}.content{padding:40px 30px;font-size:16px;}.content p{margin-top:0;margin-bottom:20px;}.highlight{background:#ecfdf5;padding:15px 20px;border-radius:12px;border-left:4px solid #10b981;margin-bottom:20px;}.footer{background:#f8fafc;padding:20px;text-align:center;font-size:13px;color:#64748b;border-top:1px solid #f1f5f9;}</style>
+</head><body><div class="container"><div class="header"><h1>The Grocery Hub 🛒</h1></div><div class="content">${replacedHtmlBody}</div><div class="footer"><p>Thank you for shopping with us!<br><strong>The Grocery Hub</strong> - Fresh • Quality • Trust</p></div></div></body></html>`;
+
+            await addDoc(collection(db, 'mail'), {
+              to: targetEmail,
+              from: '"The Grocery Hub" <ghoshabhijit1295@gmail.com>',
+              message: {
+                subject: emailSubject,
+                html: htmlWithWrapper
+              }
+            });
+          }
+        } catch (mailErr) {
+          console.error("Failed to send order received email:", mailErr);
+        }
+      }
 
       // Update recent buyers count for each item
       for (const item of cartItems) {

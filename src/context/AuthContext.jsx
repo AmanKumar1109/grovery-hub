@@ -9,7 +9,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
 
 const AuthContext = createContext(null);
 
@@ -17,6 +17,41 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const sendWelcomeEmail = async (userEmail, userName) => {
+    try {
+      const notifDoc = await getDoc(doc(db, 'settings', 'notifications'));
+      let template = null;
+      if (notifDoc.exists()) {
+        template = notifDoc.data().templates?.Welcome;
+      }
+      if (template) {
+        const rawBody = template.body || '';
+        const replacedBody = rawBody
+          .replace(/\[Customer Name\]/g, userName || 'Customer')
+          .replace(/\[Email\]/g, userEmail);
+
+        const emailSubject = template.subject || 'Welcome!';
+        const replacedHtmlBody = replacedBody.replace(/\n/g, '<br>');
+
+        const htmlWithWrapper = `
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>body{font-family:'Inter',sans-serif;background-color:#f4fdf8;margin:0;padding:0;color:#334155;line-height:1.6;}.container{max-width:600px;margin:40px auto;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);border:1px solid #e2e8f0;}.header{background:linear-gradient(135deg, #059669 0%, #10b981 100%);padding:30px 20px;text-align:center;}.header h1{color:#ffffff;margin:0;font-size:28px;font-weight:800;}.content{padding:40px 30px;font-size:16px;}.content p{margin-top:0;margin-bottom:20px;}.highlight{background:#ecfdf5;padding:15px 20px;border-radius:12px;border-left:4px solid #10b981;margin-bottom:20px;}.footer{background:#f8fafc;padding:20px;text-align:center;font-size:13px;color:#64748b;border-top:1px solid #f1f5f9;}</style>
+</head><body><div class="container"><div class="header"><h1>The Grocery Hub 🛒</h1></div><div class="content">${replacedHtmlBody}</div><div class="footer"><p>Thank you for shopping with us!<br><strong>The Grocery Hub</strong> - Fresh • Quality • Trust</p></div></div></body></html>`;
+
+        await addDoc(collection(db, 'mail'), {
+          to: userEmail,
+          from: '"The Grocery Hub" <ghoshabhijit1295@gmail.com>',
+          message: {
+            subject: emailSubject,
+            html: htmlWithWrapper
+          }
+        });
+      }
+    } catch (e) {
+      console.warn("Failed to send welcome email:", e);
+    }
+  };
 
   // Listen to Firebase auth state changes in the background without blocking initial app render
   useEffect(() => {
@@ -55,9 +90,11 @@ export function AuthProvider({ children }) {
               addresses: [],
               primaryAddressId: null,
               wishlist: [],
+              welcomeEmailSent: true
             };
             setUserProfile(initialData);
             await setDoc(userDocRef, initialData);
+            await sendWelcomeEmail(user.email, user.displayName || 'Grocery Member');
           }
         } catch (err) {
           console.warn('Firestore profile fetch error:', err);
@@ -94,9 +131,11 @@ export function AuthProvider({ children }) {
       addresses: [],
       primaryAddressId: null,
       wishlist: [],
+      welcomeEmailSent: true
     };
     try {
       await setDoc(doc(db, 'users', res.user.uid), initialData);
+      await sendWelcomeEmail(email, fullName);
     } catch (e) {
       console.warn('Failed to save user doc to Firestore:', e);
     }
