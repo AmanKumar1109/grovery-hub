@@ -8,8 +8,6 @@ function IndependenceDayBanner() {
       className="w-full relative overflow-hidden bg-[#080f1e] text-white py-1.5 px-4 flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold border-b border-slate-800"
     >
       <div className="flex items-center justify-center gap-2">
-        <span className="text-sm">🚀</span>
-        <span className="text-amber-400 font-bold">⚡</span>
         <span className="tracking-wide text-slate-100 font-medium">Independence Day Special Offers Available</span>
       </div>
     </div>
