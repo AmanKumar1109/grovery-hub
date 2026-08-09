@@ -1,9 +1,88 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap');
 @import 'tailwindcss';
 
-:root {
+/* =====================================================
+   THEME SYSTEM — CSS Custom Properties
+   Applied via data-theme attribute on <html> element
+   Controlled live from Admin → Store Settings → Theme
+   ===================================================== */
+
+:root,
+[data-theme="normal"] {
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   background-color: #ffffff;
+
+  /* Normal Theme — Amber + Green */
+  --theme-accent:          #f59e0b;   /* amber-400 */
+  --theme-accent-dark:     #d97706;   /* amber-600 */
+  --theme-accent-light:    #fef3c7;   /* amber-100 */
+  --theme-primary:         #16a34a;   /* green-600 */
+  --theme-primary-dark:    #15803d;   /* green-700 */
+  --theme-primary-light:   #dcfce7;   /* green-100 */
+  --theme-header-from:     #ffffff;
+  --theme-header-to:       #f8fafc;
+  --theme-hero-from:       #f0fdf4;
+  --theme-hero-to:         #ecfdf5;
+  --theme-btn-bg:          #f59e0b;
+  --theme-btn-text:        #1c1917;
+  --theme-btn-hover:       #d97706;
+  --theme-badge-bg:        #fef3c7;
+  --theme-badge-text:      #92400e;
+  --theme-banner-from:     transparent;
+  --theme-banner-to:       transparent;
+  --theme-banner-text:     transparent;
+  --theme-banner-show:     0;
+  --theme-section-bg:      #f0fdf4;
+}
+
+/* Independence Day Theme 🇮🇳 — Saffron + White + Green */
+[data-theme="independence-day"] {
+  --theme-accent:          #ff9933;   /* Indian saffron */
+  --theme-accent-dark:     #e67700;
+  --theme-accent-light:    #fff3e0;
+  --theme-primary:         #138808;   /* Indian green */
+  --theme-primary-dark:    #0a5c05;
+  --theme-primary-light:   #e8f5e9;
+  --theme-header-from:     #ff9933;
+  --theme-header-to:       #138808;
+  --theme-hero-from:       #fff3e0;
+  --theme-hero-to:         #e8f5e9;
+  --theme-btn-bg:          #138808;
+  --theme-btn-text:        #ffffff;
+  --theme-btn-hover:       #0a5c05;
+  --theme-badge-bg:        #fff3e0;
+  --theme-badge-text:      #e67700;
+  --theme-banner-from:     #ff9933;
+  --theme-banner-mid:      #ffffff;
+  --theme-banner-to:       #138808;
+  --theme-banner-text:     #1a1a1a;
+  --theme-banner-show:     1;
+  --theme-section-bg:      #fff8f0;
+}
+
+/* Diwali Theme 🪔 — Deep Gold + Maroon + Purple */
+[data-theme="diwali"] {
+  --theme-accent:          #f59e0b;   /* gold */
+  --theme-accent-dark:     #b45309;
+  --theme-accent-light:    #fef3c7;
+  --theme-primary:         #7c2d12;   /* deep maroon */
+  --theme-primary-dark:    #581c0c;
+  --theme-primary-light:   #fde8dc;
+  --theme-header-from:     #7c2d12;
+  --theme-header-to:       #1c0a00;
+  --theme-hero-from:       #431407;
+  --theme-hero-to:         #78350f;
+  --theme-btn-bg:          #f59e0b;
+  --theme-btn-text:        #1c0a00;
+  --theme-btn-hover:       #d97706;
+  --theme-badge-bg:        #fef3c7;
+  --theme-badge-text:      #7c2d12;
+  --theme-banner-from:     #7c2d12;
+  --theme-banner-mid:      #b45309;
+  --theme-banner-to:       #92400e;
+  --theme-banner-text:     #fef3c7;
+  --theme-banner-show:     1;
+  --theme-section-bg:      #fef3e2;
 }
 
 /* Hide all scrollbars globally across Chrome, Safari, Edge, Firefox */

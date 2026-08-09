@@ -11,6 +11,7 @@ import CartDrawer from '../components/shop/CartDrawer';
 import { useCart } from '../context/CartContext';
 import { Check } from 'lucide-react';
 import SEO from '../components/seo/SEO';
+import FestiveBanner from '../components/ui/FestiveBanner';
 
 export default function HomePage() {
   const { toastMessage } = useCart();
@@ -47,6 +48,9 @@ export default function HomePage() {
 
       {/* Main Container */}
       <main className="w-full bg-white relative">
+        {/* Festive Banner — visible only when Independence Day or Diwali theme is active */}
+        <FestiveBanner />
+
         {/* Navigation Header */}
         <Header />
 

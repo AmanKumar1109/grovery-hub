@@ -21,7 +21,8 @@ export function SettingsProvider({ children }) {
     standardDeliveryFee: 40,
     taxPercentage: 0,
     categorySectionSubtitle: 'Explore Categories',
-    categorySectionTitle: 'Shop Fresh Organic Produce'
+    categorySectionTitle: 'Shop Fresh Organic Produce',
+    activeTheme: 'normal'  // 'normal' | 'independence-day' | 'diwali'
   });
   
   const [banners, setBanners] = useState([]);

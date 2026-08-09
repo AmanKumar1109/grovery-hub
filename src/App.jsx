@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SettingsProvider } from './context/SettingsContext';
@@ -8,7 +8,18 @@ import FloatingWhatsApp from './components/ui/FloatingWhatsApp';
 import GlobalPopup from './components/ui/GlobalPopup';
 import OrderNotificationListener from './components/ui/OrderNotificationListener';
 import { useAuth } from './context/AuthContext';
+import { useSettings } from './context/SettingsContext';
 import ScrollToTop from './components/ui/ScrollToTop';
+
+// Applies data-theme="..." on <html> — triggers CSS variable switches site-wide
+function ThemeApplier() {
+  const { globalSettings } = useSettings();
+  useEffect(() => {
+    const theme = globalSettings?.activeTheme || 'normal';
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [globalSettings?.activeTheme]);
+  return null;
+}
 
 // CatalogPage & HomePage are eagerly imported — these are the two most-visited
 // pages and must open instantly without any JS-chunk download delay.
@@ -48,6 +59,7 @@ function App() {
   return (
     <AuthProvider>
       <SettingsProvider>
+        <ThemeApplier />
         <CartProvider>
           <ScrollToTop />
           <Suspense fallback={<PageLoader />}>
