@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import CategoryShowcase from './CategoryShowcase';
 import ProductCard from './ProductCard';
@@ -27,34 +27,53 @@ export default function ShopSection() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
 
-  const filteredProducts = (products || [])
-    .filter((prod) => {
-      const matchesCategory =
-        selectedCategory === 'all'
-          ? true
-          : selectedCategory === 'Trending'
-          ? !!prod.isTrending
-          : selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1'
-          ? !!prod.isBogo
-          : prod.category === selectedCategory;
-      const matchesSubcategory =
-        selectedCategory === 'all' || selectedCategory === 'Trending' || selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1'
-          ? true
-          : !selectedSubcategory
-          ? true
-          : prod.subcategory === selectedSubcategory;
-      const matchesSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSubcategory && matchesSearch;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'price-low') return a.price - b.price;
-      if (sortBy === 'price-high') return b.price - a.price;
-      if (sortBy === 'rating') return b.rating - a.rating;
-      return 0;
-    });
+  const filteredProducts = useMemo(() => {
+    return (products || [])
+      .filter((prod) => {
+        const matchesCategory =
+          selectedCategory === 'all'
+            ? true
+            : selectedCategory === 'Trending'
+            ? !!prod.isTrending
+            : selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1'
+            ? !!prod.isBogo
+            : prod.category === selectedCategory;
+        const matchesSubcategory =
+          selectedCategory === 'all' || selectedCategory === 'Trending' || selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1'
+            ? true
+            : !selectedSubcategory
+            ? true
+            : prod.subcategory === selectedSubcategory;
+        const matchesSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSubcategory && matchesSearch;
+      })
+      .sort((a, b) => {
+        if (sortBy === 'price-low') return a.price - b.price;
+        if (sortBy === 'price-high') return b.price - a.price;
+        if (sortBy === 'rating') return b.rating - a.rating;
+        return 0;
+      });
+  }, [products, selectedCategory, selectedSubcategory, searchQuery, sortBy]);
 
-  // Limit homepage section to max 8 items
-  const homepageProducts = filteredProducts.slice(0, 8);
+  // Stable random seed per page-load session (does NOT re-shuffle on re-render)
+  const randomSeedRef = useRef(Math.random());
+
+  // Pick 8 random products — reshuffles only when filteredProducts list itself changes
+  const homepageProducts = useMemo(() => {
+    if (filteredProducts.length <= 8) return filteredProducts;
+    // Seeded Fisher-Yates shuffle (stable per session seed)
+    const arr = [...filteredProducts];
+    let seed = randomSeedRef.current;
+    const seededRandom = () => {
+      seed = (seed * 9301 + 49297) % 233280;
+      return seed / 233280;
+    };
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(seededRandom() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr.slice(0, 8);
+  }, [filteredProducts]);
 
   return (
     <section id="shop" className="w-full px-3 sm:px-8 lg:px-12 py-6 sm:py-8 lg:py-12 bg-gradient-to-b from-slate-50 via-white to-slate-50 relative">
