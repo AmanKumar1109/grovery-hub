@@ -2,10 +2,15 @@ import React, { useMemo } from 'react';
 import { Heart, ShoppingBag, Star, Plus, Minus, Zap, TrendingUp, Clock, Users, Flame, Gift } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { useSettings } from '../../context/SettingsContext';
 
 export default function ProductCard({ product }) {
   const { cartItems, addToCart, updateQuantity, showToast, setIsCartOpen } = useCart();
   const { currentUser, userProfile, toggleWishlist } = useAuth();
+  const { globalSettings } = useSettings();
+
+  const theme = globalSettings?.activeTheme || 'normal';
+  const isIndependence = theme === 'independence-day';
 
   const isWishlisted = userProfile?.wishlist?.some(item => item.id === product.id) || false;
 
@@ -107,18 +112,34 @@ export default function ProductCard({ product }) {
   }, [product.id, product.inStock, product.recentBuyers]);
 
   return (
-    <div className="product-card-root bg-white rounded-2xl sm:rounded-3xl border border-slate-100/80 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] hover:border-amber-200/60 transition-all duration-500 flex flex-col justify-between group relative overflow-hidden hover:-translate-y-1">
+    <div className={`product-card-root bg-white rounded-2xl sm:rounded-3xl border shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] transition-all duration-500 flex flex-col justify-between group relative overflow-hidden hover:-translate-y-1 ${
+      isIndependence
+        ? 'border-orange-200/80 hover:border-emerald-500/80 shadow-orange-500/5'
+        : 'border-slate-100/80 hover:border-amber-200/60'
+    }`}>
 
       {/* Shimmer hover overlay */}
       <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/20 to-transparent z-10 pointer-events-none" />
 
       {/* Product Image & Top Badges */}
       <div className="relative">
-        <div className="relative h-36 sm:h-52 w-full bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-t-2xl sm:rounded-t-3xl overflow-hidden">
+        <div className={`relative h-36 sm:h-52 w-full rounded-t-2xl sm:rounded-t-3xl overflow-hidden ${
+          isIndependence
+            ? 'bg-gradient-to-br from-[#fff7ed] via-[#ffffff] to-[#ecfdf5]'
+            : 'bg-gradient-to-br from-slate-50 to-slate-100/50'
+        }`}>
+          {/* Subtle Tiranga Color Spray overlay for Independence Day theme */}
+          {isIndependence && (
+            <div className="absolute inset-0 pointer-events-none opacity-40 z-0">
+              <div className="absolute -top-10 -left-10 w-28 h-28 rounded-full bg-orange-400/30 blur-2xl" />
+              <div className="absolute -bottom-10 -right-10 w-28 h-28 rounded-full bg-emerald-500/30 blur-2xl" />
+            </div>
+          )}
+
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700 ease-out"
+            className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-700 ease-out relative z-1"
           />
 
           {/* Dark gradient overlay at bottom of image */}
@@ -245,17 +266,21 @@ export default function ProductCard({ product }) {
           </button>
         ) : quantityInCart > 0 ? (
           <div className="flex items-center gap-2">
-            <div className="flex-1 flex items-center justify-between bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-lg shadow-amber-400/25">
+            <div className={`flex-1 flex items-center justify-between p-1 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-lg ${
+              isIndependence
+                ? 'bg-gradient-to-r from-orange-500 via-emerald-600 to-green-700 text-white shadow-emerald-700/30'
+                : 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-amber-400/25'
+            }`}>
               <button
                 onClick={() => updateQuantity(product.id, -1)}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white/25 hover:bg-white/40 text-slate-950 flex items-center justify-center font-black transition-all active:scale-90 cursor-pointer"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white/25 hover:bg-white/40 text-white flex items-center justify-center font-black transition-all active:scale-90 cursor-pointer"
               >
                 <Minus className="w-3.5 h-3.5" />
               </button>
               <span className="font-black text-sm sm:text-base px-1 sm:px-3 tabular-nums">{quantityInCart}</span>
               <button
                 onClick={() => updateQuantity(product.id, 1)}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white/25 hover:bg-white/40 text-slate-950 flex items-center justify-center font-black transition-all active:scale-90 cursor-pointer"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white/25 hover:bg-white/40 text-white flex items-center justify-center font-black transition-all active:scale-90 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>
@@ -272,7 +297,11 @@ export default function ProductCard({ product }) {
           <button
             type="button"
             onClick={(e) => handleFlyToCart(e, product)}
-            className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 font-extrabold text-[11px] sm:text-xs rounded-xl sm:rounded-2xl flex items-center justify-center gap-1.5 shadow-lg shadow-amber-400/25 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] cursor-pointer tracking-wide"
+            className={`w-full py-2.5 sm:py-3 font-extrabold text-[11px] sm:text-xs rounded-xl sm:rounded-2xl flex items-center justify-center gap-1.5 shadow-lg transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] cursor-pointer tracking-wide ${
+              isIndependence
+                ? 'bg-gradient-to-r from-orange-500 via-emerald-600 to-green-700 hover:from-orange-600 hover:to-green-800 text-white shadow-emerald-700/25 border border-orange-400/30'
+                : 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 shadow-amber-400/25'
+            }`}
           >
             <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Add to Cart
           </button>

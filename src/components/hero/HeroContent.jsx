@@ -59,19 +59,23 @@ export default function HeroContent() {
 
   return (
     <div className="relative z-10 flex flex-col justify-center px-6 lg:px-16 pt-8 pb-12 lg:py-16 max-w-xl">
-      {/* Background Ashoka Chakra Watermark for Independence Day Theme */}
+      {/* Background Indian Flag & Ashoka Chakra Watermark for Independence Day Theme */}
       {isIndependence ? (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] sm:w-[420px] sm:h-[420px] lg:w-[480px] lg:h-[480px] opacity-[0.07] pointer-events-none z-0">
-          <svg viewBox="0 0 200 200" fill="none" stroke="#000080" className="w-full h-full animate-spin-slow">
-            <circle cx="100" cy="100" r="90" strokeWidth="3" />
-            <circle cx="100" cy="100" r="16" strokeWidth="2" fill="#000080" fillOpacity="0.1" />
-            {/* 24 Spokes */}
+        <div className="absolute top-1/2 left-[45%] -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] sm:w-[420px] sm:h-[420px] lg:w-[520px] lg:h-[520px] opacity-[0.14] pointer-events-none z-0">
+          <svg viewBox="0 0 300 300" fill="none" className="w-full h-full">
+            {/* Soft Tricolor Spray Rings */}
+            <circle cx="150" cy="150" r="140" fill="none" stroke="#FF9933" strokeWidth="3" strokeDasharray="6 6" />
+            <circle cx="150" cy="150" r="125" fill="none" stroke="#138808" strokeWidth="3" strokeDasharray="8 8" />
+            
+            {/* Ashoka Chakra Center */}
+            <circle cx="150" cy="150" r="75" stroke="#000080" strokeWidth="2.5" />
+            <circle cx="150" cy="150" r="12" fill="#000080" fillOpacity="0.2" stroke="#000080" strokeWidth="1" />
             {[...Array(24)].map((_, i) => {
               const angle = (i * 360) / 24;
               const rad = (angle * Math.PI) / 180;
-              const x2 = 100 + 90 * Math.cos(rad);
-              const y2 = 100 + 90 * Math.sin(rad);
-              return <line key={i} x1="100" y1="100" x2={x2} y2={y2} strokeWidth="1.8" />;
+              const x2 = 150 + 75 * Math.cos(rad);
+              const y2 = 150 + 75 * Math.sin(rad);
+              return <line key={i} x1="150" y1="150" x2={x2} y2={y2} stroke="#000080" strokeWidth="1.8" />;
             })}
           </svg>
         </div>

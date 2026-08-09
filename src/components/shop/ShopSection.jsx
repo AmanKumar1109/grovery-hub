@@ -4,11 +4,15 @@ import CategoryShowcase from './CategoryShowcase';
 import ProductCard from './ProductCard';
 import ProductSkeleton from './ProductSkeleton';
 import { useCart } from '../../context/CartContext';
+import { useSettings } from '../../context/SettingsContext';
 import { Search, SlidersHorizontal, Package, ArrowRight } from 'lucide-react';
 
 export default function ShopSection() {
   const location = useLocation();
   const { products, isLoadingProducts } = useCart();
+  const { globalSettings } = useSettings();
+  const theme = globalSettings?.activeTheme || 'normal';
+  const isIndependence = theme === 'independence-day';
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState(null);
 
@@ -141,7 +145,11 @@ export default function ShopSection() {
             <div className="flex justify-center pt-2">
               <Link
                 to="/catalog"
-                className="inline-flex items-center gap-2.5 px-8 py-3.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs sm:text-sm rounded-full shadow-lg shadow-amber-300/40 hover:shadow-amber-400/50 hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer group"
+                className={`inline-flex items-center gap-2.5 px-8 py-3.5 font-black text-xs sm:text-sm rounded-full shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer group ${
+                  isIndependence
+                    ? 'bg-gradient-to-r from-orange-500 via-emerald-600 to-green-700 hover:from-orange-600 hover:to-green-800 text-white shadow-emerald-700/30'
+                    : 'bg-amber-400 hover:bg-amber-500 text-slate-950 shadow-amber-300/40 hover:shadow-amber-400/50'
+                }`}
               >
                 <span>Explore All Products in Catalogue</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
