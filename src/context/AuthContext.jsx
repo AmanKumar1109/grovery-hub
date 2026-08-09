@@ -187,6 +187,21 @@ export function AuthProvider({ children }) {
     setUserProfile(newProfile);
   };
 
+  // Update Profile Photo
+  const updateProfilePhoto = async (photoURL) => {
+    if (!currentUser) return;
+    try {
+      await updateProfile(currentUser, { photoURL });
+      const newProfile = { ...userProfile, photoURL };
+      await setDoc(doc(db, 'users', currentUser.uid), { photoURL }, { merge: true });
+      setUserProfile(newProfile);
+      return true;
+    } catch (e) {
+      console.error('Failed to update profile photo:', e);
+      return false;
+    }
+  };
+
   // Add Address
   const addAddress = async (addressData) => {
     if (!currentUser) return;
@@ -306,6 +321,7 @@ export function AuthProvider({ children }) {
         loginWithGoogle,
         logout,
         completeProfile,
+        updateProfilePhoto,
         addAddress,
         deleteAddress,
         setPrimaryAddress,

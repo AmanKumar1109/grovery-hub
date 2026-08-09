@@ -128,6 +128,7 @@ export default function TopHeader() {
   }, [mobileMenuOpen]);
 
   const userName = userProfile?.fullName || currentUser?.displayName || 'Grocery Member';
+  const displayPhoto = userProfile?.photoURL || currentUser?.photoURL || userAvatar;
 
   const navLinks = [
     { name: 'Home', path: '/', icon: Home },
@@ -234,7 +235,7 @@ export default function TopHeader() {
                 className="flex items-center gap-2 sm:gap-3 pl-1 sm:pl-2 cursor-pointer group focus:outline-none"
               >
                 <img
-                  src={userAvatar}
+                  src={displayPhoto}
                   alt={userName}
                   className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-amber-400 shadow-sm group-hover:border-amber-500 transition-colors flex-shrink-0"
                 />
@@ -396,7 +397,7 @@ export default function TopHeader() {
                   {currentUser ? (
                     <>
                       <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/60">
-                        <img src={userAvatar} loading="lazy" alt={`Avatar of ${userName}`} className="w-10 h-10 rounded-full object-cover border border-amber-400 shadow-xs" />
+                        <img src={displayPhoto} loading="lazy" alt={`Avatar of ${userName}`} className="w-10 h-10 rounded-full object-cover border border-amber-400 shadow-xs" />
                         <div className="min-w-0">
                           <p className="text-xs font-black text-slate-900 truncate">{userName}</p>
                           <p className="text-[10px] text-emerald-700 font-extrabold">Verified Member 🌿</p>

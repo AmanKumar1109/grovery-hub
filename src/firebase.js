@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
 // Firebase configuration with env variables + reliable fallbacks for Vercel production
 export const firebaseConfig = {
@@ -17,9 +18,10 @@ export const firebaseConfig = {
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore Database & Auth
+// Initialize Firestore Database, Auth & Storage
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const storage = getStorage(app);
 
 // Safely initialize Analytics if supported in browser environment
 export let analytics = null;

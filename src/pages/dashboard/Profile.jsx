@@ -1,11 +1,13 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Camera, User, Mail, Phone, ShieldCheck, Check, MapPin, Home, Briefcase, Tag, AlertCircle } from 'lucide-react';
+import { Camera, User, Mail, Phone, ShieldCheck, Check, MapPin, Home, Briefcase, Tag, AlertCircle, Loader2 } from 'lucide-react';
 import gsap from 'gsap';
 import { useAuth } from '../../context/AuthContext';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../firebase';
 
 export default function Profile() {
   const containerRef = useRef(null);
-  const { currentUser, userProfile, completeProfile } = useAuth();
+  const { currentUser, userProfile, completeProfile, updateProfilePhoto } = useAuth();
 
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -13,6 +15,7 @@ export default function Profile() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
     if (userProfile || currentUser) {
@@ -57,6 +60,41 @@ export default function Profile() {
   };
 
   const userInitial = (fullName?.[0] || currentUser?.email?.[0] || 'S').toUpperCase();
+  const displayPhoto = userProfile?.photoURL || currentUser?.photoURL;
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !currentUser) return;
+    
+    // Check file size (e.g., max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('Image must be less than 2MB');
+      return;
+    }
+
+    try {
+      setUploadingPhoto(true);
+      setError('');
+      
+      const fileExt = file.name.split('.').pop();
+      const storageRef = ref(storage, `profilePhotos/${currentUser.uid}-${Date.now()}.${fileExt}`);
+      
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      
+      const success = await updateProfilePhoto(downloadURL);
+      if (success) {
+        setMessage('Profile photo updated successfully!');
+      } else {
+        setError('Failed to update profile photo.');
+      }
+    } catch (err) {
+      console.error(err);
+      setError('Failed to upload photo. Please try again.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   return (
     <div ref={containerRef} className="pb-24 md:pb-8 max-w-4xl mx-auto space-y-6">
@@ -73,11 +111,25 @@ export default function Profile() {
         <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8 mb-8 relative z-10">
           <div className="relative">
             <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-gradient-to-tr from-amber-400 to-amber-500 border-4 border-white shadow-xl flex items-center justify-center overflow-hidden">
-              <span className="text-3xl sm:text-4xl font-black text-slate-950">{userInitial}</span>
+              {displayPhoto ? (
+                <img src={displayPhoto} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-3xl sm:text-4xl font-black text-slate-950">{userInitial}</span>
+              )}
             </div>
-            <button className="absolute bottom-0 right-0 w-9 h-9 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform cursor-pointer">
-              <Camera className="w-4 h-4" />
-            </button>
+            
+            <input 
+              type="file" 
+              id="profile-upload" 
+              className="hidden" 
+              accept="image/*" 
+              onChange={handlePhotoUpload}
+              disabled={uploadingPhoto}
+            />
+            
+            <label htmlFor="profile-upload" className={`absolute bottom-0 right-0 w-9 h-9 rounded-full flex items-center justify-center shadow-lg transition-transform cursor-pointer ${uploadingPhoto ? 'bg-slate-400' : 'bg-slate-900 hover:scale-110 text-white'}`}>
+              {uploadingPhoto ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Camera className="w-4 h-4" />}
+            </label>
           </div>
           <div className="text-center sm:text-left">
             <h2 className="text-2xl font-black text-slate-900">{fullName || 'User'}</h2>
