@@ -66,7 +66,7 @@ export default function HeroContent() {
             {/* Soft Tricolor Spray Rings */}
             <circle cx="150" cy="150" r="140" fill="none" stroke="#FF9933" strokeWidth="3" strokeDasharray="6 6" />
             <circle cx="150" cy="150" r="125" fill="none" stroke="#138808" strokeWidth="3" strokeDasharray="8 8" />
-            
+
             {/* Ashoka Chakra Center */}
             <circle cx="150" cy="150" r="75" stroke="#000080" strokeWidth="2.5" />
             <circle cx="150" cy="150" r="12" fill="#000080" fillOpacity="0.2" stroke="#000080" strokeWidth="1" />
@@ -180,8 +180,8 @@ export default function HeroContent() {
               }}
               className="flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white text-sm sm:text-base font-extrabold px-6 py-3 rounded-full shadow-lg shadow-emerald-700/20 hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer"
             >
-              <span className="text-lg">🛵</span>
-              Fast Quality
+              <span className="text-lg"></span>
+              best Quality
             </button>
           </>
         ) : (
