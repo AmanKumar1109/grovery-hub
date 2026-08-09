@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import heroImg from '../../assets/images/hero.png';
+import heroImg from '../../assets/images/hero.webp';
 import FloatingDeliveryBadge from './FloatingDeliveryBadge';
 import gsap from 'gsap';
 import { useSettings } from '../../context/SettingsContext';
@@ -73,6 +73,9 @@ export default function HeroVisual() {
           <img
             src={heroImg}
             fetchPriority="high"
+            width="600"
+            height="600"
+            decoding="async"
             alt="The Grocery Hub Hero"
             className="w-auto h-[460px] sm:h-[560px] lg:h-[680px] object-contain object-bottom transition-all duration-500 hover:scale-[1.03] hover:-translate-y-2 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] drop-shadow-[0_30px_40px_rgba(0,0,0,0.45)]"
           />

@@ -5,6 +5,14 @@ import { useSettings } from './SettingsContext';
 
 const PAGE_SIZE = 8;
 
+function optimizeImageUrl(url) {
+  if (!url) return 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=300&q=75&fm=webp';
+  if (url.includes('unsplash.com') && !url.includes('fm=webp')) {
+    return `${url.split('?')[0]}?w=300&q=75&fm=webp`;
+  }
+  return url;
+}
+
 // Shared doc transformer
 function transformDoc(d) {
   const data = d.data();
@@ -32,7 +40,7 @@ function transformDoc(d) {
     isTrending: data.isTrending === true || data.isTrending === 'true' || data.badge === 'Trending',
     isBogo: data.isBogo === true || data.isBogo === 'true' || data.badge === 'Buy 1 Get 1' || data.isBOGO === true,
     recentBuyers: data.recentBuyers || 0,
-    image: data.image || 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&auto=format&fit=crop&q=80',
+    image: optimizeImageUrl(data.image),
     sortOrder: data.sortOrder ?? 999999
   };
 }

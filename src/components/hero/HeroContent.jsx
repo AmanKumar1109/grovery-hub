@@ -3,7 +3,7 @@ import { useSettings } from '../../context/SettingsContext';
 import { CheckCircle2, ShoppingCart } from 'lucide-react';
 import FloatingReviewsCard from './FloatingReviewsCard';
 import gsap from 'gsap';
-import timeImage from '../../assets/images/time.png';
+import timeImage from '../../assets/images/time.webp';
 
 export default function HeroContent() {
   const { globalSettings } = useSettings();

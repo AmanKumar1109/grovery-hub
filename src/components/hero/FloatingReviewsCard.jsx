@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useSettings } from '../../context/SettingsContext';
-import customerAvatars from '../../assets/images/customer-avatars.png';
-import userAvatar from '../../assets/images/user-avatar.png';
+import customerAvatars from '../../assets/images/customer-avatars.webp';
+import userAvatar from '../../assets/images/user-avatar.webp';
 import gsap from 'gsap';
 
 export default function FloatingReviewsCard() {
