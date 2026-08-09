@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import Header from '../components/header/Header';
 import Footer from '../components/shop/Footer';
 import CartDrawer from '../components/shop/CartDrawer';
@@ -12,6 +12,7 @@ import SEO from '../components/seo/SEO';
 
 export default function CatalogPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { categoryName, shortId } = useParams();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState('all');
@@ -143,6 +144,23 @@ export default function CatalogPage() {
     const searchParams = new URLSearchParams(location.search);
     return searchParams.get('product');
   }, [shortId, location.search]);
+
+  // Inject Home Page into history if user lands directly on a shared link
+  useEffect(() => {
+    if (shortId) {
+      // In React Router v6, window.history.state.idx === 0 means it's the first page in the session
+      const isDirectEntry = window.history.state && window.history.state.idx === 0;
+      if (isDirectEntry && !location.state?.historyInjected) {
+        // Replace current entry with home page
+        navigate('/', { replace: true });
+        // Then immediately push the shared page on top
+        // React Router batches these so there is no visual flicker!
+        setTimeout(() => {
+          navigate(`/p/${shortId}`, { replace: false, state: { historyInjected: true } });
+        }, 10);
+      }
+    }
+  }, [shortId, navigate, location.state]);
 
   const filteredProducts = useMemo(() => {
     let filtered = products || [];
