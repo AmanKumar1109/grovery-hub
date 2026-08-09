@@ -55,22 +55,6 @@ function GlobalNotification() {
   return currentUser ? <OrderNotificationListener userId={currentUser.uid} /> : null;
 }
 
-// Redirect handler for short shared links
-function ProductRedirect() {
-  const { shortId } = useParams();
-  try {
-    // Re-add padding if missing
-    let base64 = shortId;
-    while (base64.length % 4 !== 0) {
-      base64 += '=';
-    }
-    const decodedId = atob(base64);
-    return <Navigate to={`/catalog?product=${encodeURIComponent(decodedId)}`} replace />;
-  } catch (e) {
-    return <Navigate to="/catalog" replace />;
-  }
-}
-
 function App() {
   return (
     <AuthProvider>
@@ -81,7 +65,7 @@ function App() {
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<HomePage />} />
-              <Route path="/p/:shortId" element={<ProductRedirect />} />
+              <Route path="/p/:shortId" element={<CatalogPage />} />
               <Route path="/catalog" element={<CatalogPage />} />
               <Route path="/category/:categoryName" element={<CatalogPage />} />
               <Route path="/login" element={<LoginPage />} />

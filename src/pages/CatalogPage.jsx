@@ -12,7 +12,7 @@ import SEO from '../components/seo/SEO';
 
 export default function CatalogPage() {
   const location = useLocation();
-  const { categoryName } = useParams();
+  const { categoryName, shortId } = useParams();
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -130,6 +130,20 @@ export default function CatalogPage() {
     }
   }, [products]);
 
+  const sharedProductId = useMemo(() => {
+    if (shortId) {
+      try {
+        let base64 = shortId;
+        while (base64.length % 4 !== 0) base64 += '=';
+        return atob(base64);
+      } catch (e) {
+        return null;
+      }
+    }
+    const searchParams = new URLSearchParams(location.search);
+    return searchParams.get('product');
+  }, [shortId, location.search]);
+
   const filteredProducts = useMemo(() => {
     let filtered = products || [];
 
@@ -173,8 +187,6 @@ export default function CatalogPage() {
       });
 
       // Special handling for shared product link
-      const searchParams = new URLSearchParams(location.search);
-      const sharedProductId = searchParams.get('product');
       if (sharedProductId) {
         const sharedProduct = filtered.find(p => p.id === sharedProductId);
         if (sharedProduct) {
@@ -194,7 +206,7 @@ export default function CatalogPage() {
     }
 
     return filtered;
-  }, [products, searchQuery, searchIndex, selectedCategory, selectedSubcategory, onlyDiscounted, sortBy, location.search]);
+  }, [products, searchQuery, searchIndex, selectedCategory, selectedSubcategory, onlyDiscounted, sortBy, sharedProductId]);
 
   // --- Client-side lazy loading (must be AFTER filteredProducts) ---
   // Reset displayCount whenever filters / search change so user starts fresh
