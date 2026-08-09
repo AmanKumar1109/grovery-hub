@@ -470,41 +470,61 @@ export function CartProvider({ children }) {
 
   const finalTotal = cartTotal - discountAmount + deliveryFee;
 
+  const value = useMemo(() => ({
+    products,
+    categoriesList,
+    categoryDocs,
+    isLoadingProducts,
+    loadMoreProducts,
+    hasMore,
+    isLoadingMore,
+    cartItems,
+    cartCount,
+    cartTotal,
+    isCartOpen,
+    setIsCartOpen,
+    addToCart,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    showToast,
+    toastMessage,
+    availableCoupons,
+    promoCodeInput,
+    setPromoCodeInput,
+    appliedCoupon,
+    setAppliedCoupon,
+    promoError,
+    setPromoError,
+    discountAmount,
+    deliveryFee,
+    finalTotal,
+    handleApplyPromo,
+    handleRemovePromo
+  }), [
+    products,
+    categoriesList,
+    categoryDocs,
+    isLoadingProducts,
+    loadMoreProducts,
+    hasMore,
+    isLoadingMore,
+    cartItems,
+    cartCount,
+    cartTotal,
+    isCartOpen,
+    toastMessage,
+    availableCoupons,
+    promoCodeInput,
+    appliedCoupon,
+    promoError,
+    discountAmount,
+    deliveryFee,
+    finalTotal
+  ]);
+
   return (
-    <CartContext.Provider
-      value={{
-        products,
-        categoriesList,
-        categoryDocs,
-        isLoadingProducts,
-        loadMoreProducts,
-        hasMore,
-        isLoadingMore,
-        cartItems,
-        cartCount,
-        cartTotal,
-        isCartOpen,
-        setIsCartOpen,
-        addToCart,
-        updateQuantity,
-        removeFromCart,
-        clearCart,
-        showToast,
-        toastMessage,
-        availableCoupons,
-        promoCodeInput,
-        setPromoCodeInput,
-        appliedCoupon,
-        setAppliedCoupon,
-        promoError,
-        setPromoError,
-        discountAmount,
-        deliveryFee,
-        finalTotal,
-        handleApplyPromo,
-        handleRemovePromo
-      }}
-    >
+    <CartContext.Provider value={value}>
       {children}
     </CartContext.Provider>
   );

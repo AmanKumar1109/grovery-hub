@@ -22,22 +22,16 @@ export default function OrderNotificationListener({ userId }) {
     (n) => new Date(n.timestamp).getTime() > lastSeenTime
   ).length;
 
-  // robust portal target locator
+  // Lightweight portal target locator (no heavy document.body MutationObserver)
   useEffect(() => {
     const checkTarget = () => {
       const el = document.getElementById('notification-bell-portal-target');
-      if (el !== portalTarget) {
-        setPortalTarget(el);
-      }
+      if (el) setPortalTarget(el);
     };
-    
     checkTarget();
-    
-    const observer = new MutationObserver(checkTarget);
-    observer.observe(document.body, { childList: true, subtree: true });
-    
-    return () => observer.disconnect();
-  }, [portalTarget]);
+    const timer = setInterval(checkTarget, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Close panel when clicking outside
   useEffect(() => {

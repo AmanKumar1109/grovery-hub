@@ -167,10 +167,12 @@ export default function SearchBar() {
       </style>
       <div ref={searchContainerRef} className="relative flex-1 w-full max-w-2xl lg:mx-8 z-50 group">
         
-        {/* Gemini Smokey Flowing Border */}
-        <div className="gemini-container">
-          <div className="gemini-border-smoke"></div>
-        </div>
+        {/* Gemini Smokey Flowing Border — Active only on Focus for maximum GPU performance */}
+        {isSearchFocused && (
+          <div className="gemini-container">
+            <div className="gemini-border-smoke"></div>
+          </div>
+        )}
 
         {/* Main Search Bar Container */}
         <div className={`relative flex items-center bg-white rounded-full px-1.5 py-1 transition-all duration-500 ease-out border-2 ${isSearchFocused ? 'shadow-2xl scale-[1.02] border-transparent' : 'shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border-white/50'

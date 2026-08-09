@@ -10,7 +10,7 @@ import { useCart } from '../../context/CartContext';
 import { useSettings } from '../../context/SettingsContext';
 import gsap from 'gsap';
 
-const UrgencyBanner = () => {
+const UrgencyBanner = React.memo(() => {
   const { globalSettings } = useSettings();
   const isActive = globalSettings?.isUrgencyBannerActive ?? true;
   const bannerTextRaw = globalSettings?.urgencyBannerText || 'High Demand | Order in next {timer} to get it by {time}';
@@ -78,7 +78,7 @@ const UrgencyBanner = () => {
       </span>
     </div>
   );
-};
+});
 
 export default function TopHeader() {
   const headerRef = useRef(null);
