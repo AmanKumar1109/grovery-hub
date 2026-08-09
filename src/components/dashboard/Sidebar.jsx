@@ -18,13 +18,14 @@ const navItems = [
 export default function Sidebar() {
   const { currentUser, userProfile, logout } = useAuth();
   const userName = userProfile?.fullName || currentUser?.displayName || 'User';
+  const displayPhoto = userProfile?.photoURL || currentUser?.photoURL || userAvatar;
 
   return (
     <aside className="hidden md:flex flex-col w-64 bg-white/80 backdrop-blur-xl border border-slate-200/80 shadow-xl rounded-3xl p-5 sticky top-8 z-20 flex-shrink-0">
       {/* Profile Summary Card */}
       <div className="flex items-center gap-3.5 mb-8 p-3 bg-gradient-to-br from-amber-50 to-emerald-50/50 rounded-2xl border border-amber-200/60 shadow-sm">
         <img
-          src={userAvatar}
+          src={displayPhoto}
           alt={userName}
           className="w-11 h-11 rounded-full object-cover border-2 border-amber-400 shadow-sm flex-shrink-0"
         />
