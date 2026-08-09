@@ -18,8 +18,9 @@ export default function ProductCard({ product }) {
     e.preventDefault();
     e.stopPropagation();
     
-    // Construct the share URL using the product ID so it automatically finds the exact product
-    const shareUrl = `${window.location.origin}/catalog?product=${encodeURIComponent(product.id)}`;
+    // Construct a random-looking short URL like Flipkart (/p/SVRFTS...)
+    const shortId = btoa(product.id).replace(/=/g, '');
+    const shareUrl = `${window.location.origin}/p/${shortId}`;
     const shareData = {
       title: product.name,
       text: `Check out ${product.name} at The Grocery Hub!`,
