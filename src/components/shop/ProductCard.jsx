@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Heart, ShoppingBag, Star, Plus, Minus, Zap, TrendingUp, Clock, Users, Flame, Gift } from 'lucide-react';
+import { Heart, ShoppingBag, Star, Plus, Minus, Zap, TrendingUp, Clock, Users, Flame, Gift, Share2 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../context/SettingsContext';
@@ -13,6 +13,31 @@ export default function ProductCard({ product }) {
   const isIndependence = theme === 'independence-day';
 
   const isWishlisted = userProfile?.wishlist?.some(item => item.id === product.id) || false;
+
+  const handleShare = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Construct the share URL using the product ID so it automatically finds the exact product
+    const shareUrl = `${window.location.origin}/catalog?product=${encodeURIComponent(product.id)}`;
+    const shareData = {
+      title: product.name,
+      text: `Check out ${product.name} at The Grocery Hub!`,
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback for desktop or unsupported browsers
+        await navigator.clipboard.writeText(shareUrl);
+        showToast('Product link copied to clipboard!');
+      }
+    } catch (err) {
+      console.log('Error sharing product:', err);
+    }
+  };
 
   const cartItem = cartItems.find((item) => item.id === product.id);
   const quantityInCart = cartItem ? cartItem.quantity : 0;
@@ -189,6 +214,16 @@ export default function ProductCard({ product }) {
             title="Add to Wishlist"
           >
             <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 ${isWishlisted ? 'fill-pink-500 stroke-pink-500 scale-110' : 'group-hover:scale-110'}`} />
+          </button>
+
+          {/* Share Toggle */}
+          <button
+            type="button"
+            onClick={handleShare}
+            className="absolute top-11 right-2 sm:top-14 sm:right-3 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center transition-all duration-300 shadow-md active:scale-90 cursor-pointer hover:bg-white z-20 text-slate-400 hover:text-blue-500"
+            title="Share Product"
+          >
+            <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-300 group-hover:scale-110" />
           </button>
 
           {/* Trending indicator on image bottom-right — ONLY when admin marks product.isTrending as true */}

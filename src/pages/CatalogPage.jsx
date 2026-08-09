@@ -171,6 +171,18 @@ export default function CatalogPage() {
         // featured: sort by the sortOrder configured in the dashboard
         return (a.sortOrder ?? 999999) - (b.sortOrder ?? 999999);
       });
+
+      // Special handling for shared product link
+      const searchParams = new URLSearchParams(location.search);
+      const sharedProductId = searchParams.get('product');
+      if (sharedProductId) {
+        const sharedProduct = filtered.find(p => p.id === sharedProductId);
+        if (sharedProduct) {
+          const related = filtered.filter(p => p.id !== sharedProductId && p.category === sharedProduct.category);
+          const others = filtered.filter(p => p.id !== sharedProductId && p.category !== sharedProduct.category);
+          filtered = [sharedProduct, ...related, ...others];
+        }
+      }
     } else if (sortBy !== 'featured') {
       // If user explicitly chose a sort while searching, apply it
       filtered = [...filtered].sort((a, b) => {
@@ -182,7 +194,7 @@ export default function CatalogPage() {
     }
 
     return filtered;
-  }, [products, searchQuery, searchIndex, selectedCategory, selectedSubcategory, onlyDiscounted, sortBy]);
+  }, [products, searchQuery, searchIndex, selectedCategory, selectedSubcategory, onlyDiscounted, sortBy, location.search]);
 
   // --- Client-side lazy loading (must be AFTER filteredProducts) ---
   // Reset displayCount whenever filters / search change so user starts fresh
