@@ -5,26 +5,13 @@ import { useSettings } from '../../context/SettingsContext';
 function IndependenceDayBanner() {
   return (
     <div
-      className="w-full overflow-hidden relative"
-      style={{
-        background: 'linear-gradient(90deg, #FF9933 0%, #FF9933 33%, #ffffff 33%, #ffffff 66%, #138808 66%, #138808 100%)',
-        borderBottom: '2px solid #FF9933'
-      }}
+      className="w-full relative overflow-hidden bg-[#080f1e] text-white py-1.5 px-4 flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold border-b border-slate-800"
     >
-      <div className="relative py-2 px-4 flex items-center justify-center gap-3 text-center">
-        <div className="flex items-center gap-3 animate-pulse">
-          <span className="text-lg">🇮🇳</span>
-          <span
-            className="text-xs sm:text-sm font-black tracking-wide"
-            style={{ color: '#000080', textShadow: '0 1px 2px rgba(255,255,255,0.8)' }}
-          >
-            🎉 Happy Independence Day! Jai Hind! — Celebrating 78 Years of Freedom 🎉
-          </span>
-          <span className="text-lg">🇮🇳</span>
-        </div>
+      <div className="flex items-center justify-center gap-2">
+        <span className="text-sm">🚀</span>
+        <span className="text-amber-400 font-bold">⚡</span>
+        <span className="tracking-wide text-slate-100 font-medium">Independence Day Special Offers Available</span>
       </div>
-      <div className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 border-[#000080] opacity-40" />
-      <div className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full border-2 border-[#000080] opacity-40" />
     </div>
   );
 }

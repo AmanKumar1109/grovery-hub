@@ -245,12 +245,16 @@ export default function SearchBar() {
             )}
           </div>
 
-          {/* Search button (Premium Gradient) */}
+          {/* Search button (Premium Gradient / Theme adaptive) */}
           <button
             type="button"
             aria-label="Search"
             onClick={() => executeSearch()}
-            className="bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white p-2.5 rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30 transition-all duration-300 hover:shadow-orange-500/40 hover:-translate-y-0.5 active:scale-95 ml-1.5 cursor-pointer"
+            className={`p-2.5 rounded-full flex items-center justify-center shadow-md transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:scale-95 ml-1.5 cursor-pointer text-white ${
+              globalSettings?.activeTheme === 'independence-day'
+                ? 'bg-[#0c5e26] hover:bg-[#09471c] shadow-emerald-900/30'
+                : 'bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 shadow-orange-500/30'
+            }`}
           >
             <Search className="w-4.5 h-4.5" />
           </button>

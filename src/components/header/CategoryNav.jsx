@@ -32,6 +32,9 @@ export default function CategoryNav() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const theme = globalSettings?.activeTheme || 'normal';
+  const isIndependence = theme === 'independence-day';
+
   return (
     <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-8 px-4 sm:px-8 lg:px-12 py-1.5 sm:py-2.5 bg-transparent w-full relative z-40">
       {/* Category Dropdown Pill */}
@@ -41,10 +44,16 @@ export default function CategoryNav() {
           aria-expanded={isOpen}
           aria-label="Toggle Categories Dropdown"
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-700 font-extrabold text-[11px] sm:text-xs hover:bg-emerald-100 transition-colors shadow-sm cursor-pointer"
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-extrabold text-[11px] sm:text-xs transition-colors shadow-sm cursor-pointer ${
+            isIndependence
+              ? 'bg-[#0c5923] hover:bg-[#08421a] text-white border border-[#0c5923]'
+              : 'bg-emerald-50 border border-emerald-300 text-emerald-700 hover:bg-emerald-100'
+          }`}
         >
           <span>All Categories</span>
-          <ChevronDown className={`w-3.5 h-3.5 text-emerald-600 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${
+            isIndependence ? 'text-white' : 'text-emerald-600'
+          } ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
         {isOpen && (
@@ -78,12 +87,12 @@ export default function CategoryNav() {
             end={link.exact}
             className={({ isActive }) =>
               `flex items-center gap-1.5 text-xs font-bold transition-all duration-150 py-1 ${isActive
-                ? 'text-emerald-700 font-extrabold border-b-2 border-amber-400'
-                : 'text-gray-600 hover:text-emerald-700'
+                ? isIndependence ? 'text-[#0c5923] font-black border-b-2 border-[#0c5923]' : 'text-emerald-700 font-extrabold border-b-2 border-amber-400'
+                : isIndependence ? 'text-[#1b4324] hover:text-[#0c5923]' : 'text-gray-600 hover:text-emerald-700'
               }`
             }
           >
-            {link.icon && <link.icon className="w-3.5 h-3.5 text-amber-500" />}
+            {link.icon && <link.icon className={`w-3.5 h-3.5 ${isIndependence ? 'text-[#0c5923]' : 'text-amber-500'}`} />}
             <span>{link.name}</span>
           </NavLink>
         ))}
