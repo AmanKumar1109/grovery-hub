@@ -389,6 +389,20 @@ export default function CheckoutPage() {
         }
       }
 
+      // Deactivate applied coupon (one-time use)
+      if (appliedCoupon && appliedCoupon.id) {
+        try {
+          await updateDoc(doc(db, 'coupons', appliedCoupon.id), {
+            isActive: false,
+            usedBy: currentUser ? currentUser.uid : 'guest',
+            usedAt: timestamp,
+            usedInOrder: orderId
+          });
+        } catch (err) {
+          console.error("Error deactivating applied coupon:", err);
+        }
+      }
+
       clearCart();
       setIsProcessing(false);
       setIsOrderConfirmed(true);
