@@ -78,10 +78,24 @@ export function AuthProvider({ children }) {
               // Save migration quietly
               setDoc(userDocRef, { addresses: data.addresses, primaryAddressId: data.primaryAddressId }, { merge: true });
             }
+            // Migration: Generate referral code if missing for legacy users
+            if (!data.myReferralCode) {
+              const baseName = (data.fullName || 'USER').split(' ')[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase() || 'GH';
+              const randomDigits = Math.floor(100 + Math.random() * 900);
+              const myReferralCode = `${baseName}${randomDigits}${user.uid.substring(0, 3).toUpperCase()}`;
+              data.myReferralCode = myReferralCode;
+              setDoc(userDocRef, { myReferralCode }, { merge: true });
+            }
+
             if (!data.addresses) data.addresses = [];
 
             setUserProfile(data);
           } else {
+            const pendingReferralCode = localStorage.getItem('pendingReferralCode') || null;
+            const baseName = (user.displayName || 'USER').split(' ')[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase() || 'GH';
+            const randomDigits = Math.floor(100 + Math.random() * 900);
+            const myReferralCode = `${baseName}${randomDigits}${user.uid.substring(0, 3).toUpperCase()}`;
+
             const initialData = {
               fullName: user.displayName || 'Grocery Member',
               email: user.email,
@@ -90,10 +104,15 @@ export function AuthProvider({ children }) {
               addresses: [],
               primaryAddressId: null,
               wishlist: [],
-              welcomeEmailSent: true
+              welcomeEmailSent: true,
+              referredByCode: pendingReferralCode,
+              myReferralCode: myReferralCode
             };
             setUserProfile(initialData);
             await setDoc(userDocRef, initialData);
+            if (pendingReferralCode) {
+              localStorage.removeItem('pendingReferralCode');
+            }
             await sendWelcomeEmail(user.email, user.displayName || 'Grocery Member');
           }
         } catch (err) {
@@ -123,6 +142,7 @@ export function AuthProvider({ children }) {
     if (fullName && res.user) {
       await updateProfile(res.user, { displayName: fullName });
     }
+    const pendingReferralCode = localStorage.getItem('pendingReferralCode') || null;
     const initialData = {
       fullName: fullName || 'Grocery Member',
       email,
@@ -131,10 +151,14 @@ export function AuthProvider({ children }) {
       addresses: [],
       primaryAddressId: null,
       wishlist: [],
-      welcomeEmailSent: true
+      welcomeEmailSent: true,
+      referredByCode: pendingReferralCode
     };
     try {
       await setDoc(doc(db, 'users', res.user.uid), initialData);
+      if (pendingReferralCode) {
+        localStorage.removeItem('pendingReferralCode');
+      }
       await sendWelcomeEmail(email, fullName);
     } catch (e) {
       console.warn('Failed to save user doc to Firestore:', e);

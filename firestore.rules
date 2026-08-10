@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Default: allow read/write for now to not break existing app, 
+    // EXCEPT for the new secure collections.
+    // In a real production app, all other collections should be locked down.
+    match /{collection}/{document=**} {
+      allow read, write: if collection != 'referrals' 
+                         && collection != 'scratchCards' 
+                         && collection != 'coupons';
+    }
+
+    match /referrals/{referralId} {
+      // User can read if they are referrer or referred user
+      allow read: if isAuthenticated() && (
+        resource.data.referrerId == request.auth.uid || 
+        resource.data.referredUserId == request.auth.uid
+      );
+      // NO client writes allowed
+      allow write: if false; 
+    }
+
+    match /scratchCards/{scratchCardId} {
+      // User can read their own cards
+      allow read: if isOwner(resource.data.userId);
+      // NO client writes allowed
+      allow write: if false;
+    }
+
+    match /coupons/{couponId} {
+      // User can read global coupons (no userId) OR their own coupons
+      allow read: if !('userId' in resource.data) || isOwner(resource.data.userId);
+      // NO client writes allowed (admin writes from backend)
+      allow write: if false;
+    }
+  }
+}

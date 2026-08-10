@@ -21,6 +21,19 @@ function ThemeApplier() {
   return null;
 }
 
+// Intercepts ?ref= parameter and stores in localStorage
+function ReferralInterceptor() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get('ref');
+    if (refCode) {
+      localStorage.setItem('pendingReferralCode', refCode);
+    }
+  }, []);
+  return null;
+}
+
+
 // CatalogPage & HomePage are eagerly imported — these are the two most-visited
 // pages and must open instantly without any JS-chunk download delay.
 import CatalogPage from './pages/CatalogPage';
@@ -42,6 +55,7 @@ const HelpSupport = lazy(() => import('./pages/dashboard/HelpSupport'));
 const ComplaintPage = lazy(() => import('./pages/ComplaintPage'));
 const DynamicPage = lazy(() => import('./pages/DynamicPage'));
 const MyComplaints = lazy(() => import('./pages/dashboard/MyComplaints'));
+const ReferEarn = lazy(() => import('./pages/dashboard/ReferEarn'));
 
 // Fallback loader during page transitions
 const PageLoader = () => (
@@ -60,6 +74,7 @@ function App() {
     <AuthProvider>
       <SettingsProvider>
         <ThemeApplier />
+        <ReferralInterceptor />
         <CartProvider>
           <ScrollToTop />
           <Suspense fallback={<PageLoader />}>
@@ -91,6 +106,7 @@ function App() {
                 <Route path="wishlist" element={<Wishlist />} />
                 <Route path="addresses" element={<SavedAddresses />} />
                 <Route path="profile" element={<Profile />} />
+                <Route path="refer-earn" element={<ReferEarn />} />
                 <Route path="settings" element={<Navigate to="/dashboard/help" replace />} />
                 <Route path="complaints" element={<MyComplaints />} />
                 <Route path="invoice/:id" element={<InvoicePage />} />

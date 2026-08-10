@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import { db } from '../firebase';
 import { collection, onSnapshot, getDocs, query, limit, startAfter } from 'firebase/firestore';
 import { useSettings } from './SettingsContext';
+import { useAuth } from './AuthContext';
 
 const PAGE_SIZE = 8;
 
@@ -163,6 +164,7 @@ export const initialProducts = [
 ];
 
 export function CartProvider({ children }) {
+  const { currentUser } = useAuth();
   const [products, setProducts] = useState([]);
   const [dbCategories, setDbCategories] = useState([]);
   const [categoryDocs, setCategoryDocs] = useState([]);
@@ -362,19 +364,21 @@ export function CartProvider({ children }) {
   const [promoError, setPromoError] = useState('');
   const [discountAmount, setDiscountAmount] = useState(0);
 
-  // Fetch Coupons on Mount
+  // Fetch Coupons on Mount and when currentUser changes
   useEffect(() => {
     const fetchCoupons = async () => {
       try {
         const snap = await getDocs(collection(db, 'coupons'));
-        const coupons = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setAvailableCoupons(coupons);
+        const allCoupons = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Filter coupons: either public (no userId) or belongs to current user
+        const validCoupons = allCoupons.filter(c => !c.userId || (currentUser && c.userId === currentUser.uid));
+        setAvailableCoupons(validCoupons);
       } catch (err) {
         console.warn("Failed to fetch coupons:", err);
       }
     };
     fetchCoupons();
-  }, []);
+  }, [currentUser]);
 
   const handleApplyPromo = (codeToApply) => {
     setPromoError('');
@@ -392,6 +396,11 @@ export function CartProvider({ children }) {
 
     if (!coupon.isActive) {
       setPromoError('This Promo Code is currently inactive');
+      return;
+    }
+
+    if (coupon.isReferralCoupon && appliedCoupon && appliedCoupon.isReferralCoupon) {
+      setPromoError('You can only apply one referral coupon per order');
       return;
     }
 
