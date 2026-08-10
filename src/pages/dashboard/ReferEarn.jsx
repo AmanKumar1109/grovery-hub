@@ -4,13 +4,11 @@ import { useCart } from '../../context/CartContext';
 import { db } from '../../firebase';
 import { collection, query, where, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
 import { Copy, Share2, Gift, Users, Clock, CheckCircle2, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
-import ScratchCard from '../../components/ui/ScratchCard'; // We will create this
 
 export default function ReferEarn() {
   const { currentUser, userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [referrals, setReferrals] = useState([]);
-  const [scratchCards, setScratchCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copySuccess, setCopySuccess] = useState(false);
   const { availableCoupons } = useCart();
@@ -29,18 +27,11 @@ export default function ReferEarn() {
       setReferrals(data);
     });
 
-    // Listen to scratchCards
-    const qCards = query(collection(db, 'scratchCards'), where('userId', '==', currentUser.uid));
-    const unsubCards = onSnapshot(qCards, (snap) => {
-      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-      setScratchCards(data);
       setLoading(false);
     });
 
     return () => {
       unsubRef();
-      unsubCards();
     };
   }, [currentUser]);
 
@@ -70,8 +61,7 @@ export default function ReferEarn() {
     total: referrals.length,
     successful: referrals.filter(r => r.status === 'REWARDED').length,
     pending: referrals.filter(r => r.status === 'REGISTERED').length,
-    notQualified: referrals.filter(r => r.status === 'NOT_QUALIFIED' || r.status === 'CANCELLED').length,
-    scratchAvailable: scratchCards.filter(s => s.status === 'AVAILABLE').length
+    notQualified: referrals.filter(r => r.status === 'NOT_QUALIFIED' || r.status === 'CANCELLED').length
   };
 
   return (
@@ -84,7 +74,7 @@ export default function ReferEarn() {
             <h1 className="text-2xl font-black tracking-tight">Refer & Earn</h1>
           </div>
           <p className="text-emerald-50 max-w-md font-medium text-sm">
-            Your friend gets ₹30 OFF on their first ₹299+ order. After their order is successfully delivered, you unlock a Scratch Card worth ₹30 OFF!
+            Your friend gets ₹30 OFF on their first ₹299+ order. After their order is successfully delivered, you unlock a Coupon worth ₹30 OFF!
           </p>
           
           <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
@@ -146,8 +136,8 @@ export default function ReferEarn() {
           <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col gap-2">
             <Gift className="w-6 h-6 text-violet-500" />
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Scratch Cards</p>
-              <p className="text-2xl font-black text-slate-800">{stats.scratchAvailable} Available</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Your Rewards</p>
+              <p className="text-2xl font-black text-slate-800">{availableCoupons.length} Coupons</p>
             </div>
           </div>
         </div>
@@ -193,29 +183,9 @@ export default function ReferEarn() {
         </div>
       )}
 
-      {/* Rewards Tab */}
       {activeTab === 'rewards' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black uppercase text-slate-800">Your Scratch Cards</h3>
-            <span className="text-xs font-bold text-emerald-600">{stats.scratchAvailable} Available</span>
-          </div>
-          
-          {scratchCards.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-slate-200 border-dashed p-10 text-center flex flex-col items-center">
-              <Gift className="w-12 h-12 text-slate-200 mb-3" />
-              <p className="text-sm font-bold text-slate-400">No Scratch Cards yet</p>
-              <p className="text-xs text-slate-400 mt-1">Wait for your friends to complete their first order!</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {scratchCards.map(card => (
-                <ScratchCard key={card.id} card={card} />
-              ))}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between mt-8">
             <h3 className="text-sm font-black uppercase text-slate-800">Your Coupons</h3>
             <span className="text-xs font-bold text-emerald-600">{availableCoupons.length} Available</span>
           </div>
