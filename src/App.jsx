@@ -33,7 +33,6 @@ function ReferralInterceptor() {
   return null;
 }
 
-
 // CatalogPage & HomePage are eagerly imported — these are the two most-visited
 // pages and must open instantly without any JS-chunk download delay.
 import CatalogPage from './pages/CatalogPage';
