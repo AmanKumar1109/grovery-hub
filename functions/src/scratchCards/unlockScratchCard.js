@@ -93,16 +93,16 @@ exports.scratchCardUnlock = onCall(async (request) => {
         actor: 'User',
         actorType: 'user',
         category: 'Referrals',
-        details: `User scratched card ${scratchCardId} and received coupon ${couponId}`,
+        details: `User scratched card ${scratchCardId} and received coupon ${newCouponId}`,
         severity: 'info',
         userId: userId,
         scratchCardId: scratchCardId,
-        couponId: couponId
+        couponId: newCouponId
       });
 
       return { 
         status: 'success', 
-        couponId: couponId, 
+        couponId: newCouponId, 
         rewardAmount: cardData.rewardAmount 
       };
     });
