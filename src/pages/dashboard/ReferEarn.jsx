@@ -12,6 +12,7 @@ export default function ReferEarn() {
   const [loading, setLoading] = useState(true);
   const [copySuccess, setCopySuccess] = useState(false);
   const { availableCoupons } = useCart();
+  const userCoupons = availableCoupons.filter(c => c.userId === currentUser?.uid);
 
   const referralCode = userProfile?.myReferralCode || 'PENDING';
   const referralLink = `${window.location.origin}/?ref=${referralCode}`;
@@ -185,17 +186,17 @@ export default function ReferEarn() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-black uppercase text-slate-800">Your Coupons</h3>
-            <span className="text-xs font-bold text-emerald-600">{availableCoupons.length} Available</span>
+            <span className="text-xs font-bold text-emerald-600">{userCoupons.length} Available</span>
           </div>
 
-          {availableCoupons.length === 0 ? (
+          {userCoupons.length === 0 ? (
             <div className="bg-white rounded-3xl border border-slate-200 border-dashed p-10 text-center flex flex-col items-center">
               <Gift className="w-12 h-12 text-slate-200 mb-3" />
               <p className="text-sm font-bold text-slate-400">No Coupons yet</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {availableCoupons.map(coupon => (
+              {userCoupons.map(coupon => (
                 <div key={coupon.id} className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center justify-between shadow-sm relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500"></div>
                   <div className="pl-2">

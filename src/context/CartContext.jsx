@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { db } from '../firebase';
-import { collection, onSnapshot, getDocs, query, limit, startAfter } from 'firebase/firestore';
+import { collection, onSnapshot, getDocs, query, limit, startAfter, where } from 'firebase/firestore';
 import { useSettings } from './SettingsContext';
 import { useAuth } from './AuthContext';
 
@@ -368,10 +368,21 @@ export function CartProvider({ children }) {
   useEffect(() => {
     const fetchCoupons = async () => {
       try {
-        const snap = await getDocs(collection(db, 'coupons'));
-        const allCoupons = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        // Filter coupons: either public (no userId) or belongs to current user
-        const validCoupons = allCoupons.filter(c => !c.userId || (currentUser && c.userId === currentUser.uid));
+        // Query 1: Fetch Global Coupons (isGlobal === true)
+        const globalQuery = query(collection(db, 'coupons'), where('isGlobal', '==', true));
+        const globalSnap = await getDocs(globalQuery);
+        let allCoupons = globalSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Query 2: Fetch Personal Coupons (userId === currentUser.uid)
+        if (currentUser) {
+          const personalQuery = query(collection(db, 'coupons'), where('userId', '==', currentUser.uid));
+          const personalSnap = await getDocs(personalQuery);
+          const personalCoupons = personalSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          allCoupons = [...allCoupons, ...personalCoupons];
+        }
+
+        // Filter valid coupons locally just in case (e.g. valid date check)
+        const validCoupons = allCoupons.filter(c => c.isActive && new Date(c.validUntil) >= new Date());
         setAvailableCoupons(validCoupons);
       } catch (err) {
         console.warn("Failed to fetch coupons:", err);
