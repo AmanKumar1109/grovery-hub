@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { db } from '../../firebase';
 import { collection, query, where, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
 import { Copy, Share2, Gift, Users, Clock, CheckCircle2, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
@@ -12,6 +13,7 @@ export default function ReferEarn() {
   const [scratchCards, setScratchCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copySuccess, setCopySuccess] = useState(false);
+  const { availableCoupons } = useCart();
 
   const referralCode = userProfile?.myReferralCode || 'PENDING';
   const referralLink = `${window.location.origin}/?ref=${referralCode}`;
@@ -209,6 +211,35 @@ export default function ReferEarn() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {scratchCards.map(card => (
                 <ScratchCard key={card.id} card={card} />
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between mt-8">
+            <h3 className="text-sm font-black uppercase text-slate-800">Your Coupons</h3>
+            <span className="text-xs font-bold text-emerald-600">{availableCoupons.length} Available</span>
+          </div>
+
+          {availableCoupons.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-slate-200 border-dashed p-10 text-center flex flex-col items-center">
+              <Gift className="w-12 h-12 text-slate-200 mb-3" />
+              <p className="text-sm font-bold text-slate-400">No Coupons yet</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {availableCoupons.map(coupon => (
+                <div key={coupon.id} className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center justify-between shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500"></div>
+                  <div className="pl-2">
+                    <p className="font-black text-lg text-slate-800 tracking-wider font-mono">{coupon.code}</p>
+                    <p className="text-sm font-semibold text-emerald-600 mt-1">
+                      {coupon.discountType === 'flat' ? `₹${coupon.discountValue} OFF` : `${coupon.discountValue}% OFF`}
+                    </p>
+                    <p className="text-[10px] text-slate-500 mt-2 font-medium">
+                      Min. Order: ₹{coupon.minOrderValue} &bull; Valid till: {new Date(coupon.validUntil).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
               ))}
             </div>
           )}
