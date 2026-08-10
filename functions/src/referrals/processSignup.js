@@ -13,7 +13,8 @@ exports.onUserCreated = onDocumentCreated('users/{userId}', async (event) => {
   const newUser = snap.data();
   const newUserId = event.params.userId;
     
-    // 1. Generate a unique referral code for the NEW user if they don't have one
+    // 1. Generate a unique referral code for the NEW user if they don't have one.
+    // (Forcing redeploy to clear cloud build cache)
     const db = getFirestore();
     if (!newUser.myReferralCode) {
       const baseName = (newUser.fullName || 'user').split(' ')[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase();

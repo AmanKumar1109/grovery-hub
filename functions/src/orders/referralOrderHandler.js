@@ -15,7 +15,8 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
   const orderAfter = change.after.data();
   const orderId = event.params.orderId;
 
-    // Check if status changed to the trigger status (e.g. "Delivered")
+    // Check if status changed to the trigger status (e.g. "Delivered").
+    // Forcing redeploy
     if (orderBefore.status === orderAfter.status) return null;
     if (orderAfter.status !== CONFIG.rewardTriggerStatus) return null;
 
