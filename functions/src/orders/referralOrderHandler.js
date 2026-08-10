@@ -40,14 +40,14 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
     const referralData = referralDoc.data();
     const referralId = referralDoc.id;
 
-    // Validate qualifying order amount
-    const totalAmount = parseFloat(orderAfter.totalAmount) || 0;
-    if (totalAmount < CONFIG.referrerReward.minOrderValue) {
-      console.log(`Order ${orderId} amount ${totalAmount} < ${CONFIG.referrerReward.minOrderValue}. Not qualified.`);
+    // Validate qualifying order amount (use subTotal if available, to ignore coupon discounts)
+    const qualifyingAmount = parseFloat(orderAfter.subTotal) || parseFloat(orderAfter.totalAmount) || 0;
+    if (qualifyingAmount < CONFIG.referrerReward.minOrderValue) {
+      console.log(`Order ${orderId} amount ${qualifyingAmount} < ${CONFIG.referrerReward.minOrderValue}. Not qualified.`);
       await referralDoc.ref.update({
         status: 'NOT_QUALIFIED',
         orderId: orderId,
-        orderAmount: totalAmount,
+        orderAmount: qualifyingAmount,
         updatedAt: FieldValue.serverTimestamp()
       });
       return null;
@@ -66,31 +66,34 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
         throw new Error(`Referral ${referralId} is no longer REGISTERED.`);
       }
 
-      // Create Scratch Card
-      const scratchCardId = `SC-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
-      const scratchCardRef = db.collection('scratchCards').doc(scratchCardId);
+      // Create Coupon Directly (Skipping Scratch Card)
+      const newCouponId = `RWD-${Date.now().toString().slice(-4)}-${Math.floor(Math.random() * 10000)}`;
+      const validUntil = new Date();
+      validUntil.setDate(validUntil.getDate() + CONFIG.referrerReward.couponValidityDays);
+      const discountAmount = CONFIG.referrerReward.amount;
 
-      const scratchCardData = {
-        id: scratchCardId,
+      const couponRef = db.collection('coupons').doc(newCouponId);
+      const couponData = {
+        code: newCouponId,
         userId: referralData.referrerId,
-        referralId: referralId,
-        rewardAmount: CONFIG.referrerReward.amount,
-        status: 'AVAILABLE',
-        unlockedAt: null, // Will be set when scratched
-        scratchedAt: null,
-        expiresAt: null, // Could add expiry logic if configured
-        couponId: null,
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp()
+        isReferralCoupon: true,
+        discountType: 'flat',
+        discountValue: discountAmount,
+        minOrderValue: CONFIG.referrerReward.couponMinOrderValue,
+        maxUses: 1,
+        isActive: true,
+        validUntil: validUntil.toISOString().split('T')[0],
+        sourceReferralId: referralId,
+        createdAt: FieldValue.serverTimestamp()
       };
 
-      transaction.set(scratchCardRef, scratchCardData);
+      transaction.set(couponRef, couponData);
 
       // Update Referral Status
       transaction.update(referralDoc.ref, {
         status: 'REWARDED',
         orderId: orderId,
-        orderAmount: orderAfter.totalAmount || orderAfter.amount || 0,
+        orderAmount: qualifyingAmount,
         orderQualifiedAt: FieldValue.serverTimestamp(),
         rewardedAt: FieldValue.serverTimestamp(),
         updatedAt: FieldValue.serverTimestamp()
@@ -103,18 +106,18 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
       transaction.set(auditRef, {
         id: auditRef.id,
         timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
-        action: 'SCRATCH_CARD_UNLOCKED',
+        action: 'REFERRAL_COUPON_REWARDED',
         actor: 'System (Cloud Function)',
         actorType: 'system',
         category: 'Referrals',
-        details: `Unlocked scratch card ${scratchCardId} for referrer ${referralData.referrerId} (Order ${orderId})`,
+        details: `Rewarded referrer ${referralData.referrerId} with coupon ${newCouponId} for order ${orderId}`,
         severity: 'success',
         referralId: referralId,
         userId: referralData.referrerId,
         orderId: orderId,
-        scratchCardId: scratchCardId
+        couponId: newCouponId
       });
 
-      return { scratchCardId };
+      return { couponId: newCouponId };
     });
   });

@@ -109,7 +109,7 @@ exports.onUserCreated = onDocumentCreated('users/{userId}', async (event) => {
         isReferralCoupon: true,
         discountType: 'flat',
         discountValue: CONFIG.referredUserReward.amount,
-        minOrderValue: CONFIG.referredUserReward.minOrderValue,
+        minOrderValue: CONFIG.referredUserReward.couponMinOrderValue,
         maxUses: 1,
         isActive: true,
         validUntil: validUntil.toISOString().split('T')[0],

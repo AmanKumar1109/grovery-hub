@@ -8,17 +8,19 @@ const CONFIG = {
   
   // What does User A get?
   referrerReward: {
-    type: "SCRATCH_CARD",
+    type: "COUPON",
     amount: 30, // ₹30 OFF
     couponValidityDays: 30,
-    minOrderValue: 299
+    minOrderValue: 299,
+    couponMinOrderValue: 100
   },
 
   // What does User B get (on signup)?
   referredUserReward: {
     type: "COUPON",
     amount: 30, // ₹30 OFF
-    minOrderValue: 299
+    minOrderValue: 299,
+    couponMinOrderValue: 100
   },
 
   // When is the reward given to User A?
