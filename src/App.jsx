@@ -33,6 +33,31 @@ function ReferralInterceptor() {
   return null;
 }
 
+// TEMPORARY MIGRATION: Fix old referral coupons
+function CouponFixer() {
+  useEffect(() => {
+    const fixOldCoupons = async () => {
+      try {
+        const { collection, getDocs, updateDoc, doc } = await import('firebase/firestore');
+        const { db } = await import('./firebase');
+        const snap = await getDocs(collection(db, 'coupons'));
+        for (const docSnap of snap.docs) {
+          const data = docSnap.data();
+          if (data.isReferralCoupon && data.minOrderValue !== 100) {
+            await updateDoc(doc(db, 'coupons', docSnap.id), { minOrderValue: 100 });
+            console.log('Fixed minOrderValue for', docSnap.id);
+          }
+        }
+      } catch (err) {
+        console.error('Migration error:', err);
+      }
+    };
+    fixOldCoupons();
+  }, []);
+  return null;
+}
+
+
 // CatalogPage & HomePage are eagerly imported — these are the two most-visited
 // pages and must open instantly without any JS-chunk download delay.
 import CatalogPage from './pages/CatalogPage';
@@ -73,6 +98,7 @@ function App() {
     <AuthProvider>
       <SettingsProvider>
         <ThemeApplier />
+        <CouponFixer />
         <ReferralInterceptor />
         <CartProvider>
           <ScrollToTop />
