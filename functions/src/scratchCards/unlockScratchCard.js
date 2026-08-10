@@ -1,5 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const CONFIG = require('../config/referralCampaign');
 
 /**
@@ -18,7 +19,8 @@ exports.scratchCardUnlock = onCall(async (request) => {
     throw new HttpsError('invalid-argument', 'scratchCardId is required.');
   }
 
-  const db = admin.firestore();
+  const db = getFirestore();
+
   const scratchCardRef = db.collection('scratchCards').doc(scratchCardId);
 
   try {
@@ -51,23 +53,24 @@ exports.scratchCardUnlock = onCall(async (request) => {
       }
 
       // Generate the Coupon
-      const couponId = `RWD-${Date.now().toString().slice(-4)}-${Math.floor(Math.random() * 10000)}`;
+      const newCouponId = `RWD-${Date.now().toString().slice(-4)}-${Math.floor(Math.random() * 10000)}`;
       const validUntil = new Date();
       validUntil.setDate(validUntil.getDate() + CONFIG.referrerReward.couponValidityDays);
+      const discountAmount = cardData.rewardAmount;
 
-      const couponRef = db.collection('coupons').doc(couponId);
+      const couponRef = db.collection('coupons').doc(newCouponId);
       const couponData = {
-        code: couponId,
+        code: newCouponId,
         userId: userId, // Locks the coupon to this user
         isReferralCoupon: true,
         discountType: 'flat',
-        discountValue: cardData.rewardAmount,
+        discountValue: discountAmount,
         minOrderValue: CONFIG.referrerReward.minOrderValue,
         maxUses: 1,
         isActive: true,
         validUntil: validUntil.toISOString().split('T')[0], // YYYY-MM-DD
-        sourceScratchCardId: scratchCardId,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        sourceReferralId: cardData.referralId || null,
+        createdAt: FieldValue.serverTimestamp()
       };
 
       transaction.set(couponRef, couponData);
@@ -75,9 +78,10 @@ exports.scratchCardUnlock = onCall(async (request) => {
       // Update the Scratch Card
       transaction.update(scratchCardRef, {
         status: 'SCRATCHED',
-        scratchedAt: admin.firestore.FieldValue.serverTimestamp(),
-        couponId: couponId,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        couponId: newCouponId,
+        scratchedAt: FieldValue.serverTimestamp(),
+        discountValue: discountAmount,
+        updatedAt: FieldValue.serverTimestamp()
       });
 
       // Audit Log

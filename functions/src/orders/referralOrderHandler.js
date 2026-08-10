@@ -1,5 +1,6 @@
 const { onDocumentUpdated } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { runIdempotentTask } = require('../utils/idempotency');
 const { addAuditLog } = require('../utils/auditLogger');
 const CONFIG = require('../config/referralCampaign');
@@ -23,7 +24,7 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
     const userId = orderAfter.userId || orderAfter.customerId || orderAfter.uid;
     if (!userId) return null;
 
-    const db = admin.firestore();
+    const db = getFirestore();
 
     // Check if this user is a referred user with a pending referral
     const referralQuery = await db.collection('referrals')
@@ -46,7 +47,7 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
         status: 'NOT_QUALIFIED',
         orderId: orderId,
         orderAmount: totalAmount,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        updatedAt: FieldValue.serverTimestamp()
       });
       return null;
     }
@@ -74,12 +75,12 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
         referralId: referralId,
         rewardAmount: CONFIG.referrerReward.amount,
         status: 'AVAILABLE',
-        unlockedAt: admin.firestore.FieldValue.serverTimestamp(),
+        unlockedAt: null, // Will be set when scratched
         scratchedAt: null,
         expiresAt: null, // Could add expiry logic if configured
         couponId: null,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp()
       };
 
       transaction.set(scratchCardRef, scratchCardData);
@@ -88,11 +89,10 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
       transaction.update(referralDoc.ref, {
         status: 'REWARDED',
         orderId: orderId,
-        orderAmount: totalAmount,
-        orderQualifiedAt: admin.firestore.FieldValue.serverTimestamp(),
-        rewardedAt: admin.firestore.FieldValue.serverTimestamp(),
-        scratchCardId: scratchCardId,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        orderAmount: orderAfter.totalAmount || orderAfter.amount || 0,
+        orderQualifiedAt: FieldValue.serverTimestamp(),
+        rewardedAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp()
       });
 
       // Add audit log asynchronously (after transaction)

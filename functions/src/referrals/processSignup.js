@@ -1,5 +1,6 @@
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { addAuditLog } = require('../utils/auditLogger');
 const CONFIG = require('../config/referralCampaign');
 
@@ -13,7 +14,7 @@ exports.onUserCreated = onDocumentCreated('users/{userId}', async (event) => {
   const newUserId = event.params.userId;
     
     // 1. Generate a unique referral code for the NEW user if they don't have one
-    const db = admin.firestore();
+    const db = getFirestore();
     if (!newUser.myReferralCode) {
       const baseName = (newUser.fullName || 'user').split(' ')[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
       const randomDigits = Math.floor(100 + Math.random() * 900);
@@ -76,14 +77,14 @@ exports.onUserCreated = onDocumentCreated('users/{userId}', async (event) => {
         status: 'REGISTERED',
         orderId: null,
         orderAmount: null,
-        registeredAt: admin.firestore.FieldValue.serverTimestamp(),
+        registeredAt: FieldValue.serverTimestamp(),
         orderQualifiedAt: null,
         rewardProcessingAt: null,
         rewardedAt: null,
         scratchCardId: null,
         couponId: null,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp()
       };
 
       await db.collection('referrals').doc(referralId).set(referralData);
@@ -112,7 +113,7 @@ exports.onUserCreated = onDocumentCreated('users/{userId}', async (event) => {
         isActive: true,
         validUntil: validUntil.toISOString().split('T')[0],
         sourceReferralId: referralId,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
+        createdAt: FieldValue.serverTimestamp()
       };
 
       await db.collection('coupons').doc(userBCouponId).set(couponData);

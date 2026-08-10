@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 
 /**
  * Ensures a given block of code runs exactly once per event.
@@ -6,7 +7,7 @@ const admin = require('firebase-admin');
  * @param {Function} task - The async task to run.
  */
 async function runIdempotentTask(eventId, task) {
-  const db = admin.firestore();
+  const db = getFirestore();
   const idempotencyRef = db.collection('idempotency').doc(eventId);
 
   return db.runTransaction(async (t) => {
@@ -22,7 +23,7 @@ async function runIdempotentTask(eventId, task) {
 
     // Save success state
     t.set(idempotencyRef, {
-      processedAt: admin.firestore.FieldValue.serverTimestamp(),
+      processedAt: FieldValue.serverTimestamp(),
       result: result || null
     });
 

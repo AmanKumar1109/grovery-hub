@@ -1,10 +1,11 @@
 const admin = require('firebase-admin');
+const { getFirestore } = require('firebase-admin/firestore');
 
 /**
  * Logs important events to the auditLogs collection
  */
 async function addAuditLog(action, details, category, severity, extraData = {}) {
-  const db = admin.firestore();
+  const db = getFirestore();
   const logId = `LOG-${Date.now().toString().slice(-4)}-${Math.floor(Math.random() * 1000)}`;
   
   const newLog = {
