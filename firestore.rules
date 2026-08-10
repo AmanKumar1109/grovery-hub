@@ -16,6 +16,14 @@ service cloud.firestore {
       );
     }
 
+    // Orders Collection: allow read, create, and update (for cancellation)
+    match /orders/{orderId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if true;
+      allow delete: if isAdmin();
+    }
+
     // Default: allow read/write for now to not break existing app, 
     // EXCEPT for the new secure collections.
     // In a real production app, all other collections should be locked down.
