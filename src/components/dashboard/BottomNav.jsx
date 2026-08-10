@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ShoppingBag, Heart, User, MoreHorizontal, MapPin, LogOut, X, Store, HelpCircle, MessageSquareWarning } from 'lucide-react';
+import { LayoutDashboard, ShoppingBag, Heart, User, MoreHorizontal, MapPin, LogOut, X, Store, HelpCircle, MessageSquareWarning, Gift } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import gsap from 'gsap';
 
@@ -12,6 +12,7 @@ const mainNavItems = [
 ];
 
 const moreItems = [
+  { path: '/dashboard/refer-earn', label: 'Refer & Earn', icon: Gift },
   { path: '/dashboard/complaints', label: 'My Complaints', icon: MessageSquareWarning },
   { path: '/dashboard/help', label: 'Help & Support', icon: HelpCircle },
   { path: '/dashboard/wishlist', label: 'Wishlist', icon: Heart },
