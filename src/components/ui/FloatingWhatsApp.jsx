@@ -10,7 +10,7 @@ export default function FloatingWhatsApp() {
       href={`https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 sm:bottom-8 sm:right-8 z-[9999] bg-[#25D366] text-white p-2.5 sm:p-3 rounded-full shadow-[0_10px_25px_rgba(37,211,102,0.5)] hover:shadow-[0_15px_35px_rgba(37,211,102,0.6)] hover:-translate-y-1 transition-all duration-300 animate-[bounce_4s_infinite] group flex items-center justify-center cursor-pointer"
+      className="fixed bottom-24 right-4 sm:bottom-8 sm:right-8 z-[9999] bg-[#25D366] text-white p-2.5 sm:p-3 rounded-full shadow-[0_10px_25px_rgba(37,211,102,0.5)] hover:shadow-[0_15px_35px_rgba(37,211,102,0.6)] hover:-translate-y-1 transition-all duration-300 animate-[bounce_4s_infinite] group flex items-center justify-center cursor-pointer"
       aria-label="Chat with us on WhatsApp"
     >
       <svg
