@@ -25,8 +25,6 @@ export default function ReferEarn() {
       const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       data.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
       setReferrals(data);
-    });
-
       setLoading(false);
     });
 
