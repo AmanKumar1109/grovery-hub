@@ -93,7 +93,7 @@ function App() {
               <Route path="/terms-of-service" element={<DynamicPage documentId="termsOfService" title="Terms and Conditions" />} />
               <Route path="/refund-policy" element={<DynamicPage documentId="refundPolicy" title="Refund & Returns Policy" />} />
               <Route path="/about-us" element={<DynamicPage documentId="aboutUs" title="About Us" />} />
-              
+
               {/* Dashboard Nested Routes */}
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<DashboardHome />} />
