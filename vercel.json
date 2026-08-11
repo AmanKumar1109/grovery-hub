@@ -1,8 +1,16 @@
 {
-    "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": "/index.html"
-        }
-    ]
+  "rewrites": [
+    {
+      "source": "/sabpaisa-api-stag/(.*)",
+      "destination": "https://staging-sb-merchant-api.sabpaisa.in/$1"
+    },
+    {
+      "source": "/sabpaisa-api-prod/(.*)",
+      "destination": "https://merchant-api.sabpaisa.in/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
 }

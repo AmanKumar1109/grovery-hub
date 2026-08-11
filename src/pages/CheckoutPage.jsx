@@ -9,6 +9,7 @@ import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs, updateDoc, i
 import { checkAddressServiceability } from '../utils/locationUtils';
 import { loadGoogleMaps } from '../utils/googleMapsLoader';
 import LocationPickerModal from '../components/LocationPickerModal';
+import { initiateSubPaisaPayment } from '../utils/sabpaisa';
 
 export default function CheckoutPage() {
   const { currentUser, userProfile, addAddress } = useAuth();
@@ -27,6 +28,7 @@ export default function CheckoutPage() {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isOrderConfirmed, setIsOrderConfirmed] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('COD'); // 'COD' | 'ONLINE'
 
   const [addressForm, setAddressForm] = useState({
     name: '',
@@ -271,10 +273,10 @@ export default function CheckoutPage() {
         deliveryFee: deliveryFee || 0,
         discountAmount: discountAmount || 0,
         couponApplied: appliedCoupon ? appliedCoupon.code : null,
-        status: 'Order Received',
+        status: paymentMethod === 'ONLINE' ? 'Pending Payment' : 'Order Received',
         isCurrent: true,
-        paymentMethod: 'Cash on Delivery',
-        paymentStatus: 'Pending (COD)',
+        paymentMethod: paymentMethod === 'ONLINE' ? 'Online Payment (SubPaisa)' : 'Cash on Delivery',
+        paymentStatus: paymentMethod === 'ONLINE' ? 'Pending (Online)' : 'Pending (COD)',
         orderTime: formattedTime,
         createdAt: timestamp,
         updatedAt: timestamp,
@@ -292,6 +294,22 @@ export default function CheckoutPage() {
       const sanitizedOrderData = JSON.parse(JSON.stringify(orderData, (k, v) => v === undefined ? null : v));
 
       await setDoc(doc(db, 'orders', orderId), sanitizedOrderData);
+
+      if (paymentMethod === 'ONLINE') {
+        localStorage.setItem('pendingSubPaisaOrder', JSON.stringify({
+          ...sanitizedOrderData,
+          appliedCouponId: appliedCoupon?.id || null
+        }));
+
+        await initiateSubPaisaPayment({
+          orderId: orderId,
+          amount: finalTotal,
+          payerName: custName,
+          payerEmail: currentUser ? currentUser.email : '',
+          payerMobile: phone
+        });
+        return;
+      }
 
       // Trigger Order Received Email
       const targetEmail = currentUser ? currentUser.email : '';
@@ -408,8 +426,9 @@ export default function CheckoutPage() {
       setIsOrderConfirmed(true);
     } catch (error) {
       console.error("Error creating order: ", error);
-      showToast('Failed to place order. Please try again.');
+      showToast(error.message || 'Failed to place order. Please try again.');
       setIsProcessing(false);
+
     }
   };
 
@@ -599,19 +618,48 @@ export default function CheckoutPage() {
                 <h2 className="text-xl font-black text-slate-900">Payment Method</h2>
               </div>
 
-              <div className="p-5 border-2 border-amber-400 bg-amber-50/30 rounded-2xl relative cursor-pointer">
-                <div className="absolute top-5 right-5 text-amber-500">
-                  <CheckCircle2 className="w-6 h-6" />
+              <div className="grid grid-cols-1 gap-4">
+                {/* Cash on Delivery */}
+                <div
+                  onClick={() => setPaymentMethod('COD')}
+                  className={`p-5 border-2 rounded-2xl relative cursor-pointer transition-all ${
+                    paymentMethod === 'COD'
+                      ? 'border-amber-400 bg-amber-50/30'
+                      : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
+                  }`}
+                >
+                  {paymentMethod === 'COD' && (
+                    <div className="absolute top-5 right-5 text-amber-500">
+                      <CheckCircle2 className="w-6 h-6" />
+                    </div>
+                  )}
+                  <h3 className="font-extrabold text-slate-900 mb-1">Cash on Delivery (COD)</h3>
+                  <p className="text-sm font-bold text-slate-600">Pay with cash or UPI when your order arrives.</p>
                 </div>
-                <h3 className="font-extrabold text-slate-900 mb-1">Cash on Delivery (COD)</h3>
-                <p className="text-sm font-bold text-slate-600">Pay with cash or UPI when your order arrives.</p>
-              </div>
 
-              <div className="mt-4 p-4 border border-slate-200 bg-slate-50 rounded-xl opacity-60">
-                <h3 className="font-extrabold text-slate-900 mb-1">Online Payment</h3>
-                <p className="text-sm font-bold text-slate-500">Currently unavailable for this region.</p>
+                {/* Online Payment via SubPaisa */}
+                <div
+                  onClick={() => setPaymentMethod('ONLINE')}
+                  className={`p-5 border-2 rounded-2xl relative cursor-pointer transition-all ${
+                    paymentMethod === 'ONLINE'
+                      ? 'border-emerald-500 bg-emerald-50/30'
+                      : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
+                  }`}
+                >
+                  {paymentMethod === 'ONLINE' && (
+                    <div className="absolute top-5 right-5 text-emerald-500">
+                      <CheckCircle2 className="w-6 h-6" />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-extrabold text-slate-900">Online Payment</h3>
+                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 font-black text-[10px] rounded-md">SubPaisa</span>
+                  </div>
+                  <p className="text-sm font-bold text-slate-600">Pay instantly via UPI, Credit/Debit Cards, or NetBanking.</p>
+                </div>
               </div>
             </div>
+
 
           </div>
 
@@ -739,8 +787,11 @@ export default function CheckoutPage() {
                     ? 'Processing...'
                     : !serviceability.isServiceable
                       ? '🚫 Delivery Unavailable (Out of 5 KM Zone)'
-                      : 'Place Order'}
+                      : paymentMethod === 'ONLINE'
+                        ? 'Proceed to Online Payment'
+                        : 'Place Order'}
                 </span>
+
                 {!isProcessing && serviceability.isServiceable && <ArrowRight className="w-5 h-5" />}
               </button>
 
