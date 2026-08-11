@@ -1,6 +1,7 @@
 /**
  * SabPaisa PG 3.0 API Integration Utility
  * Implements official SabPaisa PG 3.0 REST API specification (devdocs.sabpaisa.in)
+ * Supports localhost, thegroceryhub.in, and www.thegroceryhub.in
  */
 
 /**
@@ -52,25 +53,16 @@ export const initiateSubPaisaPayment = async ({
     throw new Error("SabPaisa PG 3.0 credentials missing in environment variables (VITE_SABPAISA_CLIENT_CODE, VITE_SABPAISA_API_KEY, VITE_SABPAISA_SECRET_KEY).");
   }
 
-  // Base URL & CORS Proxy selection
   const isStaging = env === 'stag';
-  const isLocalhost = typeof window !== 'undefined' && 
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   let endpointUrl;
-
   if (customUrl) {
     endpointUrl = customUrl.includes('/api/v2/payments')
       ? customUrl
       : `${customUrl.replace(/\/+$/, '')}/api/v2/payments`;
-  } else if (isLocalhost) {
-    // Use local proxy to completely bypass browser CORS on localhost
-    endpointUrl = isStaging ? '/sabpaisa-api-stag/api/v2/payments' : '/sabpaisa-api-prod/api/v2/payments';
   } else {
-    // Direct endpoint URL
-    endpointUrl = isStaging 
-      ? 'https://staging-sb-merchant-api.sabpaisa.in/api/v2/payments' 
-      : 'https://merchant-api.sabpaisa.in/api/v2/payments';
+    // Relative proxy path - supported on localhost (Vite), Vercel (vercel.json), thegroceryhub.in, and www.thegroceryhub.in
+    endpointUrl = isStaging ? '/sabpaisa-api-stag/api/v2/payments' : '/sabpaisa-api-prod/api/v2/payments';
   }
 
   // SabPaisa 3.0 PG Parameters
@@ -78,6 +70,7 @@ export const initiateSubPaisaPayment = async ({
   const paiseAmount = Math.round(parseFloat(amount) * 100); // Amount in paise (Long)
   const currency = 'INR';
   const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
+  // Dynamically uses current domain (http://localhost:5173, https://thegroceryhub.in, or https://www.thegroceryhub.in)
   const returnUrl = callbackUrl || `${window.location.origin}/payment-callback`;
 
   const sanitizedMobile = (payerMobile || '').replace(/\D/g, '').slice(-10) || '9999999999';
@@ -112,6 +105,7 @@ export const initiateSubPaisaPayment = async ({
       body: JSON.stringify(requestPayload)
     });
   } catch (err) {
+    // Fallback to direct absolute URL if relative proxy fetch is unavailable
     if (endpointUrl.startsWith('/')) {
       const fallbackUrl = isStaging 
         ? 'https://staging-sb-merchant-api.sabpaisa.in/api/v2/payments' 
@@ -135,14 +129,13 @@ export const initiateSubPaisaPayment = async ({
     responseData = JSON.parse(responseText);
   } catch (parseErr) {
     console.error("SabPaisa API returned non-JSON response:", responseText);
-    throw new Error(`SabPaisa response error. Please restart your dev server (npm run dev) to load proxy settings.`);
+    throw new Error(`SabPaisa response error. Please check domain connection settings.`);
   }
 
   if (response.ok && responseData && (responseData.checkoutUrl || (responseData.data && responseData.data.checkoutUrl))) {
     let targetCheckoutUrl = responseData.checkoutUrl || responseData.data.checkoutUrl;
     const clientSecret = responseData.clientSecret || (responseData.data && responseData.data.clientSecret);
 
-    // Append clientSecret parameter to checkoutUrl if returned by SabPaisa
     if (clientSecret && !targetCheckoutUrl.includes('clientSecret')) {
       const separator = targetCheckoutUrl.includes('?') ? '&' : '?';
       targetCheckoutUrl = `${targetCheckoutUrl}${separator}clientSecret=${encodeURIComponent(clientSecret)}`;
