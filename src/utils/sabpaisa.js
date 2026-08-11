@@ -1,7 +1,7 @@
 /**
  * SabPaisa PG 3.0 API Integration Utility
  * Implements official SabPaisa PG 3.0 REST API specification (devdocs.sabpaisa.in)
- * Supports localhost, production domains, and direct API connection
+ * Supports localhost, Vercel Serverless Functions (/api/sabpaisa), and direct API connection
  */
 
 /**
@@ -26,7 +26,10 @@ const generateHmacSha256Hex = async (secretKey, message) => {
 };
 
 /**
- * Initiates SabPaisa PG 3.0 Payment Session via REST API POST /api/v2/payments
+ * Initiates SabPaisa PG 3.0 Payment Session
+ * First calls Vercel Serverless Function (/api/sabpaisa) to bypass browser CORS on all live domains.
+ * Falls back to client-side proxy / direct fetch if Serverless API is unavailable.
+ * 
  * @param {Object} paymentInfo 
  * @param {string} paymentInfo.orderId - Unique order/transaction ID
  * @param {number|string} paymentInfo.amount - Total amount payable in Rupees
@@ -43,6 +46,44 @@ export const initiateSubPaisaPayment = async ({
   payerMobile,
   callbackUrl
 }) => {
+  const returnUrl = callbackUrl || `${window.location.origin}/payment-callback`;
+
+  // 1. Primary Strategy: Serverless Function (/api/sabpaisa) - Eliminates CORS across all domains
+  try {
+    const serverlessRes = await fetch('/api/sabpaisa', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        orderId,
+        amount,
+        payerName,
+        payerEmail,
+        payerMobile,
+        callbackUrl: returnUrl
+      })
+    });
+
+    const text = await serverlessRes.text();
+    if (serverlessRes.ok && text && text.trim().startsWith('{')) {
+      const serverlessData = JSON.parse(text);
+      if (serverlessData.success && serverlessData.checkoutUrl) {
+        window.location.href = serverlessData.checkoutUrl;
+        return;
+      }
+      if (serverlessData.error) {
+        throw new Error(serverlessData.error);
+      }
+    }
+  } catch (serverlessErr) {
+    if (serverlessErr.message && !serverlessErr.message.includes('fetch') && !serverlessErr.message.includes('non-JSON')) {
+      throw serverlessErr;
+    }
+    console.warn("Serverless API /api/sabpaisa unavailable or non-200, attempting client-side proxy...", serverlessErr);
+  }
+
+  // 2. Fallback Strategy: Client-side HMAC & proxy/direct fetch
   const merchantId = (import.meta.env.VITE_SABPAISA_CLIENT_CODE || '').trim();
   const apiKey = (import.meta.env.VITE_SABPAISA_API_KEY || import.meta.env.VITE_SABPAISA_AUTH_KEY || '').trim();
   const secretKey = (import.meta.env.VITE_SABPAISA_SECRET_KEY || import.meta.env.VITE_SABPAISA_AUTH_IV || '').trim();
@@ -50,16 +91,14 @@ export const initiateSubPaisaPayment = async ({
   const customUrl = (import.meta.env.VITE_SABPAISA_URL || '').trim();
 
   if (!merchantId || !apiKey || !secretKey) {
-    throw new Error("SabPaisa PG 3.0 credentials missing in environment variables (VITE_SABPAISA_CLIENT_CODE, VITE_SABPAISA_API_KEY, VITE_SABPAISA_SECRET_KEY).");
+    throw new Error("SabPaisa PG 3.0 credentials missing in environment variables.");
   }
 
   const isStaging = env === 'stag';
-
   const directUrl = isStaging 
     ? 'https://staging-sb-merchant-api.sabpaisa.in/api/v2/payments' 
     : 'https://merchant-api.sabpaisa.in/api/v2/payments';
 
-  // Endpoint URL selection: proxy on localhost, custom URL if provided, or direct API URL
   let primaryUrl = directUrl;
   if (customUrl) {
     primaryUrl = customUrl.includes('/api/v2/payments')
@@ -69,18 +108,15 @@ export const initiateSubPaisaPayment = async ({
     primaryUrl = isStaging ? '/sabpaisa-api-stag/api/v2/payments' : '/sabpaisa-api-prod/api/v2/payments';
   }
 
-  // SabPaisa 3.0 PG Parameters
   const merchantTxnId = orderId;
-  const paiseAmount = Math.round(parseFloat(amount) * 100); // Amount in paise (Long)
+  const paiseAmount = Math.round(parseFloat(amount) * 100);
   const currency = 'INR';
-  const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
-  const returnUrl = callbackUrl || `${window.location.origin}/payment-callback`;
+  const timestamp = Math.floor(Date.now() / 1000);
 
   const sanitizedMobile = (payerMobile || '').replace(/\D/g, '').slice(-10) || '9999999999';
   const sanitizedEmail = payerEmail || 'customer@groceryhub.com';
   const sanitizedName = (payerName || 'Customer').slice(0, 100);
 
-  // HMAC-SHA256 Checksum = merchantId|merchantTxnId|amount|currency|timestamp
   const checksumMessage = `${merchantId}|${merchantTxnId}|${paiseAmount}|${currency}|${timestamp}`;
   const checksum = await generateHmacSha256Hex(secretKey, checksumMessage);
 
@@ -114,7 +150,6 @@ export const initiateSubPaisaPayment = async ({
     console.warn("Primary API endpoint fetch failed, trying direct endpoint:", e);
   }
 
-  // Fallback to direct URL if primary proxy fetch failed or returned non-JSON HTML
   if (!responseText || !responseText.trim().startsWith('{')) {
     if (primaryUrl !== directUrl) {
       try {
@@ -138,7 +173,7 @@ export const initiateSubPaisaPayment = async ({
     responseData = JSON.parse(responseText);
   } catch (parseErr) {
     console.error("SabPaisa raw API response:", responseText);
-    throw new Error(`SabPaisa API Response Error (Status ${response?.status || 'Unknown'}). Response: ${responseText.slice(0, 120)}`);
+    throw new Error(`SabPaisa API Response Error (Status ${response?.status || 'Unknown'}).`);
   }
 
   if (response && response.ok && responseData && (responseData.checkoutUrl || (responseData.data && responseData.data.checkoutUrl))) {
@@ -152,7 +187,7 @@ export const initiateSubPaisaPayment = async ({
 
     window.location.href = targetCheckoutUrl;
   } else {
-    const errorMsg = responseData?.errorMessage || responseData?.message || responseData?.error || `Payment session creation failed (Status ${response?.status || 'Error'}).`;
+    const errorMsg = responseData?.errorMessage || responseData?.message || responseData?.error || `Payment session creation failed.`;
     throw new Error(errorMsg);
   }
 };
