@@ -1,7 +1,7 @@
 /**
  * SabPaisa PG 3.0 API Integration Utility
  * Implements official SabPaisa PG 3.0 REST API specification (devdocs.sabpaisa.in)
- * Supports localhost, thegroceryhub.in, and www.thegroceryhub.in
+ * Supports localhost, production domains, and direct API connection
  */
 
 /**
@@ -55,14 +55,18 @@ export const initiateSubPaisaPayment = async ({
 
   const isStaging = env === 'stag';
 
-  let endpointUrl;
+  const directUrl = isStaging 
+    ? 'https://staging-sb-merchant-api.sabpaisa.in/api/v2/payments' 
+    : 'https://merchant-api.sabpaisa.in/api/v2/payments';
+
+  // Endpoint URL selection: proxy on localhost, custom URL if provided, or direct API URL
+  let primaryUrl = directUrl;
   if (customUrl) {
-    endpointUrl = customUrl.includes('/api/v2/payments')
+    primaryUrl = customUrl.includes('/api/v2/payments')
       ? customUrl
       : `${customUrl.replace(/\/+$/, '')}/api/v2/payments`;
-  } else {
-    // Relative proxy path - supported on localhost (Vite), Vercel (vercel.json), thegroceryhub.in, and www.thegroceryhub.in
-    endpointUrl = isStaging ? '/sabpaisa-api-stag/api/v2/payments' : '/sabpaisa-api-prod/api/v2/payments';
+  } else if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    primaryUrl = isStaging ? '/sabpaisa-api-stag/api/v2/payments' : '/sabpaisa-api-prod/api/v2/payments';
   }
 
   // SabPaisa 3.0 PG Parameters
@@ -70,7 +74,6 @@ export const initiateSubPaisaPayment = async ({
   const paiseAmount = Math.round(parseFloat(amount) * 100); // Amount in paise (Long)
   const currency = 'INR';
   const timestamp = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
-  // Dynamically uses current domain (http://localhost:5173, https://thegroceryhub.in, or https://www.thegroceryhub.in)
   const returnUrl = callbackUrl || `${window.location.origin}/payment-callback`;
 
   const sanitizedMobile = (payerMobile || '').replace(/\D/g, '').slice(-10) || '9999999999';
@@ -95,8 +98,10 @@ export const initiateSubPaisaPayment = async ({
   };
 
   let response;
+  let responseText = '';
+
   try {
-    response = await fetch(endpointUrl, {
+    response = await fetch(primaryUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -104,35 +109,39 @@ export const initiateSubPaisaPayment = async ({
       },
       body: JSON.stringify(requestPayload)
     });
-  } catch (err) {
-    // Fallback to direct absolute URL if relative proxy fetch is unavailable
-    if (endpointUrl.startsWith('/')) {
-      const fallbackUrl = isStaging 
-        ? 'https://staging-sb-merchant-api.sabpaisa.in/api/v2/payments' 
-        : 'https://merchant-api.sabpaisa.in/api/v2/payments';
-      response = await fetch(fallbackUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Api-Key': apiKey
-        },
-        body: JSON.stringify(requestPayload)
-      });
-    } else {
-      throw err;
+    responseText = await response.text();
+  } catch (e) {
+    console.warn("Primary API endpoint fetch failed, trying direct endpoint:", e);
+  }
+
+  // Fallback to direct URL if primary proxy fetch failed or returned non-JSON HTML
+  if (!responseText || !responseText.trim().startsWith('{')) {
+    if (primaryUrl !== directUrl) {
+      try {
+        response = await fetch(directUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Api-Key': apiKey
+          },
+          body: JSON.stringify(requestPayload)
+        });
+        responseText = await response.text();
+      } catch (err) {
+        console.error("Direct SabPaisa API fetch error:", err);
+      }
     }
   }
 
-  const responseText = await response.text();
   let responseData;
   try {
     responseData = JSON.parse(responseText);
   } catch (parseErr) {
-    console.error("SabPaisa API returned non-JSON response:", responseText);
-    throw new Error(`SabPaisa response error. Please check domain connection settings.`);
+    console.error("SabPaisa raw API response:", responseText);
+    throw new Error(`SabPaisa API Response Error (Status ${response?.status || 'Unknown'}). Response: ${responseText.slice(0, 120)}`);
   }
 
-  if (response.ok && responseData && (responseData.checkoutUrl || (responseData.data && responseData.data.checkoutUrl))) {
+  if (response && response.ok && responseData && (responseData.checkoutUrl || (responseData.data && responseData.data.checkoutUrl))) {
     let targetCheckoutUrl = responseData.checkoutUrl || responseData.data.checkoutUrl;
     const clientSecret = responseData.clientSecret || (responseData.data && responseData.data.clientSecret);
 
@@ -143,7 +152,7 @@ export const initiateSubPaisaPayment = async ({
 
     window.location.href = targetCheckoutUrl;
   } else {
-    const errorMsg = responseData?.errorMessage || responseData?.message || responseData?.error || 'Failed to create payment session with SabPaisa.';
+    const errorMsg = responseData?.errorMessage || responseData?.message || responseData?.error || `Payment session creation failed (Status ${response?.status || 'Error'}).`;
     throw new Error(errorMsg);
   }
 };
