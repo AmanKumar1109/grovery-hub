@@ -9,7 +9,7 @@
       "destination": "https://merchant-api.sabpaisa.in/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]
