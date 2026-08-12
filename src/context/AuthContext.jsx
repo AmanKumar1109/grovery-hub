@@ -241,13 +241,36 @@ export function AuthProvider({ children }) {
     return res.user;
   };
 
-  // Firebase Logout
+  // Firebase Logout with instant 0ms localStorage wipe & home page redirect
   const logout = async () => {
-    removeCachedProfile(currentUser?.uid);
-    await signOut(auth);
+    try {
+      localStorage.removeItem(LAST_AUTH_UID_KEY);
+      if (currentUser?.uid) {
+        localStorage.removeItem(getUserProfileStorageKey(currentUser.uid));
+      }
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('grocery_user_profile_') || key.startsWith('addressSkipped_')) {
+          localStorage.removeItem(key);
+        }
+      });
+    } catch (e) {
+      console.warn('Failed to wipe localStorage on logout:', e);
+    }
+
     setCurrentUser(null);
     setUserProfile(null);
+
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
+
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.warn('Firebase signOut error:', e);
+    }
   };
+
 
   // Firebase Google Login
   const loginWithGoogle = async () => {
