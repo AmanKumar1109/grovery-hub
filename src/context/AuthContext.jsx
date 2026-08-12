@@ -13,8 +13,22 @@ import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
 
 const AuthContext = createContext(null);
 
-// LocalStorage User Profile Persistence Helpers (Instant 0ms Load Time)
+// Synchronous LocalStorage Persistence for Instant 0ms App Loading
 const getUserProfileStorageKey = (uid) => `grocery_user_profile_${uid}`;
+const LAST_AUTH_UID_KEY = 'grocery_last_auth_uid';
+
+const getInitialAuthCache = () => {
+  try {
+    const lastUid = localStorage.getItem(LAST_AUTH_UID_KEY);
+    if (lastUid) {
+      const raw = localStorage.getItem(getUserProfileStorageKey(lastUid));
+      if (raw) return JSON.parse(raw);
+    }
+  } catch (e) {
+    console.warn('Initial auth cache parse error:', e);
+  }
+  return null;
+};
 
 const getCachedProfile = (uid) => {
   if (!uid) return null;
@@ -30,6 +44,7 @@ const getCachedProfile = (uid) => {
 const setCachedProfile = (uid, profile) => {
   if (!uid || !profile) return;
   try {
+    localStorage.setItem(LAST_AUTH_UID_KEY, uid);
     localStorage.setItem(getUserProfileStorageKey(uid), JSON.stringify(profile));
   } catch (e) {
     console.warn('Failed to save user profile to localStorage:', e);
@@ -37,18 +52,22 @@ const setCachedProfile = (uid, profile) => {
 };
 
 const removeCachedProfile = (uid) => {
-  if (!uid) return;
   try {
-    localStorage.removeItem(getUserProfileStorageKey(uid));
+    localStorage.removeItem(LAST_AUTH_UID_KEY);
+    if (uid) {
+      localStorage.removeItem(getUserProfileStorageKey(uid));
+    }
   } catch (e) {
     console.warn('Failed to remove user profile from localStorage:', e);
   }
 };
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const initialCachedProfile = getInitialAuthCache();
+  const [currentUser, setCurrentUser] = useState(auth.currentUser || null);
+  const [userProfile, setUserProfile] = useState(initialCachedProfile);
+  // Set loading to false immediately if we have cached profile or Firebase user synchronously
+  const [loading, setLoading] = useState(!initialCachedProfile && !auth.currentUser);
 
   const updateLocalAndStateProfile = (uid, newProfile) => {
     setUserProfile(newProfile);
@@ -92,12 +111,12 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Listen to Firebase auth state changes with instant localStorage cache fallback
+  // Listen to Firebase auth state changes with instant 0ms localStorage cache
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
-        // 1. Instantly load cached user profile from localStorage (0ms load time!)
+        // 1. Load cached user profile instantly (0ms delay)
         const cached = getCachedProfile(user.uid);
         if (cached) {
           setUserProfile(cached);
@@ -176,6 +195,7 @@ export function AuthProvider({ children }) {
           }
         }
       } else {
+        removeCachedProfile(null);
         setUserProfile(null);
       }
       setLoading(false);
@@ -223,9 +243,7 @@ export function AuthProvider({ children }) {
 
   // Firebase Logout
   const logout = async () => {
-    if (currentUser?.uid) {
-      removeCachedProfile(currentUser.uid);
-    }
+    removeCachedProfile(currentUser?.uid);
     await signOut(auth);
     setCurrentUser(null);
     setUserProfile(null);
@@ -378,7 +396,6 @@ export function AuthProvider({ children }) {
       return true;
     } catch (e) {
       console.error('Failed to update wishlist in Firestore:', e);
-      // Revert on error
       updateLocalAndStateProfile(currentUser.uid, userProfile);
       return false;
     }
