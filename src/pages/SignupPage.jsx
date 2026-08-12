@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, User, UserPlus, AlertCircle, ArrowRight, Eye, EyeOff, MapPin, Phone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/header/Header';
@@ -16,13 +16,18 @@ export default function SignupPage() {
 
   const { signup, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const searchParams = new URLSearchParams(location.search);
+  const redirectUrl = searchParams.get('redirect') || '/dashboard/profile';
+  const googleRedirectUrl = searchParams.get('redirect') || '/dashboard';
 
   const handleGoogleSignup = async () => {
     try {
       setLoading(true);
       setError('');
       await loginWithGoogle();
-      navigate('/dashboard');
+      navigate(googleRedirectUrl);
     } catch (err) {
       console.error(err);
       setError('Failed to sign up with Google: ' + (err.message || 'Check your internet connection'));
@@ -48,7 +53,7 @@ export default function SignupPage() {
     try {
       setLoading(true);
       await signup(email.trim(), password, fullName.trim(), phone.trim());
-      navigate('/dashboard/profile');
+      navigate(redirectUrl);
     } catch (err) {
       console.error(err);
       if (err.code === 'auth/email-already-in-use') {
@@ -192,7 +197,7 @@ export default function SignupPage() {
           <div className="text-center pt-4 border-t border-slate-100">
             <p className="text-xs font-semibold text-slate-500">
               Already have an account?{' '}
-              <Link to="/login" className="font-extrabold text-amber-600 hover:text-amber-700 underline">
+              <Link to={`/login${location.search}`} className="font-extrabold text-amber-600 hover:text-amber-700 underline">
                 Sign In
               </Link>
             </p>

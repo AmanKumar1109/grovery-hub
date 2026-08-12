@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, LogIn, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/header/Header';
@@ -14,13 +14,17 @@ export default function LoginPage() {
 
   const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const searchParams = new URLSearchParams(location.search);
+  const redirectUrl = searchParams.get('redirect') || '/dashboard';
 
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
       setError('');
       await loginWithGoogle();
-      navigate('/dashboard');
+      navigate(redirectUrl);
     } catch (err) {
       console.error(err);
       setError('Failed to log in with Google: ' + (err.message || 'Check your internet connection'));
@@ -41,7 +45,7 @@ export default function LoginPage() {
     try {
       setLoading(true);
       await login(email.trim(), password);
-      navigate('/dashboard');
+      navigate(redirectUrl);
     } catch (err) {
       console.error(err);
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
@@ -150,7 +154,7 @@ export default function LoginPage() {
           <div className="text-center pt-4 border-t border-slate-100">
             <p className="text-xs font-semibold text-slate-500">
               Don't have an account yet?{' '}
-              <Link to="/signup" className="font-extrabold text-amber-600 hover:text-amber-700 underline">
+              <Link to={`/signup${location.search}`} className="font-extrabold text-amber-600 hover:text-amber-700 underline">
                 Create Account
               </Link>
             </p>

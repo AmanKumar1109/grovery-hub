@@ -12,6 +12,7 @@ import { useCart } from '../context/CartContext';
 import { Check } from 'lucide-react';
 import SEO from '../components/seo/SEO';
 import FestiveBanner from '../components/ui/FestiveBanner';
+import ReferralBanner from '../components/shop/ReferralBanner';
 
 export default function HomePage() {
   const { toastMessage } = useCart();
@@ -56,6 +57,9 @@ export default function HomePage() {
 
         {/* Hero Section */}
         <HeroSection />
+
+        {/* Refer & Earn Promotional Banner */}
+        <ReferralBanner />
 
         {/* Shop Items Section (Below Hero Section) */}
         <ShopSection />
