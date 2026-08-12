@@ -108,11 +108,23 @@ export default function HeroContent() {
             ref={titleRef}
             className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight mb-5 min-h-[140px] sm:min-h-[160px] lg:min-h-[190px] relative z-10"
           >
-            <span className="text-[#f25c05]">{prefixText}</span> <br />
-            <span className="text-[#0c7a2b] inline-block transition-colors duration-500">
-              {words[currentWord % words.length] || ''}
+            <span className="text-[#f25c05]">Happy 80th</span> <br />
+            <span className="text-[#0c7a2b] inline-flex items-center gap-3 transition-colors duration-500">
+              Independence Day 
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg" 
+                alt="Indian Flag" 
+                className="w-12 sm:w-16 h-auto drop-shadow-lg rounded-sm"
+                style={{ animation: 'flagWave 1.5s ease-in-out infinite', transformOrigin: 'bottom left' }} 
+              />
+              <style>{`
+                @keyframes flagWave {
+                  0%, 100% { transform: rotate(-4deg) translateY(0); }
+                  50% { transform: rotate(8deg) translateY(-4px); }
+                }
+              `}</style>
             </span> <br />
-            <span className="text-[#112918]">{suffixText}</span>
+            <span className="text-[#112918] text-3xl sm:text-4xl font-extrabold mt-2 inline-block">Celebrating 79 Years of Freedom!</span>
           </h1>
         ) : (
           <h1
@@ -155,7 +167,9 @@ export default function HeroContent() {
         ref={descRef}
         className="text-xs sm:text-sm text-gray-600 font-medium leading-relaxed max-w-md mb-8"
       >
-        {subtitleText}
+        {isIndependence 
+          ? "The Grocery Hub celebrates freedom with you! Shop your favorite groceries, snacks, and daily essentials with our special Independence Day offers."
+          : subtitleText}
       </p>
 
       {/* CTA and Buttons */}

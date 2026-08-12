@@ -5,10 +5,21 @@ import { useSettings } from '../../context/SettingsContext';
 function IndependenceDayBanner() {
   return (
     <div
-      className="w-full relative overflow-hidden bg-[#080f1e] text-white py-1.5 px-4 flex items-center justify-center gap-2 text-xs sm:text-sm font-semibold border-b border-slate-800"
+      className="w-full relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(90deg, #ff9933 0%, #ffffff 50%, #138808 100%)',
+        borderBottom: '1px solid #e2e8f0'
+      }}
     >
-      <div className="flex items-center justify-center gap-2">
-        <span className="tracking-wide text-slate-100 font-medium">Independence Day Special Offers Available</span>
+      <div className="relative py-1.5 px-4 flex items-center justify-center gap-2">
+        <span className="text-xl leading-none animate-pulse">🇮🇳</span>
+        <span
+          className="text-xs sm:text-sm font-bold tracking-wide"
+          style={{ color: '#0f172a', textShadow: '0 0 10px rgba(255,255,255,0.8)' }}
+        >
+          Happy 80th Independence Day! Get Special Freedom Offers Inside.
+        </span>
+        <span className="text-xl leading-none animate-pulse">🇮🇳</span>
       </div>
     </div>
   );
