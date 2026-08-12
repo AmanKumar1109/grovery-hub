@@ -69,13 +69,14 @@ export default function MyOrders() {
       const finalReason = userCancelReason === 'Other' ? (userCustomCancelReason.trim() || 'No reason provided') : userCancelReason;
       const orderRef = doc(db, 'orders', orderId);
       await updateDoc(orderRef, { 
-        status: 'cancelled',
-        cancelReason: `Cancelled by Customer: ${finalReason}`
+        status: 'Cancelled',
+        cancelReason: `Cancelled by Customer: ${finalReason}`,
+        updatedAt: new Date().toISOString()
       });
-      // No need to update local state since onSnapshot will handle it automatically
+      showToast("Order cancelled successfully.");
     } catch (error) {
       console.error("Error cancelling order:", error);
-      alert("Failed to cancel order. Please try again.");
+      alert("Failed to cancel order. Please check Firebase Firestore permissions or network connection.");
     } finally {
       setCancellingOrderId(null);
       setOrderToCancel(null);

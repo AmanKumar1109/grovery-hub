@@ -9,14 +9,15 @@ import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs, updateDoc, i
 import { checkAddressServiceability } from '../utils/locationUtils';
 import { loadGoogleMaps } from '../utils/googleMapsLoader';
 import LocationPickerModal from '../components/LocationPickerModal';
+import { initiateSubPaisaPayment } from '../utils/sabpaisa';
 
 export default function CheckoutPage() {
   const { currentUser, userProfile, addAddress } = useAuth();
   const { globalSettings } = useSettings();
-  const { 
-    cartItems, 
-    cartTotal, 
-    finalTotal, 
+  const {
+    cartItems,
+    cartTotal,
+    finalTotal,
     deliveryFee,
     availableCoupons, promoCodeInput, setPromoCodeInput,
     appliedCoupon, promoError, setPromoError,
@@ -27,6 +28,7 @@ export default function CheckoutPage() {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isOrderConfirmed, setIsOrderConfirmed] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('COD'); // 'COD' | 'ONLINE'
 
   const [addressForm, setAddressForm] = useState({
     name: '',
@@ -67,16 +69,16 @@ export default function CheckoutPage() {
       showToast('Geolocation is not supported by your browser');
       return;
     }
-    
+
     setIsLocating(true);
-    
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
         try {
           const maps = await loadGoogleMaps();
           const geocoder = new maps.Geocoder();
-          
+
           geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (results, status) => {
             if (status === 'OK' && results[0]) {
               const addressComponents = results[0].address_components;
@@ -85,35 +87,35 @@ export default function CheckoutPage() {
               let pincode = '';
               let streetParts = [];
               let localityParts = [];
-              
+
               addressComponents.forEach(component => {
                 const types = component.types;
                 if (types.includes('locality')) city = component.long_name;
                 else if (types.includes('administrative_area_level_1')) state = component.long_name;
                 else if (types.includes('postal_code')) pincode = component.long_name;
-                
+
                 if (types.includes('neighborhood') || types.includes('sublocality') || types.includes('sublocality_level_1') || types.includes('sublocality_level_2') || types.includes('point_of_interest') || types.includes('landmark')) {
                   if (!localityParts.includes(component.long_name)) localityParts.push(component.long_name);
                 }
-                
+
                 if (types.includes('route') || types.includes('street_number') || types.includes('premise')) {
                   streetParts.push(component.long_name);
                 }
               });
-              
+
               const street = streetParts.join(', ');
               const locality = localityParts.join(', ');
-              
+
               // Fallback to formatted address if street is entirely empty
               let finalStreet = street;
               if (!finalStreet) {
                 const parts = results[0].formatted_address.split(',');
                 finalStreet = parts[0] + (parts[1] && !parts[1].includes(city) ? ', ' + parts[1] : '');
               }
-              
+
               const finalCity = city || 'Baharagora';
               const finalPincode = pincode || '832101';
-              
+
               setAddressForm(prev => ({
                 ...prev,
                 street: finalStreet || prev.street,
@@ -271,10 +273,10 @@ export default function CheckoutPage() {
         deliveryFee: deliveryFee || 0,
         discountAmount: discountAmount || 0,
         couponApplied: appliedCoupon ? appliedCoupon.code : null,
-        status: 'Order Received',
+        status: paymentMethod === 'ONLINE' ? 'Pending Payment' : 'Order Received',
         isCurrent: true,
-        paymentMethod: 'Cash on Delivery',
-        paymentStatus: 'Pending (COD)',
+        paymentMethod: paymentMethod === 'ONLINE' ? 'Online Payment (SubPaisa)' : 'Cash on Delivery',
+        paymentStatus: paymentMethod === 'ONLINE' ? 'Pending (Online)' : 'Pending (COD)',
         orderTime: formattedTime,
         createdAt: timestamp,
         updatedAt: timestamp,
@@ -293,13 +295,29 @@ export default function CheckoutPage() {
 
       await setDoc(doc(db, 'orders', orderId), sanitizedOrderData);
 
+      if (paymentMethod === 'ONLINE') {
+        localStorage.setItem('pendingSubPaisaOrder', JSON.stringify({
+          ...sanitizedOrderData,
+          appliedCouponId: appliedCoupon?.id || null
+        }));
+
+        await initiateSubPaisaPayment({
+          orderId: orderId,
+          amount: finalTotal,
+          payerName: custName,
+          payerEmail: currentUser ? currentUser.email : '',
+          payerMobile: phone
+        });
+        return;
+      }
+
       // Trigger Order Received Email
       const targetEmail = currentUser ? currentUser.email : '';
       if (targetEmail) {
         try {
           const notifDoc = await getDoc(doc(db, 'settings', 'notifications'));
           let template = null;
-          
+
           if (notifDoc.exists()) {
             template = notifDoc.data().templates?.Pending;
           }
@@ -322,14 +340,14 @@ export default function CheckoutPage() {
                   <td style="padding: 12px 15px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; text-align: right; font-weight: 600;">₹${total}</td>
                 </tr>`;
               });
-              
+
               if (totalAmount !== undefined) {
                 html += `<tr>
                   <td style="padding: 12px 15px; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-size: 15px; font-weight: 800; text-align: right;">Total</td>
                   <td style="padding: 12px 15px; border-bottom: 1px solid #e2e8f0; color: #059669; font-size: 16px; text-align: right; font-weight: 800;">₹${parseFloat(totalAmount).toFixed(2)}</td>
                 </tr>`;
               }
-              
+
               if (address) {
                 html += `<tr>
                   <td colspan="2" style="padding: 15px; background: #f8fafc; color: #475569; font-size: 13px; line-height: 1.5;">
@@ -408,8 +426,9 @@ export default function CheckoutPage() {
       setIsOrderConfirmed(true);
     } catch (error) {
       console.error("Error creating order: ", error);
-      showToast('Failed to place order. Please try again.');
+      showToast(error.message || 'Failed to place order. Please try again.');
       setIsProcessing(false);
+
     }
   };
 
@@ -438,7 +457,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-slate-50 pt-24 pb-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
-        <button 
+        <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-slate-500 hover:text-slate-900 font-bold text-sm mb-6 transition-colors"
         >
@@ -451,7 +470,7 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Address and Payment */}
           <div className="lg:col-span-2 space-y-6">
-            
+
             {/* Delivery Address Section */}
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
               <div className="flex items-center gap-3 mb-6">
@@ -492,18 +511,17 @@ export default function CheckoutPage() {
                       </p>
                     </div>
                   )}
-                  
+
                   {addresses.length > 1 && (
                     <div className="pt-2">
                       <p className="text-xs font-bold text-slate-500 mb-2">Or select another address:</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {addresses.map(addr => (
-                          <div 
+                          <div
                             key={addr.id}
                             onClick={() => setActiveAddressId(addr.id)}
-                            className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${
-                              activeAddressId === addr.id ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
-                            }`}
+                            className={`p-3 rounded-xl border-2 cursor-pointer transition-all ${activeAddressId === addr.id ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
+                              }`}
                           >
                             <h4 className="text-xs font-extrabold text-slate-900">{addr.type}</h4>
                             <p className="text-[10px] text-slate-500 mt-1 line-clamp-1">{addr.street}, {addr.city}</p>
@@ -512,7 +530,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                   )}
-                  <button 
+                  <button
                     onClick={() => navigate('/dashboard/addresses')}
                     className="text-xs font-bold text-indigo-600 hover:text-indigo-800"
                   >
@@ -528,8 +546,8 @@ export default function CheckoutPage() {
                       </div>
                       <h3 className="text-lg font-black text-slate-900">Where should we deliver?</h3>
                       <p className="text-sm font-medium text-slate-500 max-w-xs mx-auto">Please select your exact delivery location on the map to continue.</p>
-                      <button 
-                        type="button" 
+                      <button
+                        type="button"
                         onClick={() => setShowLocationPickerModal(true)}
                         className="mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-black shadow-lg shadow-emerald-200 transition-all active:scale-95 cursor-pointer"
                       >
@@ -541,8 +559,8 @@ export default function CheckoutPage() {
                     <form onSubmit={handleSaveAddress} className="space-y-4">
                       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-4">
                         <p className="text-sm font-bold text-slate-500">Please enter your delivery details to proceed.</p>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={() => setShowLocationPickerModal(true)}
                           className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black shadow-md shadow-emerald-200 transition-all active:scale-95 cursor-pointer"
                         >
@@ -550,42 +568,42 @@ export default function CheckoutPage() {
                           <span>🎯 Edit Map Location</span>
                         </button>
                       </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Full Name *</label>
-                      <input type="text" name="name" value={addressForm.name || ''} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="Your Name" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1.5">Phone *</label>
-                      <input type="tel" name="phone" value={addressForm.phone || ''} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="Mobile Number" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Street Address *</label>
-                    <input type="text" name="street" value={addressForm.street} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="House/Flat No., Building Name" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Locality / Area</label>
-                    <input type="text" name="locality" value={addressForm.locality} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="E.g., Sector 62, Koramangala" />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1.5">City *</label>
-                      <input type="text" name="city" value={addressForm.city} readOnly className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed" />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1.5">State</label>
-                      <input type="text" name="state" value={addressForm.state} readOnly className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Pincode *</label>
-                    <input type="text" name="pincode" value={addressForm.pincode} readOnly className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed" />
-                  </div>
-                  <button type="submit" disabled={isProcessing} className="mt-2 w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm rounded-xl transition-all cursor-pointer">
-                    {isProcessing ? 'Saving...' : 'Save Address'}
-                  </button>
-                </form>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">Full Name *</label>
+                          <input type="text" name="name" value={addressForm.name || ''} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="Your Name" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">Phone *</label>
+                          <input type="tel" name="phone" value={addressForm.phone || ''} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="Mobile Number" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Street Address *</label>
+                        <input type="text" name="street" value={addressForm.street} onChange={handleInputChange} required className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="House/Flat No., Building Name" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Locality / Area</label>
+                        <input type="text" name="locality" value={addressForm.locality} onChange={handleInputChange} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-amber-400/20 focus:border-amber-400 transition-all" placeholder="E.g., Sector 62, Koramangala" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">City *</label>
+                          <input type="text" name="city" value={addressForm.city} readOnly className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed" />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1.5">State</label>
+                          <input type="text" name="state" value={addressForm.state} readOnly className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Pincode *</label>
+                        <input type="text" name="pincode" value={addressForm.pincode} readOnly className="w-full px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-sm font-bold text-slate-500 cursor-not-allowed" />
+                      </div>
+                      <button type="submit" disabled={isProcessing} className="mt-2 w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-sm rounded-xl transition-all cursor-pointer">
+                        {isProcessing ? 'Saving...' : 'Save Address'}
+                      </button>
+                    </form>
                   )}
                 </div>
               )}
@@ -599,20 +617,49 @@ export default function CheckoutPage() {
                 </div>
                 <h2 className="text-xl font-black text-slate-900">Payment Method</h2>
               </div>
-              
-              <div className="p-5 border-2 border-amber-400 bg-amber-50/30 rounded-2xl relative cursor-pointer">
-                <div className="absolute top-5 right-5 text-amber-500">
-                  <CheckCircle2 className="w-6 h-6" />
+
+              <div className="grid grid-cols-1 gap-4">
+                {/* Cash on Delivery */}
+                <div
+                  onClick={() => setPaymentMethod('COD')}
+                  className={`p-5 border-2 rounded-2xl relative cursor-pointer transition-all ${
+                    paymentMethod === 'COD'
+                      ? 'border-amber-400 bg-amber-50/30'
+                      : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
+                  }`}
+                >
+                  {paymentMethod === 'COD' && (
+                    <div className="absolute top-5 right-5 text-amber-500">
+                      <CheckCircle2 className="w-6 h-6" />
+                    </div>
+                  )}
+                  <h3 className="font-extrabold text-slate-900 mb-1">Cash on Delivery (COD)</h3>
+                  <p className="text-sm font-bold text-slate-600">Pay with cash or UPI when your order arrives.</p>
                 </div>
-                <h3 className="font-extrabold text-slate-900 mb-1">Cash on Delivery (COD)</h3>
-                <p className="text-sm font-bold text-slate-600">Pay with cash or UPI when your order arrives.</p>
-              </div>
-              
-              <div className="mt-4 p-4 border border-slate-200 bg-slate-50 rounded-xl opacity-60">
-                <h3 className="font-extrabold text-slate-900 mb-1">Online Payment</h3>
-                <p className="text-sm font-bold text-slate-500">Currently unavailable for this region.</p>
+
+                {/* Online Payment via SubPaisa */}
+                <div
+                  onClick={() => setPaymentMethod('ONLINE')}
+                  className={`p-5 border-2 rounded-2xl relative cursor-pointer transition-all ${
+                    paymentMethod === 'ONLINE'
+                      ? 'border-emerald-500 bg-emerald-50/30'
+                      : 'border-slate-200 bg-slate-50 hover:bg-slate-100'
+                  }`}
+                >
+                  {paymentMethod === 'ONLINE' && (
+                    <div className="absolute top-5 right-5 text-emerald-500">
+                      <CheckCircle2 className="w-6 h-6" />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="font-extrabold text-slate-900">Online Payment</h3>
+                    <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 font-black text-[10px] rounded-md">SubPaisa</span>
+                  </div>
+                  <p className="text-sm font-bold text-slate-600">Pay instantly via UPI, Credit/Debit Cards, or NetBanking.</p>
+                </div>
               </div>
             </div>
+
 
           </div>
 
@@ -620,7 +667,7 @@ export default function CheckoutPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 sticky top-24">
               <h2 className="text-xl font-black text-slate-900 mb-6">Order Summary</h2>
-              
+
               <div className="space-y-4 mb-6 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 {cartItems.map(item => (
                   <div key={item.id} className="flex gap-3">
@@ -638,19 +685,19 @@ export default function CheckoutPage() {
               <div className="border-t border-slate-100 pt-5 pb-2">
                 {!appliedCoupon ? (
                   <div>
-                    <h3 className="text-sm font-extrabold text-slate-900 mb-2 flex items-center gap-1.5"><Tag className="w-4 h-4 text-emerald-500"/> Apply Promo Code</h3>
+                    <h3 className="text-sm font-extrabold text-slate-900 mb-2 flex items-center gap-1.5"><Tag className="w-4 h-4 text-emerald-500" /> Apply Promo Code</h3>
                     <div className="flex gap-2">
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         value={promoCodeInput}
                         onChange={e => {
                           setPromoCodeInput(e.target.value.toUpperCase());
                           setPromoError('');
                         }}
-                        placeholder="Enter code here" 
+                        placeholder="Enter code here"
                         className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 uppercase"
                       />
-                      <button 
+                      <button
                         onClick={() => handleApplyPromo()}
                         className="px-4 py-2 bg-slate-900 text-white font-bold text-sm rounded-xl hover:bg-slate-800 transition-colors"
                       >
@@ -658,13 +705,13 @@ export default function CheckoutPage() {
                       </button>
                     </div>
                     {promoError && <p className="text-xs font-bold text-rose-500 mt-2">{promoError}</p>}
-                    
+
                     {/* List available coupons */}
                     {availableCoupons.filter(c => c.isActive).length > 0 && (
                       <div className="mt-3 flex gap-2 overflow-x-auto pb-2 scrollbar-none">
                         {availableCoupons.filter(c => c.isActive).map(c => (
-                          <div 
-                            key={c.id} 
+                          <div
+                            key={c.id}
                             onClick={() => handleApplyPromo(c.code)}
                             className="shrink-0 border border-emerald-200 bg-emerald-50/50 rounded-lg px-3 py-2 cursor-pointer hover:bg-emerald-50 transition-colors"
                           >
@@ -678,7 +725,7 @@ export default function CheckoutPage() {
                 ) : (
                   <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-bold text-emerald-600 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5"/> Code Applied</p>
+                      <p className="text-xs font-bold text-emerald-600 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Code Applied</p>
                       <p className="text-sm font-black text-slate-900">{appliedCoupon.code}</p>
                     </div>
                     <button onClick={handleRemovePromo} className="text-slate-400 hover:text-rose-500 p-1">
@@ -728,21 +775,23 @@ export default function CheckoutPage() {
               <button
                 onClick={handlePlaceOrder}
                 disabled={isProcessing || !hasAddress || !serviceability.isServiceable}
-                className={`mt-6 w-full py-4 font-extrabold text-sm rounded-2xl flex items-center justify-center gap-2 transition-all ${
-                  !serviceability.isServiceable
+                className={`mt-6 w-full py-4 font-extrabold text-sm rounded-2xl flex items-center justify-center gap-2 transition-all ${!serviceability.isServiceable
                     ? 'bg-rose-100 text-rose-700 border-2 border-rose-300 opacity-80 cursor-not-allowed'
                     : (!hasAddress || isProcessing)
-                    ? 'bg-amber-400 opacity-50 cursor-not-allowed text-slate-950'
-                    : 'bg-amber-400 hover:bg-amber-500 text-slate-950 shadow-lg shadow-amber-300/40 cursor-pointer hover:-translate-y-0.5'
-                }`}
+                      ? 'bg-amber-400 opacity-50 cursor-not-allowed text-slate-950'
+                      : 'bg-amber-400 hover:bg-amber-500 text-slate-950 shadow-lg shadow-amber-300/40 cursor-pointer hover:-translate-y-0.5'
+                  }`}
               >
                 <span>
                   {isProcessing
                     ? 'Processing...'
                     : !serviceability.isServiceable
-                    ? '🚫 Delivery Unavailable (Out of 5 KM Zone)'
-                    : 'Place Order'}
+                      ? '🚫 Delivery Unavailable (Out of 5 KM Zone)'
+                      : paymentMethod === 'ONLINE'
+                        ? 'Proceed to Online Payment'
+                        : 'Place Order'}
                 </span>
+
                 {!isProcessing && serviceability.isServiceable && <ArrowRight className="w-5 h-5" />}
               </button>
 
@@ -751,7 +800,7 @@ export default function CheckoutPage() {
                   ⚠️ This address (Bistupur / Jamshedpur / Out of range) is outside our 5 km Baharagora delivery zone!
                 </p>
               )}
-              
+
               {!hasAddress && (
                 <p className="text-center text-xs font-bold text-red-500 mt-3">
                   Please save your delivery address to continue.

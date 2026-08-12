@@ -67,6 +67,7 @@ import HomePage from './pages/HomePage';
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const SignupPage = lazy(() => import('./pages/SignupPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
+const PaymentCallbackPage = lazy(() => import('./pages/PaymentCallbackPage'));
 const DashboardHome = lazy(() => import('./pages/dashboard/DashboardHome'));
 const MyOrders = lazy(() => import('./pages/dashboard/MyOrders'));
 const TrackOrder = lazy(() => import('./pages/dashboard/TrackOrder'));
@@ -111,6 +112,7 @@ function App() {
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/checkout" element={<CheckoutPage />} />
+              <Route path="/payment-callback" element={<PaymentCallbackPage />} />
               <Route path="/complaint" element={<ComplaintPage />} />
               <Route path="/cancellation-policy" element={<DynamicPage documentId="cancellationPolicy" title="Cancellation Policy" />} />
               <Route path="/disclaimer" element={<DynamicPage documentId="disclaimer" title="Disclaimer" />} />
@@ -119,7 +121,7 @@ function App() {
               <Route path="/terms-of-service" element={<DynamicPage documentId="termsOfService" title="Terms and Conditions" />} />
               <Route path="/refund-policy" element={<DynamicPage documentId="refundPolicy" title="Refund & Returns Policy" />} />
               <Route path="/about-us" element={<DynamicPage documentId="aboutUs" title="About Us" />} />
-              
+
               {/* Dashboard Nested Routes */}
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<DashboardHome />} />
