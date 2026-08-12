@@ -13,10 +13,49 @@ import { doc, getDoc, setDoc, addDoc, collection } from 'firebase/firestore';
 
 const AuthContext = createContext(null);
 
+// LocalStorage User Profile Persistence Helpers (Instant 0ms Load Time)
+const getUserProfileStorageKey = (uid) => `grocery_user_profile_${uid}`;
+
+const getCachedProfile = (uid) => {
+  if (!uid) return null;
+  try {
+    const raw = localStorage.getItem(getUserProfileStorageKey(uid));
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    console.warn('Failed to parse cached user profile:', e);
+    return null;
+  }
+};
+
+const setCachedProfile = (uid, profile) => {
+  if (!uid || !profile) return;
+  try {
+    localStorage.setItem(getUserProfileStorageKey(uid), JSON.stringify(profile));
+  } catch (e) {
+    console.warn('Failed to save user profile to localStorage:', e);
+  }
+};
+
+const removeCachedProfile = (uid) => {
+  if (!uid) return;
+  try {
+    localStorage.removeItem(getUserProfileStorageKey(uid));
+  } catch (e) {
+    console.warn('Failed to remove user profile from localStorage:', e);
+  }
+};
+
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const updateLocalAndStateProfile = (uid, newProfile) => {
+    setUserProfile(newProfile);
+    if (uid && newProfile) {
+      setCachedProfile(uid, newProfile);
+    }
+  };
 
   const sendWelcomeEmail = async (userEmail, userName) => {
     try {
@@ -53,12 +92,19 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Listen to Firebase auth state changes in the background without blocking initial app render
+  // Listen to Firebase auth state changes with instant localStorage cache fallback
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
-        // Fetch extended user profile from Firestore
+        // 1. Instantly load cached user profile from localStorage (0ms load time!)
+        const cached = getCachedProfile(user.uid);
+        if (cached) {
+          setUserProfile(cached);
+          setLoading(false);
+        }
+
+        // 2. Fetch fresh user profile from Firestore in background
         try {
           const userDocRef = doc(db, 'users', user.uid);
           const userDocSnap = await getDoc(userDocRef);
@@ -75,7 +121,6 @@ export function AuthProvider({ children }) {
               data.addresses = [defaultAddr];
               data.primaryAddressId = defaultAddr.id;
 
-              // Save migration quietly
               setDoc(userDocRef, { addresses: data.addresses, primaryAddressId: data.primaryAddressId }, { merge: true });
             }
             // Migration: Generate referral code if missing for legacy users
@@ -89,7 +134,7 @@ export function AuthProvider({ children }) {
 
             if (!data.addresses) data.addresses = [];
 
-            setUserProfile(data);
+            updateLocalAndStateProfile(user.uid, data);
           } else {
             const pendingReferralCode = localStorage.getItem('pendingReferralCode') || null;
             const baseName = (user.displayName || 'USER').split(' ')[0].replace(/[^a-zA-Z0-9]/g, '').toUpperCase() || 'GH';
@@ -108,7 +153,7 @@ export function AuthProvider({ children }) {
               referredByCode: pendingReferralCode,
               myReferralCode: myReferralCode
             };
-            setUserProfile(initialData);
+            updateLocalAndStateProfile(user.uid, initialData);
             await setDoc(userDocRef, initialData);
             if (pendingReferralCode) {
               localStorage.removeItem('pendingReferralCode');
@@ -117,15 +162,18 @@ export function AuthProvider({ children }) {
           }
         } catch (err) {
           console.warn('Firestore profile fetch error:', err);
-          setUserProfile((prev) => prev || {
-            fullName: user.displayName || 'Grocery Member',
-            email: user.email,
-            phone: '',
-            profileCompleted: false,
-            addresses: [],
-            primaryAddressId: null,
-            wishlist: [],
-          });
+          if (!cached) {
+            const fallbackData = {
+              fullName: user.displayName || 'Grocery Member',
+              email: user.email,
+              phone: '',
+              profileCompleted: false,
+              addresses: [],
+              primaryAddressId: null,
+              wishlist: [],
+            };
+            updateLocalAndStateProfile(user.uid, fallbackData);
+          }
         }
       } else {
         setUserProfile(null);
@@ -163,7 +211,7 @@ export function AuthProvider({ children }) {
     } catch (e) {
       console.warn('Failed to save user doc to Firestore:', e);
     }
-    setUserProfile(initialData);
+    updateLocalAndStateProfile(res.user.uid, initialData);
     return res.user;
   };
 
@@ -175,6 +223,9 @@ export function AuthProvider({ children }) {
 
   // Firebase Logout
   const logout = async () => {
+    if (currentUser?.uid) {
+      removeCachedProfile(currentUser.uid);
+    }
     await signOut(auth);
     setCurrentUser(null);
     setUserProfile(null);
@@ -208,7 +259,7 @@ export function AuthProvider({ children }) {
       console.warn('Failed to update user doc in Firestore:', e);
     }
 
-    setUserProfile(newProfile);
+    updateLocalAndStateProfile(currentUser.uid, newProfile);
   };
 
   // Update Profile Photo
@@ -218,7 +269,7 @@ export function AuthProvider({ children }) {
       await updateProfile(currentUser, { photoURL });
       const newProfile = { ...userProfile, photoURL };
       await setDoc(doc(db, 'users', currentUser.uid), { photoURL }, { merge: true });
-      setUserProfile(newProfile);
+      updateLocalAndStateProfile(currentUser.uid, newProfile);
       return true;
     } catch (e) {
       console.error('Failed to update profile photo:', e);
@@ -252,7 +303,7 @@ export function AuthProvider({ children }) {
         addresses: newProfile.addresses,
         primaryAddressId: newProfile.primaryAddressId
       }, { merge: true });
-      setUserProfile(newProfile);
+      updateLocalAndStateProfile(currentUser.uid, newProfile);
       return newAddress.id;
     } catch (e) {
       console.error('Failed to add address:', e);
@@ -268,7 +319,6 @@ export function AuthProvider({ children }) {
     const newAddresses = currentAddresses.filter(a => a.id !== addressId);
 
     let newPrimaryId = userProfile.primaryAddressId;
-    // If we deleted the primary address, set a new primary if there are other addresses left
     if (newPrimaryId === addressId) {
       newPrimaryId = newAddresses.length > 0 ? newAddresses[0].id : null;
     }
@@ -284,7 +334,7 @@ export function AuthProvider({ children }) {
         addresses: newAddresses,
         primaryAddressId: newPrimaryId
       }, { merge: true });
-      setUserProfile(newProfile);
+      updateLocalAndStateProfile(currentUser.uid, newProfile);
     } catch (e) {
       console.error('Failed to delete address:', e);
     }
@@ -303,7 +353,7 @@ export function AuthProvider({ children }) {
       await setDoc(doc(db, 'users', currentUser.uid), {
         primaryAddressId: addressId
       }, { merge: true });
-      setUserProfile(newProfile);
+      updateLocalAndStateProfile(currentUser.uid, newProfile);
     } catch (e) {
       console.error('Failed to set primary address:', e);
     }
@@ -311,7 +361,7 @@ export function AuthProvider({ children }) {
 
   // Toggle wishlist item
   const toggleWishlist = async (product) => {
-    if (!currentUser) return false; // Return false if not logged in
+    if (!currentUser) return false;
 
     const currentWishlist = userProfile?.wishlist || [];
     const isAlreadyWishlisted = currentWishlist.some((item) => item.id === product.id);
@@ -321,7 +371,7 @@ export function AuthProvider({ children }) {
       : [...currentWishlist, product];
 
     const newProfile = { ...userProfile, wishlist: newWishlist };
-    setUserProfile(newProfile);
+    updateLocalAndStateProfile(currentUser.uid, newProfile);
 
     try {
       await setDoc(doc(db, 'users', currentUser.uid), { wishlist: newWishlist }, { merge: true });
@@ -329,7 +379,7 @@ export function AuthProvider({ children }) {
     } catch (e) {
       console.error('Failed to update wishlist in Firestore:', e);
       // Revert on error
-      setUserProfile(userProfile);
+      updateLocalAndStateProfile(currentUser.uid, userProfile);
       return false;
     }
   };
