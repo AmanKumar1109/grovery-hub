@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, XCircle, ArrowRight, RefreshCw, ShoppingBag } from 'lucide-react';
 import { parseSubPaisaResponse } from '../utils/sabpaisa';
 import { db } from '../firebase';
-import { doc, getDoc, setDoc, updateDoc, increment, addDoc, collection } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, increment, addDoc, collection, arrayUnion } from 'firebase/firestore';
 import { useCart } from '../context/CartContext';
 
 export default function PaymentCallbackPage() {
@@ -156,16 +156,13 @@ export default function PaymentCallbackPage() {
             }
 
             // Deactivate coupon
-            if (orderData.appliedCouponId) {
+            if (orderData.appliedCouponId && orderData.userId && orderData.userId !== 'guest') {
               try {
-                await updateDoc(doc(db, 'coupons', orderData.appliedCouponId), {
-                  isActive: false,
-                  usedBy: orderData.userId || 'guest',
-                  usedAt: new Date().toISOString(),
-                  usedInOrder: txnId
+                await updateDoc(doc(db, 'users', orderData.userId), {
+                  usedCoupons: arrayUnion(orderData.appliedCouponId)
                 });
               } catch (err) {
-                console.error("Error deactivating coupon:", err);
+                console.error("Error updating used coupons:", err);
               }
             }
           }

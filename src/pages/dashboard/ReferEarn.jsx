@@ -2,17 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { db } from '../../firebase';
-import { collection, query, where, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, onSnapshot, getDoc, doc } from 'firebase/firestore';
 import { Copy, Share2, Gift, Users, Clock, CheckCircle2, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function ReferEarn() {
   const { currentUser, userProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [referrals, setReferrals] = useState([]);
+  const [userCoupons, setUserCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [copySuccess, setCopySuccess] = useState(false);
-  const { availableCoupons } = useCart();
-  const userCoupons = availableCoupons.filter(c => c.userId === currentUser?.uid);
+  const [friendNames, setFriendNames] = useState({});
 
   const referralCode = userProfile?.myReferralCode || 'PENDING';
   const referralLink = `${window.location.origin}/?ref=${referralCode}`;
@@ -29,10 +29,50 @@ export default function ReferEarn() {
       setLoading(false);
     });
 
+    const qCoupons = query(collection(db, 'coupons'), where('userId', '==', currentUser.uid));
+    const unsubCoupons = onSnapshot(qCoupons, (snap) => {
+      const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setUserCoupons(data);
+    });
+
     return () => {
       unsubRef();
+      unsubCoupons();
     };
   }, [currentUser]);
+
+  useEffect(() => {
+    if (referrals.length === 0) return;
+    
+    const fetchNames = async () => {
+      const names = { ...friendNames };
+      let changed = false;
+      
+      for (const ref of referrals) {
+        if (!names[ref.referredUserId]) {
+          try {
+            const userDoc = await getDoc(doc(db, 'users', ref.referredUserId));
+            if (userDoc.exists() && userDoc.data().fullName) {
+              names[ref.referredUserId] = userDoc.data().fullName;
+            } else {
+              names[ref.referredUserId] = `Friend #${ref.referredUserId.substring(0, 4)}`;
+            }
+            changed = true;
+          } catch (err) {
+            console.error("Error fetching friend name:", err);
+            names[ref.referredUserId] = `Friend #${ref.referredUserId.substring(0, 4)}`;
+            changed = true;
+          }
+        }
+      }
+      
+      if (changed) {
+        setFriendNames(names);
+      }
+    };
+    
+    fetchNames();
+  }, [referrals]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
@@ -109,7 +149,11 @@ export default function ReferEarn() {
       </div>
 
       {/* Overview Tab */}
-      {activeTab === 'overview' && (
+      {activeTab === 'overview' && (() => {
+        const activeCouponsCount = userCoupons.filter(coupon => 
+          !userProfile?.usedCoupons?.includes(coupon.id) && coupon.isActive !== false
+        ).length;
+        return (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col gap-2">
             <Users className="w-6 h-6 text-blue-500" />
@@ -136,11 +180,11 @@ export default function ReferEarn() {
             <Gift className="w-6 h-6 text-violet-500" />
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Your Rewards</p>
-              <p className="text-2xl font-black text-slate-800">{availableCoupons.length} Coupons</p>
+              <p className="text-2xl font-black text-slate-800">{activeCouponsCount} Coupons</p>
             </div>
           </div>
         </div>
-      )}
+      )})()}
 
       {/* Referrals Tab */}
       {activeTab === 'referrals' && (
@@ -157,7 +201,7 @@ export default function ReferEarn() {
                 <div key={ref.id} className="p-4 flex items-center justify-between hover:bg-slate-50 transition-colors">
                   <div>
                     <p className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                      Friend #{ref.referredUserId.substring(0,4)}
+                      {friendNames[ref.referredUserId] || `Friend #${ref.referredUserId.substring(0,4)}`}
                       {ref.status === 'REWARDED' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />}
                       {ref.status === 'NOT_QUALIFIED' && <XCircle className="w-3.5 h-3.5 text-rose-500" />}
                       {ref.status === 'REGISTERED' && <Clock className="w-3.5 h-3.5 text-amber-500" />}
@@ -182,12 +226,17 @@ export default function ReferEarn() {
         </div>
       )}
 
-      {activeTab === 'rewards' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black uppercase text-slate-800">Your Coupons</h3>
-            <span className="text-xs font-bold text-emerald-600">{userCoupons.length} Available</span>
-          </div>
+      {activeTab === 'rewards' && (() => {
+        const activeCouponsCount = userCoupons.filter(coupon => 
+          !userProfile?.usedCoupons?.includes(coupon.id) && coupon.isActive !== false
+        ).length;
+
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black uppercase text-slate-800">Your Coupons</h3>
+              <span className="text-xs font-bold text-emerald-600">{activeCouponsCount} Available</span>
+            </div>
 
           {userCoupons.length === 0 ? (
             <div className="bg-white rounded-3xl border border-slate-200 border-dashed p-10 text-center flex flex-col items-center">
@@ -196,24 +245,39 @@ export default function ReferEarn() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {userCoupons.map(coupon => (
-                <div key={coupon.id} className="bg-white border border-slate-200 rounded-2xl p-5 flex items-center justify-between shadow-sm relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500"></div>
-                  <div className="pl-2">
-                    <p className="font-black text-lg text-slate-800 tracking-wider font-mono">{coupon.code}</p>
-                    <p className="text-sm font-semibold text-emerald-600 mt-1">
-                      {coupon.discountType === 'flat' ? `₹${coupon.discountValue} OFF` : `${coupon.discountValue}% OFF`}
-                    </p>
-                    <p className="text-[10px] text-slate-500 mt-2 font-medium">
-                      Min. Order: ₹{coupon.minOrderValue} &bull; Valid till: {new Date(coupon.validUntil).toLocaleDateString()}
-                    </p>
+              {[...userCoupons].sort((a, b) => {
+                const aUsed = userProfile?.usedCoupons?.includes(a.id) || a.isActive === false;
+                const bUsed = userProfile?.usedCoupons?.includes(b.id) || b.isActive === false;
+                if (aUsed && !bUsed) return 1;
+                if (!aUsed && bUsed) return -1;
+                return 0;
+              }).map(coupon => {
+                const isUsed = userProfile?.usedCoupons?.includes(coupon.id) || coupon.isActive === false;
+                return (
+                  <div key={coupon.id} className={`bg-white border border-slate-200 rounded-2xl p-5 flex items-center justify-between shadow-sm relative overflow-hidden ${isUsed ? 'opacity-60' : ''}`}>
+                    <div className={`absolute top-0 left-0 w-2 h-full ${isUsed ? 'bg-slate-400' : 'bg-emerald-500'}`}></div>
+                    <div className="pl-2">
+                      <div className="flex items-center gap-2">
+                        <p className={`font-black text-lg tracking-wider font-mono ${isUsed ? 'text-slate-500 line-through' : 'text-slate-800'}`}>{coupon.code}</p>
+                        {isUsed && (
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-md uppercase tracking-wider">Used</span>
+                        )}
+                      </div>
+                      <p className={`text-sm font-semibold mt-1 ${isUsed ? 'text-slate-400' : 'text-emerald-600'}`}>
+                        {coupon.discountType === 'flat' ? `₹${coupon.discountValue} OFF` : `${coupon.discountValue}% OFF`}
+                      </p>
+                      <p className="text-[10px] text-slate-500 mt-2 font-medium">
+                        Min. Order: ₹{coupon.minOrderValue} &bull; Valid till: {new Date(coupon.validUntil).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

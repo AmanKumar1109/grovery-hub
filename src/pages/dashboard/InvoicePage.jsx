@@ -70,23 +70,24 @@ export default function InvoicePage() {
     return 'bg-amber-500'; // processing / paid / etc
   };
 
-  const subtotal = parseFloat(order.totalAmount || order.amount || 0);
-  const deliveryFee = parseFloat(order.deliveryFee || 0);
-  const total = subtotal + deliveryFee;
-  
   let totalQty = 0;
   let totalMrp = 0;
+  let itemsTotal = 0;
   
   order.items?.forEach(item => {
     const qty = parseFloat(item.quantity || 1);
     totalQty += qty;
+    const price = parseFloat(item.price || 0);
     const mrp = parseFloat(item.mrp || item.price || 0);
+    itemsTotal += (price * qty);
     totalMrp += (mrp * qty);
   });
 
-  const totalSavings = totalMrp - subtotal;
-  const customerName = order.shippingAddress?.fullName || userProfile?.fullName || 'Cash';
-  const customerPhone = order.shippingAddress?.phone || '';
+  const deliveryFee = parseFloat(order.deliveryFee || 0);
+  const discountAmount = parseFloat(order.discountAmount || 0);
+  const netPayable = parseFloat(order.totalAmount || (itemsTotal + deliveryFee - discountAmount));
+  const customerName = order.customerName || order.shippingAddress?.fullName || userProfile?.fullName || 'Cash';
+  const customerPhone = order.customerPhone || order.shippingAddress?.phone || userProfile?.phone || '';
 
   return (
     <div className="max-w-6xl mx-auto p-4 sm:p-8 bg-slate-50 min-h-screen print:bg-white print:p-0 print:m-0">
@@ -94,22 +95,28 @@ export default function InvoicePage() {
         {`
           @media print {
             @page {
-              margin: 0;
+              margin: 0 !important;
               size: 80mm auto;
             }
-            body {
-              background: white;
-              margin: 0;
-              padding: 0;
+            html, body {
+              background: white !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 80mm !important;
               color: black;
             }
             .thermal-print-container {
+              position: fixed !important;
+              left: 0 !important;
+              top: 0 !important;
               width: 80mm !important;
               max-width: 80mm !important;
               margin: 0 !important;
               padding: 4mm !important;
               box-shadow: none !important;
+              border: none !important;
               font-family: 'Courier New', Courier, monospace !important;
+              transform: none !important;
             }
           }
         `}
@@ -123,10 +130,10 @@ export default function InvoicePage() {
         </Link>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-8 justify-center items-start print:m-0 print:p-0 print:gap-0 print:block">
+      <div className="flex flex-col md:flex-row gap-8 justify-center items-start print:m-0 print:p-0 print:gap-0 print:block print:w-[80mm] print:mx-0">
         
         {/* Left/Main Column: Thermal Receipt */}
-        <div className="thermal-print-container w-full max-w-[380px] mx-auto bg-white shadow-xl p-6 font-mono text-[12px] leading-tight text-black print:shadow-none print:w-full print:max-w-full print:p-2">
+        <div className="thermal-print-container w-full max-w-[380px] bg-white shadow-xl p-6 font-mono text-[12px] leading-tight text-black print:shadow-none print:w-[80mm] print:max-w-[80mm] print:p-2 print:mx-0 print:ml-0">
           
           {/* Header */}
           <div className="text-center mb-2">
@@ -151,6 +158,10 @@ export default function InvoicePage() {
               <span>Name: {customerName?.slice(0, 15)}</span>
               <span>Mob: {customerPhone}</span>
             </div>
+            <div className="flex justify-between">
+              <span>Pay: {order.paymentMethod?.toLowerCase().includes('online') || order.paymentMethod === 'ONLINE' ? 'Online' : 'COD'}</span>
+              <span>Status: {order.status || 'Received'}</span>
+            </div>
           </div>
           
           <div className="border-t border-black border-dashed mb-2"></div>
@@ -159,10 +170,10 @@ export default function InvoicePage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-black border-dashed">
-                <th className="py-1 font-normal w-1/2">Item</th>
-                <th className="py-1 font-normal text-center w-1/6">Qty</th>
-                <th className="py-1 font-normal text-right w-1/6">Rate</th>
-                <th className="py-1 font-normal text-right w-1/6">Amt</th>
+                <th className="py-1 font-normal w-[46%]">Item</th>
+                <th className="py-1 font-normal text-center w-[14%]">Qty</th>
+                <th className="py-1 font-normal text-right w-[20%] pr-2">Rate</th>
+                <th className="py-1 font-normal text-right w-[20%]">Amt</th>
               </tr>
             </thead>
             <tbody>
@@ -176,7 +187,7 @@ export default function InvoicePage() {
                       {idx + 1}. {item.name} {item.weight ? `(${item.weight})` : ''}
                     </td>
                     <td className="py-1 text-center">{qty}</td>
-                    <td className="py-1 text-right">{price.toFixed(2)}</td>
+                    <td className="py-1 text-right pr-2">{price.toFixed(2)}</td>
                     <td className="py-1 text-right">{amt.toFixed(2)}</td>
                   </tr>
                 );
@@ -189,7 +200,7 @@ export default function InvoicePage() {
               <span>Total Items: {totalQty.toFixed(2)}</span>
               <div className="flex items-center gap-2">
                 <span>Total:</span>
-                <span className="text-right">{subtotal.toFixed(2)}</span>
+                <span className="text-right">{itemsTotal.toFixed(2)}</span>
               </div>
             </div>
           </div>
@@ -200,24 +211,26 @@ export default function InvoicePage() {
               <span>Total MRP</span>
               <span>: {totalMrp.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between">
-              <span>Total Savings</span>
-              <span>: {totalSavings.toFixed(2)}</span>
-            </div>
             {deliveryFee > 0 && (
               <div className="flex justify-between">
                 <span>Delivery Fee</span>
                 <span>: {deliveryFee.toFixed(2)}</span>
               </div>
             )}
+            {order.couponApplied && (
+              <div className="flex justify-between">
+                <span>Coupon ({order.couponApplied})</span>
+                <span>: -{discountAmount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between font-bold text-[14px] mt-1">
               <span>NET PAYABLE</span>
-              <span>: Rs. {total.toFixed(2)}</span>
+              <span>: Rs. {netPayable.toFixed(2)}</span>
             </div>
           </div>
 
           <div className="border-t border-black border-dashed mt-2 pt-2 text-center text-[10px]">
-            <p>Rupees {numberToWords(total)}</p>
+            <p>Rupees {numberToWords(netPayable)}</p>
           </div>
 
           <div className="border-t border-black border-dashed mt-2 pt-2 text-center">

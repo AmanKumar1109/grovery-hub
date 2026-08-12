@@ -164,7 +164,7 @@ export const initialProducts = [
 ];
 
 export function CartProvider({ children }) {
-  const { currentUser } = useAuth();
+  const { currentUser, userProfile } = useAuth();
   const [products, setProducts] = useState([]);
   const [dbCategories, setDbCategories] = useState([]);
   const [categoryDocs, setCategoryDocs] = useState([]);
@@ -382,14 +382,19 @@ export function CartProvider({ children }) {
         }
 
         // Filter valid coupons locally just in case (e.g. valid date check)
-        const validCoupons = allCoupons.filter(c => c.isActive && new Date(c.validUntil) >= new Date());
+        const validCoupons = allCoupons.filter(c => {
+          if (!c.isActive) return false;
+          if (new Date(c.validUntil) < new Date()) return false;
+          if (userProfile?.usedCoupons?.includes(c.id)) return false;
+          return true;
+        });
         setAvailableCoupons(validCoupons);
       } catch (err) {
         console.warn("Failed to fetch coupons:", err);
       }
     };
     fetchCoupons();
-  }, [currentUser]);
+  }, [currentUser, userProfile?.usedCoupons]);
 
   const handleApplyPromo = (codeToApply) => {
     setPromoError('');

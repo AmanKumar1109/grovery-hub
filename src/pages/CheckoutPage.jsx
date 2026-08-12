@@ -5,7 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
 import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft, Tag, X, AlertTriangle, ShieldAlert, Navigation, Moon } from 'lucide-react';
 import { db, auth } from '../firebase';
-import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs, updateDoc, increment, getDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs, updateDoc, increment, getDoc, arrayUnion } from 'firebase/firestore';
 import { checkAddressServiceability } from '../utils/locationUtils';
 import { loadGoogleMaps } from '../utils/googleMapsLoader';
 import LocationPickerModal from '../components/LocationPickerModal';
@@ -411,17 +411,14 @@ export default function CheckoutPage() {
         }
       }
 
-      // Deactivate applied coupon (one-time use)
-      if (appliedCoupon && appliedCoupon.id) {
+      // Mark coupon as used for this user
+      if (appliedCoupon && appliedCoupon.id && currentUser) {
         try {
-          await updateDoc(doc(db, 'coupons', appliedCoupon.id), {
-            isActive: false,
-            usedBy: currentUser ? currentUser.uid : 'guest',
-            usedAt: timestamp,
-            usedInOrder: orderId
+          await updateDoc(doc(db, 'users', currentUser.uid), {
+            usedCoupons: arrayUnion(appliedCoupon.id)
           });
         } catch (err) {
-          console.error("Error deactivating applied coupon:", err);
+          console.error("Error updating used coupons for user:", err);
         }
       }
 
