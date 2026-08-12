@@ -293,9 +293,9 @@ export default function CheckoutPage() {
 
       const sanitizedOrderData = JSON.parse(JSON.stringify(orderData, (k, v) => v === undefined ? null : v));
 
-      await setDoc(doc(db, 'orders', orderId), sanitizedOrderData);
-
       if (paymentMethod === 'ONLINE') {
+        // Save pending order to localStorage ONLY before payment verification.
+        // DO NOT write to Firestore 'orders' collection until payment is confirmed successful.
         localStorage.setItem('pendingSubPaisaOrder', JSON.stringify({
           ...sanitizedOrderData,
           appliedCouponId: appliedCoupon?.id || null
@@ -310,6 +310,10 @@ export default function CheckoutPage() {
         });
         return;
       }
+
+      // COD Path: Create order document in Firestore immediately
+      await setDoc(doc(db, 'orders', orderId), sanitizedOrderData);
+
 
       // Trigger Order Received Email
       const targetEmail = currentUser ? currentUser.email : '';

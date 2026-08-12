@@ -175,22 +175,27 @@ export default function PaymentCallbackPage() {
           setStatus('success');
         } else {
           // Payment Failed or Cancelled
+          localStorage.removeItem('pendingSubPaisaOrder');
           if (txnId) {
             try {
-              await updateDoc(doc(db, 'orders', txnId), {
-                paymentStatus: 'Failed',
-                status: 'Payment Failed',
-                paymentResponse: response,
-                updatedAt: new Date().toISOString()
-              });
+              const orderDoc = await getDoc(doc(db, 'orders', txnId));
+              if (orderDoc.exists()) {
+                await updateDoc(doc(db, 'orders', txnId), {
+                  paymentStatus: 'Failed',
+                  status: 'Payment Failed',
+                  paymentResponse: response,
+                  updatedAt: new Date().toISOString()
+                });
+              }
             } catch (err) {
-              console.error("Error updating order status for failed payment:", err);
+              console.warn("No existing order to update for failed payment:", err);
             }
           }
 
           setErrorMessage(response.statusMessage || response.message || 'Payment processing was cancelled or failed.');
           setStatus('failed');
         }
+
       } catch (err) {
         console.error("Callback processing error:", err);
         setErrorMessage(err.message || 'Failed to verify payment response.');
