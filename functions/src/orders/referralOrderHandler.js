@@ -3,7 +3,7 @@ const admin = require('firebase-admin');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { runIdempotentTask } = require('../utils/idempotency');
 const { addAuditLog } = require('../utils/auditLogger');
-const CONFIG = require('../config/referralCampaign');
+const DEFAULT_CONFIG = require('../config/referralCampaign');
 
 /**
  * Triggers on order update.
@@ -18,14 +18,31 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
     // Check if status changed to the trigger status (e.g. "Delivered").
     // Forcing redeploy
     if (orderBefore.status === orderAfter.status) return null;
-    if (orderAfter.status !== CONFIG.rewardTriggerStatus) return null;
+    if (orderAfter.status !== DEFAULT_CONFIG.rewardTriggerStatus) return null;
+
+    const db = getFirestore();
+
+    // Fetch dynamic configuration from Firestore
+    const settingsDoc = await db.collection('settings').doc('global').get();
+    let CONFIG = { ...DEFAULT_CONFIG };
+    if (settingsDoc.exists) {
+      const data = settingsDoc.data();
+      if (data.referralCampaignActive !== undefined) {
+        CONFIG.isActive = data.referralCampaignActive;
+        CONFIG.referrerReward = {
+          ...CONFIG.referrerReward,
+          amount: data.referrerRewardAmount || CONFIG.referrerReward.amount,
+          minOrderValue: data.referralMinOrderValue || CONFIG.referrerReward.minOrderValue,
+          couponValidityDays: data.referralCouponValidityDays || CONFIG.referrerReward.couponValidityDays,
+          couponMinOrderValue: data.referralCouponMinOrderValue || CONFIG.referrerReward.couponMinOrderValue
+        };
+      }
+    }
 
     if (!CONFIG.isActive) return null;
 
     const userId = orderAfter.userId || orderAfter.customerId || orderAfter.uid;
     if (!userId) return null;
-
-    const db = getFirestore();
 
     // Check if this user is a referred user with a pending referral
     const referralQuery = await db.collection('referrals')

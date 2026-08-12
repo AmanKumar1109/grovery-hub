@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useSettings } from '../../context/SettingsContext';
 import { db } from '../../firebase';
 import { collection, query, where, getDocs, orderBy, onSnapshot, getDoc, doc } from 'firebase/firestore';
 import { Copy, Share2, Gift, Users, Clock, CheckCircle2, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function ReferEarn() {
   const { currentUser, userProfile } = useAuth();
+  const { globalSettings } = useSettings();
+  
+  const rewardAmount = globalSettings?.referrerRewardAmount || 30;
+  const friendRewardAmount = globalSettings?.referredUserRewardAmount || 30;
+  const minOrderValue = globalSettings?.referralMinOrderValue || 299;
+  const campaignActive = globalSettings?.referralCampaignActive ?? true;
+
   const [activeTab, setActiveTab] = useState('overview');
   const [referrals, setReferrals] = useState([]);
   const [userCoupons, setUserCoupons] = useState([]);
@@ -85,7 +93,7 @@ export default function ReferEarn() {
       try {
         await navigator.share({
           title: 'The Grocery Hub',
-          text: `Use my code ${referralCode} to get ₹30 OFF your first order!`,
+          text: `Use my code ${referralCode} to get ₹${friendRewardAmount} OFF your first order!`,
           url: referralLink,
         });
       } catch (err) {
@@ -112,22 +120,34 @@ export default function ReferEarn() {
             <Gift className="w-6 h-6 text-amber-300" />
             <h1 className="text-2xl font-black tracking-tight">Refer & Earn</h1>
           </div>
-          <p className="text-emerald-50 max-w-md font-medium text-sm">
-            Your friend gets ₹30 OFF on their first ₹299+ order. After their order is successfully delivered, you unlock a Coupon worth ₹30 OFF!
-          </p>
           
-          <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
-            <div className="bg-black/20 backdrop-blur-md border border-white/20 rounded-2xl p-2 px-4 flex items-center justify-between w-full sm:w-auto">
-              <span className="font-mono font-bold tracking-wider mr-4">{referralCode}</span>
-              <button onClick={handleCopy} className="text-emerald-200 hover:text-white transition-colors cursor-pointer text-xs font-bold uppercase flex items-center gap-1">
-                {copySuccess ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                {copySuccess ? 'Copied' : 'Copy'}
-              </button>
+          {!campaignActive ? (
+            <div className="bg-amber-500/20 border border-amber-400/50 rounded-xl p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-300 mt-0.5 shrink-0" />
+              <p className="text-amber-50 font-medium text-sm">
+                Our referral campaign is currently paused. Check back later for exciting rewards!
+              </p>
             </div>
-            <button onClick={handleShare} className="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-amber-950 px-6 py-3 rounded-2xl font-extrabold text-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20">
-              <Share2 className="w-4 h-4" /> Share Link
-            </button>
-          </div>
+          ) : (
+            <>
+              <p className="text-emerald-50 max-w-md font-medium text-sm">
+                Your friend gets ₹{friendRewardAmount} OFF on their first ₹{minOrderValue}+ order. After their order is successfully delivered, you unlock a Coupon worth ₹{rewardAmount} OFF!
+              </p>
+              
+              <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">
+                <div className="bg-black/20 backdrop-blur-md border border-white/20 rounded-2xl p-2 px-4 flex items-center justify-between w-full sm:w-auto">
+                  <span className="font-mono font-bold tracking-wider mr-4">{referralCode}</span>
+                  <button onClick={handleCopy} className="text-emerald-200 hover:text-white transition-colors cursor-pointer text-xs font-bold uppercase flex items-center gap-1">
+                    {copySuccess ? <CheckCircle2 className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    {copySuccess ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+                <button onClick={handleShare} className="w-full sm:w-auto bg-amber-400 hover:bg-amber-500 text-amber-950 px-6 py-3 rounded-2xl font-extrabold text-sm transition-transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20">
+                  <Share2 className="w-4 h-4" /> Share Link
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

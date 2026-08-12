@@ -2,7 +2,7 @@ const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { addAuditLog } = require('../utils/auditLogger');
-const CONFIG = require('../config/referralCampaign');
+const DEFAULT_CONFIG = require('../config/referralCampaign');
 
 /**
  * Triggers when a new user signs up.
@@ -29,6 +29,27 @@ exports.onUserCreated = onDocumentCreated('users/{userId}', async (event) => {
     // 2. Check if the user was referred by someone else
     const referredByCode = newUser.referredByCode;
     if (!referredByCode) return null; // Not a referred user
+
+    // Fetch dynamic configuration from Firestore
+    const settingsDoc = await db.collection('settings').doc('global').get();
+    let CONFIG = { ...DEFAULT_CONFIG };
+    if (settingsDoc.exists) {
+      const data = settingsDoc.data();
+      if (data.referralCampaignActive !== undefined) {
+        CONFIG.isActive = data.referralCampaignActive;
+        CONFIG.referredUserReward = {
+          ...CONFIG.referredUserReward,
+          amount: data.referredUserRewardAmount || CONFIG.referredUserReward.amount,
+          minOrderValue: data.referralMinOrderValue || CONFIG.referredUserReward.minOrderValue,
+          couponMinOrderValue: data.referralCouponMinOrderValue || CONFIG.referredUserReward.couponMinOrderValue
+        };
+        // Ensure validity days is also picked up if we want it for the welcome coupon, but it uses hardcoded 30 below.
+        // Let's use the new setting for validity if available
+        if (data.referralCouponValidityDays) {
+           CONFIG.referredUserReward.couponValidityDays = data.referralCouponValidityDays;
+        }
+      }
+    }
 
     if (!CONFIG.isActive) {
       console.log(`Referral campaign is inactive. Ignored code ${referredByCode}.`);
@@ -101,7 +122,7 @@ exports.onUserCreated = onDocumentCreated('users/{userId}', async (event) => {
       // Generate the reward coupon for the newly referred user (User B)
       const userBCouponId = `WELCOME-${Date.now().toString().slice(-4)}-${Math.floor(Math.random() * 1000)}`;
       const validUntil = new Date();
-      validUntil.setDate(validUntil.getDate() + 30); // 30 days validity
+      validUntil.setDate(validUntil.getDate() + (CONFIG.referredUserReward.couponValidityDays || 30));
 
       const couponData = {
         code: userBCouponId,
