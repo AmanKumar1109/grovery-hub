@@ -28,7 +28,7 @@ export default function CheckoutPage() {
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isOrderConfirmed, setIsOrderConfirmed] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('COD'); // 'COD' | 'ONLINE'
+  const [paymentMethod, setPaymentMethod] = useState(''); // '' | 'COD' | 'ONLINE'
 
   const [addressForm, setAddressForm] = useState({
     name: '',
@@ -204,6 +204,11 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     if (!hasAddress || isProcessing) {
       if (!hasAddress) showToast('Please provide a delivery address first.');
+      return;
+    }
+
+    if (!paymentMethod) {
+      showToast('Please select a payment method.');
       return;
     }
 
@@ -788,13 +793,21 @@ export default function CheckoutPage() {
                     ? 'Processing...'
                     : !serviceability.isServiceable
                       ? '🚫 Delivery Unavailable (Out of 5 KM Zone)'
-                      : paymentMethod === 'ONLINE'
-                        ? 'Proceed to Online Payment'
-                        : 'Place Order'}
+                      : !paymentMethod
+                        ? 'Select Payment Method'
+                        : paymentMethod === 'ONLINE'
+                          ? 'Proceed to Online Payment'
+                          : 'Place Order'}
                 </span>
 
                 {!isProcessing && serviceability.isServiceable && <ArrowRight className="w-5 h-5" />}
               </button>
+
+              {!paymentMethod && hasAddress && serviceability.isServiceable && (
+                <p className="text-center text-xs font-bold text-amber-600 mt-3 animate-pulse">
+                  👆 Please select a payment method to continue
+                </p>
+              )}
 
               {!serviceability.isServiceable && (
                 <p className="text-center text-xs font-extrabold text-rose-600 mt-3">

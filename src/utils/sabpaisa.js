@@ -91,6 +91,15 @@ export const initiateSubPaisaPayment = async ({
   const customUrl = (import.meta.env.VITE_SABPAISA_URL || '').trim();
 
   if (!merchantId || !apiKey || !secretKey) {
+    if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+      console.warn("MOCKING SabPaisa Payment for Localhost since credentials are missing.");
+      const mockUrl = new URL(returnUrl);
+      mockUrl.searchParams.set('status', 'SUCCESS');
+      mockUrl.searchParams.set('merchant_txn_id', orderId);
+      mockUrl.searchParams.set('transaction_id', `MOCK_${Date.now()}`);
+      window.location.href = mockUrl.toString();
+      return;
+    }
     throw new Error("SabPaisa PG 3.0 credentials missing in environment variables.");
   }
 
