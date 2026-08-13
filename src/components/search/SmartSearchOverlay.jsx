@@ -137,6 +137,9 @@ export default function SmartSearchOverlay({
                     );
                   }
                   
+                  const maxQty = product.maxQuantity ? parseInt(product.maxQuantity, 10) : null;
+                  const isMaxReached = maxQty !== null && quantityInCart >= maxQty;
+                  
                   return (
                     <div className="flex items-center justify-between bg-emerald-600 text-white rounded-lg h-7 w-20 px-1 shadow-sm border border-emerald-700">
                       <button
@@ -148,7 +151,10 @@ export default function SmartSearchOverlay({
                       <span className="text-[11px] font-black">{quantityInCart}</span>
                       <button
                         onClick={() => updateQuantity(product.id, 1)}
-                        className="p-1 hover:bg-emerald-500 rounded-md transition-colors"
+                        disabled={isMaxReached}
+                        className={`p-1 rounded-md transition-colors ${
+                          isMaxReached ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-500'
+                        }`}
                       >
                         <Plus className="w-3 h-3 stroke-[3]" />
                       </button>

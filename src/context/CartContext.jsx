@@ -42,7 +42,8 @@ function transformDoc(d) {
     isBogo: data.isBogo === true || data.isBogo === 'true' || data.badge === 'Buy 1 Get 1' || data.isBOGO === true,
     recentBuyers: data.recentBuyers || 0,
     image: optimizeImageUrl(data.image),
-    sortOrder: data.sortOrder ?? 999999
+    sortOrder: data.sortOrder ?? 999999,
+    maxQuantity: data.maxQuantity
   };
 }
 
@@ -315,14 +316,36 @@ export function CartProvider({ children }) {
     }
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === product.id);
+      
+      let newQty = quantity;
+      if (existing) {
+        newQty = existing.quantity + quantity;
+      }
+      
+      const maxQty = product.maxQuantity ? parseInt(product.maxQuantity, 10) : null;
+      if (maxQty && newQty > maxQty) {
+        showToast(`You can only order up to ${maxQty} of "${product.name}" ⚠️`);
+        if (existing) {
+          return prev.map((item) =>
+            item.id === product.id ? { ...item, quantity: maxQty } : item
+          );
+        }
+        return [...prev, { ...product, quantity: maxQty }];
+      }
+
       if (existing) {
         return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
+          item.id === product.id ? { ...item, quantity: newQty } : item
         );
       }
       return [...prev, { ...product, quantity }];
     });
-    showToast(`Added "${product.name}" to cart! 🛒`);
+    
+    const maxQty = product.maxQuantity ? parseInt(product.maxQuantity, 10) : null;
+    const existing = cartItems.find((item) => item.id === product.id);
+    if (!maxQty || !existing || existing.quantity + quantity <= maxQty) {
+        showToast(`Added "${product.name}" to cart! 🛒`);
+    }
   };
 
   const updateQuantity = (productId, delta) => {
@@ -331,6 +354,13 @@ export function CartProvider({ children }) {
         .map((item) => {
           if (item.id === productId) {
             const newQty = item.quantity + delta;
+            
+            const maxQty = item.maxQuantity ? parseInt(item.maxQuantity, 10) : null;
+            if (maxQty && newQty > maxQty) {
+              showToast(`You can only order up to ${maxQty} of "${item.name}" ⚠️`);
+              return { ...item, quantity: maxQty };
+            }
+            
             return newQty > 0 ? { ...item, quantity: newQty } : null;
           }
           return item;

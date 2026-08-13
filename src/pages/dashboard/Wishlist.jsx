@@ -39,6 +39,8 @@ export default function Wishlist() {
           {wishlist.map(product => {
             const cartItem = cartItems.find((item) => item.id === product.id);
             const quantityInCart = cartItem ? cartItem.quantity : 0;
+            const maxQty = product.maxQuantity ? parseInt(product.maxQuantity, 10) : null;
+            const isMaxReached = maxQty !== null && quantityInCart >= maxQty;
             return (
               <div key={product.id} className="product-card bg-white/90 backdrop-blur-xl border border-slate-200/80 rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col justify-between p-3 sm:p-4">
                 <div>
@@ -86,7 +88,10 @@ export default function Wishlist() {
                         <span className="font-black text-xs sm:text-sm px-1 sm:px-3 truncate">{quantityInCart}</span>
                         <button
                           onClick={() => updateQuantity(product.id, 1)}
-                          className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-slate-950/10 hover:bg-slate-950/20 text-slate-950 flex items-center justify-center font-black transition-colors cursor-pointer"
+                          disabled={isMaxReached}
+                          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-slate-950/10 text-slate-950 flex items-center justify-center font-black transition-colors ${
+                            isMaxReached ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-950/20 cursor-pointer'
+                          }`}
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>

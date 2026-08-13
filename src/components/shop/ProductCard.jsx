@@ -42,6 +42,9 @@ export default function ProductCard({ product }) {
 
   const cartItem = cartItems.find((item) => item.id === product.id);
   const quantityInCart = cartItem ? cartItem.quantity : 0;
+  
+  const maxQty = product.maxQuantity ? parseInt(product.maxQuantity, 10) : null;
+  const isMaxReached = maxQty !== null && quantityInCart >= maxQty;
 
   const handleFlyToCart = (e, product) => {
     // 1. Get origin rect
@@ -318,7 +321,10 @@ export default function ProductCard({ product }) {
               <span className="font-black text-sm sm:text-base px-1 sm:px-3 tabular-nums">{quantityInCart}</span>
               <button
                 onClick={() => updateQuantity(product.id, 1)}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white/25 hover:bg-white/40 text-white flex items-center justify-center font-black transition-all active:scale-90 cursor-pointer"
+                disabled={isMaxReached}
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-white/25 text-white flex items-center justify-center font-black transition-all ${
+                  isMaxReached ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/40 active:scale-90 cursor-pointer'
+                }`}
               >
                 <Plus className="w-3.5 h-3.5" />
               </button>

@@ -113,7 +113,10 @@ export default function CartDrawer() {
                       <span className="text-xs font-bold w-6 text-center text-white">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(item.id, 1)}
-                        className="w-7 h-7 rounded-full flex items-center justify-center text-white hover:bg-slate-700 transition-colors cursor-pointer"
+                        disabled={item.maxQuantity && item.quantity >= parseInt(item.maxQuantity, 10)}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-white transition-colors ${
+                          item.maxQuantity && item.quantity >= parseInt(item.maxQuantity, 10) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-700 cursor-pointer'
+                        }`}
                       >
                         <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                       </button>

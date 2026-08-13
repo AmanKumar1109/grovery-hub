@@ -7,7 +7,7 @@ import gsap from 'gsap';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { db } from '../../firebase';
-import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc, getDoc } from 'firebase/firestore';
 
 export default function MyOrders() {
   const [activeTab, setActiveTab] = useState('all');
@@ -73,6 +73,35 @@ export default function MyOrders() {
         cancelReason: `Cancelled by Customer: ${finalReason}`,
         updatedAt: new Date().toISOString()
       });
+
+      // Restore inventory
+      const order = orders.find(o => o.id === orderId);
+      if (order && order.items && Array.isArray(order.items)) {
+        for (const item of order.items) {
+          if (item.id) {
+            try {
+              const prodRef = doc(db, 'items', item.id);
+              const prodSnap = await getDoc(prodRef);
+              if (prodSnap.exists()) {
+                const data = prodSnap.data();
+                if (data.maxQuantity !== undefined && data.maxQuantity !== null && data.maxQuantity !== "") {
+                  let currentMax = parseInt(data.maxQuantity, 10);
+                  if (!isNaN(currentMax)) {
+                    let newMax = currentMax + (item.quantity || item.qty || 1);
+                    await updateDoc(prodRef, {
+                      maxQuantity: String(newMax),
+                      inStock: true
+                    });
+                  }
+                }
+              }
+            } catch (err) {
+              console.error("Error restoring inventory for item:", err);
+            }
+          }
+        }
+      }
+
       showToast("Order cancelled successfully.");
     } catch (error) {
       console.error("Error cancelling order:", error);

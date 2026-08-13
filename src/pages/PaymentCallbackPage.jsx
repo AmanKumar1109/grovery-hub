@@ -147,9 +147,25 @@ export default function PaymentCallbackPage() {
               for (const item of orderData.items) {
                 if (item.id) {
                   try {
-                    await updateDoc(doc(db, 'items', item.id), {
-                      recentBuyers: increment(item.quantity || 1)
-                    });
+                    const prodRef = doc(db, 'items', item.id);
+                    const prodSnap = await getDoc(prodRef);
+                    if (prodSnap.exists()) {
+                      const data = prodSnap.data();
+                      let updates = { recentBuyers: increment(item.quantity || item.qty || 1) };
+                      if (data.maxQuantity !== undefined && data.maxQuantity !== null && data.maxQuantity !== "") {
+                        let currentMax = parseInt(data.maxQuantity, 10);
+                        if (!isNaN(currentMax)) {
+                          let newMax = currentMax - (item.quantity || item.qty || 1);
+                          if (newMax <= 0) {
+                            updates.maxQuantity = '0';
+                            updates.inStock = false;
+                          } else {
+                            updates.maxQuantity = String(newMax);
+                          }
+                        }
+                      }
+                      await updateDoc(prodRef, updates);
+                    }
                   } catch (err) {
                     console.error("Error updating recent buyers:", err);
                   }
