@@ -5,6 +5,7 @@ import { SettingsProvider } from './context/SettingsContext';
 import { CartProvider } from './context/CartContext';
 import DashboardLayout from './components/dashboard/DashboardLayout';
 import FloatingWhatsApp from './components/ui/FloatingWhatsApp';
+import FloatingCall from './components/ui/FloatingCall';
 import GlobalPopup from './components/ui/GlobalPopup';
 import OrderNotificationListener from './components/ui/OrderNotificationListener';
 import { useAuth } from './context/AuthContext';
@@ -140,6 +141,7 @@ function App() {
               </Route>
             </Routes>
           </Suspense>
+          <FloatingCall />
           <FloatingWhatsApp />
           <GlobalPopup />
           <GlobalNotification />

@@ -65,6 +65,11 @@ export default function ShopSection() {
   // Pick 8 random products — reshuffles only when filteredProducts list itself changes
   const homepageProducts = useMemo(() => {
     if (filteredProducts.length <= 8) return filteredProducts;
+    
+    if (sortBy !== 'featured') {
+      return filteredProducts.slice(0, 8);
+    }
+
     // Seeded Fisher-Yates shuffle (stable per session seed)
     const arr = [...filteredProducts];
     let seed = randomSeedRef.current;
@@ -77,7 +82,7 @@ export default function ShopSection() {
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr.slice(0, 8);
-  }, [filteredProducts]);
+  }, [filteredProducts, sortBy]);
 
   return (
     <section id="shop" className="w-full px-3 sm:px-8 lg:px-12 py-6 sm:py-8 lg:py-12 bg-gradient-to-b from-slate-50 via-white to-slate-50 relative">
