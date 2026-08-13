@@ -1,34 +1,19 @@
-import crypto from 'crypto';
+const { onRequest } = require('firebase-functions/v2/https');
+const crypto = require('crypto');
 
-export default async function handler(req, res) {
-  // CORS Headers allowing all domains (thegroceryhub.in, www.thegroceryhub.in, vercel.app, localhost)
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Key'
-  );
-
+exports.initiateSabPaisaPayment = onRequest({ cors: true }, async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.status(200).end();
     return;
   }
 
   if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ success: false, error: 'Method not allowed' });
     return;
   }
 
   try {
-    const {
-      orderId,
-      amount,
-      payerName,
-      payerEmail,
-      payerMobile,
-      callbackUrl
-    } = req.body || {};
+    const { orderId, amount, payerName, payerEmail, payerMobile, callbackUrl } = req.body || {};
 
     if (!orderId || !amount) {
       res.status(400).json({ success: false, error: 'Missing required payment parameters: orderId, amount' });
@@ -36,8 +21,8 @@ export default async function handler(req, res) {
     }
 
     const merchantId = (process.env.SABPAISA_CLIENT_CODE || process.env.VITE_SABPAISA_CLIENT_CODE || 'THEG1').trim();
-    const apiKey = (process.env.SABPAISA_API_KEY || process.env.VITE_SABPAISA_API_KEY || '').trim();
-    const secretKey = (process.env.SABPAISA_SECRET_KEY || process.env.VITE_SABPAISA_SECRET_KEY || '').trim();
+    const apiKey = (process.env.SABPAISA_API_KEY || process.env.VITE_SABPAISA_API_KEY || 'sp_NG9CX1P_GTie569c-mQmJt4AgH_XgXn_ts-SEObGD8Y').trim();
+    const secretKey = (process.env.SABPAISA_SECRET_KEY || process.env.VITE_SABPAISA_SECRET_KEY || 'sec_i2gmRNd2zRPgJwgc1-sp5WWK0jZXZgSq8TxlMHhCKVY').trim();
     const env = (process.env.SABPAISA_ENV || process.env.VITE_SABPAISA_ENV || 'prod').trim().toLowerCase();
 
     const baseUrl = env === 'stag'
@@ -109,7 +94,7 @@ export default async function handler(req, res) {
       res.status(400).json({ success: false, error: errorMsg });
     }
   } catch (err) {
-    console.error("Vercel Serverless Function SabPaisa Error:", err);
+    console.error("Firebase Cloud Function SabPaisa Error:", err);
     res.status(500).json({ success: false, error: err.message || 'Internal server error' });
   }
-}
+});

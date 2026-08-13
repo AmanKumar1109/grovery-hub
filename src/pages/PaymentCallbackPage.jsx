@@ -27,11 +27,13 @@ export default function PaymentCallbackPage() {
         setOrderId(txnId || '');
 
         const isSuccessful =
-          response.status === 'SUCCESS' ||
-          response.status === '0000' ||
-          response.responseCode === '0000' ||
-          response.statusCode === '0000' ||
-          response.paymentStatus === 'SUCCESS';
+          response.verified === true && (
+            response.status === 'SUCCESS' ||
+            response.status === '0000' ||
+            response.responseCode === '0000' ||
+            response.statusCode === '0000' ||
+            response.paymentStatus === 'SUCCESS'
+          );
 
         if (isSuccessful && txnId) {
           // Read pending order from localStorage or Firestore
