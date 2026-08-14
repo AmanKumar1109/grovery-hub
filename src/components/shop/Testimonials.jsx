@@ -10,38 +10,6 @@ import ReviewSubmissionModal from './ReviewSubmissionModal';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const defaultReviews = [
-  {
-    id: 1,
-    name: 'Abhijeet Ghosh',
-    location: 'Baharagora, Jharkhand',
-    rating: 5,
-    comment: 'Mahine bhar ka ration ab main yahi se mangwati hu. Atta, dal aur masale sab ekdum badhiya quality ke hote hain aur delivery bhi fast hai.',
-    verified: true,
-    avatar: 'https://images.unsplash.com/photo-1589156280159-27698a70f29e?auto=format&fit=crop&q=80&w=150',
-    itemBought: 'Monthly Grocery Combo',
-  },
-  {
-    id: 2,
-    name: 'Aman Kumar',
-    location: 'Baharagora, Jharkhand',
-    rating: 5,
-    comment: 'Ghar ke saare kirane ka saaman yahan asani se mil jata hai. Chawal aur tel ka price market se sasta hai aur packing bhi bohot acchi hoti hai.',
-    verified: true,
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=150',
-    itemBought: 'Premium Rice & Cooking Oil',
-  },
-  {
-    id: 3,
-    name: 'Aparna',
-    location: 'Baharagora, Jharkhand',
-    rating: 5,
-    comment: 'Pehli baar online grocery order ki thi, aur experience bahut accha raha. Sabhi grocery items sahi salamat aur bilkul time par mil gaye.',
-    verified: true,
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150',
-    itemBought: 'Daily Household Groceries',
-  },
-];
 
 export default function Testimonials() {
   const { globalSettings } = useSettings();
@@ -81,9 +49,7 @@ export default function Testimonials() {
   }, []);
 
 
-  const reviews = globalSettings?.testimonialsList || defaultReviews;
-  // Combine live reviews with default/global settings reviews
-  const allReviews = liveReviews.length > 0 ? [...liveReviews, ...reviews].slice(0, 6) : reviews;
+  const allReviews = liveReviews.slice(0, 6);
 
   const badgeText = globalSettings?.testimonialsBadge || 'Happy Shoppers';
   const titleText = globalSettings?.testimonialsTitle || 'Loved By 1000+ Indian Customers 🌟';

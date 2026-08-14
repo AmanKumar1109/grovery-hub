@@ -186,17 +186,27 @@ export default function HeroContent() {
             >
               Shop Now
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                const el = document.getElementById('shop');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-green-700 hover:from-emerald-700 hover:to-green-800 text-white text-sm sm:text-base font-extrabold px-6 py-3 rounded-full shadow-lg shadow-emerald-700/20 hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer"
-            >
-              <span className="text-lg"></span>
-              best Quality
-            </button>
+            {/* Features Banner */}
+            <div ref={featureRef}>
+              <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-white/50 overflow-hidden">
+                <div className="w-6 h-6 shrink-0 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                </div>
+                <div className="relative h-5 flex items-center min-w-[120px]">
+                  {features.map((feature, idx) => (
+                    <span
+                      key={idx}
+                      className={`absolute inset-0 flex items-center text-[11px] sm:text-xs font-bold text-slate-700 transition-all duration-500 ${idx === (currentFeature % features.length)
+                        ? 'opacity-100 translate-y-0'
+                        : 'opacity-0 translate-y-3'
+                        }`}
+                    >
+                      {feature}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
           </>
         ) : (
           <>
