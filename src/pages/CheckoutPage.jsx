@@ -12,7 +12,7 @@ import LocationPickerModal from '../components/LocationPickerModal';
 import { initiateSubPaisaPayment } from '../utils/sabpaisa';
 
 export default function CheckoutPage() {
-  const { currentUser, userProfile, addAddress } = useAuth();
+  const { currentUser, userProfile, refreshUserProfile, addAddress } = useAuth();
   const { globalSettings } = useSettings();
   const {
     cartItems,
@@ -437,6 +437,10 @@ export default function CheckoutPage() {
           await updateDoc(doc(db, 'users', currentUser.uid), {
             usedCoupons: arrayUnion(appliedCoupon.id)
           });
+          // Refresh user profile in memory so the coupon cannot be reused
+          if (refreshUserProfile) {
+            await refreshUserProfile();
+          }
         } catch (err) {
           console.error("Error updating used coupons for user:", err);
         }

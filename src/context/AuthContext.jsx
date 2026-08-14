@@ -303,6 +303,22 @@ export function AuthProvider({ children }) {
     updateLocalAndStateProfile(currentUser.uid, newProfile);
   };
 
+  // Refresh User Profile from Firestore (useful after checkout)
+  const refreshUserProfile = async () => {
+    if (!currentUser) return;
+    try {
+      const userDocRef = doc(db, 'users', currentUser.uid);
+      const userDocSnap = await getDoc(userDocRef);
+      if (userDocSnap.exists()) {
+        const data = userDocSnap.data();
+        if (!data.addresses) data.addresses = [];
+        updateLocalAndStateProfile(currentUser.uid, data);
+      }
+    } catch (e) {
+      console.error('Failed to refresh user profile:', e);
+    }
+  };
+
   // Update Profile Photo
   const updateProfilePhoto = async (photoURL) => {
     if (!currentUser) return;
@@ -442,6 +458,7 @@ export function AuthProvider({ children }) {
         deleteAddress,
         setPrimaryAddress,
         toggleWishlist,
+        refreshUserProfile,
       }}
     >
       {children}

@@ -424,7 +424,7 @@ export function CartProvider({ children }) {
         const validCoupons = allCoupons.filter(c => {
           if (!c.isActive) return false;
           if (new Date(c.validUntil) < new Date()) return false;
-          if (userProfile?.usedCoupons?.includes(c.id)) return false;
+          if (userProfile?.usedCoupons?.includes(c.id) || userProfile?.usedCoupons?.includes(c.code)) return false;
           return true;
         });
         setAvailableCoupons(validCoupons);

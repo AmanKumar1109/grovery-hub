@@ -15,6 +15,7 @@ export default function PaymentCallbackPage() {
 
   const navigate = useNavigate();
   const { clearCart } = useCart();
+  const { refreshUserProfile } = useAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -179,6 +180,9 @@ export default function PaymentCallbackPage() {
                 await updateDoc(doc(db, 'users', orderData.userId), {
                   usedCoupons: arrayUnion(orderData.appliedCouponId)
                 });
+                if (refreshUserProfile) {
+                  await refreshUserProfile();
+                }
               } catch (err) {
                 console.error("Error updating used coupons:", err);
               }
