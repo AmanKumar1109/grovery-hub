@@ -43,7 +43,8 @@ function transformDoc(d) {
     recentBuyers: data.recentBuyers || 0,
     image: optimizeImageUrl(data.image),
     sortOrder: data.sortOrder ?? 999999,
-    maxQuantity: data.maxQuantity
+    maxQuantity: data.maxQuantity,
+    tags: data.tags || []
   };
 }
 
@@ -236,13 +237,20 @@ export function CartProvider({ children }) {
   // Compute dynamic categories list with product counts
   const categoriesList = useMemo(() => {
     const catCounts = {};
+    const tagCounts = {};
     let trendingCount = 0;
     let bogoCount = 0;
+    
     products.forEach(p => {
       if (p.isTrending) trendingCount++;
       if (p.isBogo) bogoCount++;
       if (p.category) {
         catCounts[p.category] = (catCounts[p.category] || 0) + 1;
+      }
+      if (p.tags && p.tags.length > 0) {
+        p.tags.forEach(t => {
+          tagCounts[t] = (tagCounts[t] || 0) + 1;
+        });
       }
     });
 
@@ -255,7 +263,7 @@ export function CartProvider({ children }) {
       } else if (id === 'BOGO') {
         list.push({ id: 'BOGO', name: globalSettings?.bogoCustomName || 'Buy 1 Get 1', count: `${bogoCount} Item${bogoCount === 1 ? '' : 's'}` });
       } else {
-        const count = countOverride ?? (catCounts[id] || 0);
+        const count = countOverride ?? (catCounts[id] || tagCounts[id] || 0);
         list.push({ id, name, count: `${count} Item${count === 1 ? '' : 's'}` });
       }
     };
@@ -266,7 +274,8 @@ export function CartProvider({ children }) {
     displayOrder.forEach(catId => pushCategory(catId, catId));
 
     // For any remaining categories not explicitly ordered by Admin, push them to the end
-    const allCategoryNames = Array.from(new Set([...dbCategories, ...Object.keys(catCounts)]));
+    const customTags = globalSettings?.customTagsList || [];
+    const allCategoryNames = Array.from(new Set([...customTags, ...dbCategories, ...Object.keys(catCounts)]));
     
     // If the admin order doesn't have the defaults, push them first to fallback
     if (!displayOrder.includes('all')) pushCategory('all', 'All Products');
@@ -280,7 +289,7 @@ export function CartProvider({ children }) {
     });
 
     return list;
-  }, [products, dbCategories, globalSettings?.categoryDisplayOrder, globalSettings?.trendingCustomName, globalSettings?.bogoCustomName]);
+  }, [products, dbCategories, globalSettings?.categoryDisplayOrder, globalSettings?.trendingCustomName, globalSettings?.bogoCustomName, globalSettings?.customTagsList]);
 
   // Ultra-fast state management with localStorage persistence (starts empty by default)
   const [cartItems, setCartItems] = useState(() => {

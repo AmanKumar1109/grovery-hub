@@ -179,7 +179,10 @@ export default function CatalogPage() {
     }
 
     // Category/subcategory/discount filters
+    const customTags = globalSettings?.customTagsList || [];
+
     filtered = filtered.filter((prod) => {
+      const isCustomTag = customTags.includes(selectedCategory);
       const matchesCategory =
         selectedCategory === 'all'
           ? true
@@ -187,7 +190,9 @@ export default function CatalogPage() {
             ? !!prod.isTrending
             : selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1'
               ? !!prod.isBogo
-              : prod.category === selectedCategory;
+              : isCustomTag
+                ? (prod.tags || []).includes(selectedCategory)
+                : prod.category === selectedCategory;
       const matchesSubcategory =
         selectedSubcategory === 'all'
           ? true
@@ -226,7 +231,7 @@ export default function CatalogPage() {
     }
 
     return filtered;
-  }, [products, searchQuery, searchIndex, selectedCategory, selectedSubcategory, onlyDiscounted, sortBy, sharedProductId]);
+  }, [products, searchQuery, searchIndex, selectedCategory, selectedSubcategory, onlyDiscounted, sortBy, sharedProductId, globalSettings?.customTagsList]);
 
   // --- Client-side lazy loading (must be AFTER filteredProducts) ---
   // Reset displayCount whenever filters / search change so user starts fresh

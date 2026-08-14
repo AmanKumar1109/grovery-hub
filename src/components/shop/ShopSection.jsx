@@ -32,8 +32,11 @@ export default function ShopSection() {
   const [sortBy, setSortBy] = useState('featured');
 
   const filteredProducts = useMemo(() => {
+    const customTags = globalSettings?.customTagsList || [];
+
     return (products || [])
       .filter((prod) => {
+        const isCustomTag = customTags.includes(selectedCategory);
         const matchesCategory =
           selectedCategory === 'all'
             ? true
@@ -41,9 +44,11 @@ export default function ShopSection() {
             ? !!prod.isTrending
             : selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1'
             ? !!prod.isBogo
+            : isCustomTag
+            ? (prod.tags || []).includes(selectedCategory)
             : prod.category === selectedCategory;
         const matchesSubcategory =
-          selectedCategory === 'all' || selectedCategory === 'Trending' || selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1'
+          selectedCategory === 'all' || selectedCategory === 'Trending' || selectedCategory === 'BOGO' || selectedCategory === 'Buy 1 Get 1' || isCustomTag
             ? true
             : !selectedSubcategory
             ? true
@@ -57,7 +62,7 @@ export default function ShopSection() {
         if (sortBy === 'rating') return b.rating - a.rating;
         return 0;
       });
-  }, [products, selectedCategory, selectedSubcategory, searchQuery, sortBy]);
+  }, [products, selectedCategory, selectedSubcategory, searchQuery, sortBy, globalSettings?.customTagsList]);
 
   // Stable random seed per page-load session (does NOT re-shuffle on re-render)
   const randomSeedRef = useRef(Math.random());

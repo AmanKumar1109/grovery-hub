@@ -197,6 +197,13 @@ export default function ProductCard({ product }) {
                     <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 fill-white" /> {product.offPercentage}% OFF
                   </span>
                 )}
+
+                {/* Custom Tags */}
+                {(product.tags || []).map(tag => (
+                  <span key={tag} className="px-2.5 py-1 bg-gradient-to-r from-fuchsia-600 to-pink-600 text-white font-black text-[9px] sm:text-[10px] rounded-full shadow-md tracking-wide uppercase">
+                    {tag}
+                  </span>
+                ))}
               </>
             )}
           </div>
