@@ -411,11 +411,13 @@ export function AuthProvider({ children }) {
       ? currentWishlist.filter((item) => item.id !== product.id)
       : [...currentWishlist, product];
 
-    const newProfile = { ...userProfile, wishlist: newWishlist };
+    const sanitizedWishlist = JSON.parse(JSON.stringify(newWishlist, (k, v) => v === undefined ? null : v));
+    
+    const newProfile = { ...userProfile, wishlist: sanitizedWishlist };
     updateLocalAndStateProfile(currentUser.uid, newProfile);
 
     try {
-      await setDoc(doc(db, 'users', currentUser.uid), { wishlist: newWishlist }, { merge: true });
+      await setDoc(doc(db, 'users', currentUser.uid), { wishlist: sanitizedWishlist }, { merge: true });
       return true;
     } catch (e) {
       console.error('Failed to update wishlist in Firestore:', e);
