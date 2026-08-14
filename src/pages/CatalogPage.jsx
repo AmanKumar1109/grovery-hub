@@ -6,6 +6,7 @@ import CartDrawer from '../components/shop/CartDrawer';
 import ProductCard from '../components/shop/ProductCard';
 import ProductSkeleton from '../components/shop/ProductSkeleton';
 import { useCart } from '../context/CartContext';
+import { useSettings } from '../context/SettingsContext';
 import { buildSearchIndex, smartSearch } from '../utils/searchEngine';
 import { Search, SlidersHorizontal, Package, Check, Filter, ChevronDown, ChevronUp, X, Loader2 } from 'lucide-react';
 import SEO from '../components/seo/SEO';
@@ -39,6 +40,7 @@ export default function CatalogPage() {
     hasMore,
     isLoadingMore,
   } = useCart();
+  const { globalSettings } = useSettings();
 
   const lastProcessedUrl = useRef('');
 
@@ -434,7 +436,11 @@ export default function CatalogPage() {
                               : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                           }`}
                         >
-                          All in {selectedCategory}
+                          All in {
+                            selectedCategory === 'Trending' ? (globalSettings?.trendingCustomName || 'Trending') :
+                            selectedCategory === 'BOGO' ? (globalSettings?.bogoCustomName || 'Buy 1 Get 1') :
+                            selectedCategory
+                          }
                         </button>
                         {activeCatDoc.subcategories.map(sub => (
                           <button

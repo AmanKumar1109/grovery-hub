@@ -187,7 +187,7 @@ export default function ProductCard({ product }) {
                 {/* Buy 1 Get 1 Free Overlay Badge */}
                 {Boolean(product.isBogo) && (
                   <span className="px-2.5 py-1 bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center gap-1 shadow-lg tracking-wide uppercase">
-                    <Gift className="w-3 h-3 text-white" /> Buy 1 Get 1 Free
+                    <Gift className="w-3 h-3 text-white" /> {globalSettings?.bogoCustomName || 'Buy 1 Get 1 Free'}
                   </span>
                 )}
 
@@ -233,7 +233,7 @@ export default function ProductCard({ product }) {
           {/* Trending indicator on image bottom-right — ONLY when admin marks product.isTrending as true */}
           {Boolean(product.isTrending) && (
             <div className="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 px-2.5 py-1 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center gap-1 shadow-lg animate-pulse tracking-wide z-10">
-              <Flame className="w-3 h-3 fill-white" /> Trending
+              <Flame className="w-3 h-3 fill-white" /> {globalSettings?.trendingCustomName || 'Trending'}
             </div>
           )}
         </div>

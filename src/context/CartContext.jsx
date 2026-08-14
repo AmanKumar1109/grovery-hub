@@ -251,9 +251,9 @@ export function CartProvider({ children }) {
       if (id === 'all') {
         list.push({ id: 'all', name: 'All Products', count: `${products.length} Items` });
       } else if (id === 'Trending') {
-        list.push({ id: 'Trending', name: 'Trending', count: `${trendingCount} Item${trendingCount === 1 ? '' : 's'}` });
+        list.push({ id: 'Trending', name: globalSettings?.trendingCustomName || 'Trending', count: `${trendingCount} Item${trendingCount === 1 ? '' : 's'}` });
       } else if (id === 'BOGO') {
-        list.push({ id: 'BOGO', name: 'Buy 1 Get 1', count: `${bogoCount} Item${bogoCount === 1 ? '' : 's'}` });
+        list.push({ id: 'BOGO', name: globalSettings?.bogoCustomName || 'Buy 1 Get 1', count: `${bogoCount} Item${bogoCount === 1 ? '' : 's'}` });
       } else {
         const count = countOverride ?? (catCounts[id] || 0);
         list.push({ id, name, count: `${count} Item${count === 1 ? '' : 's'}` });
@@ -270,8 +270,8 @@ export function CartProvider({ children }) {
     
     // If the admin order doesn't have the defaults, push them first to fallback
     if (!displayOrder.includes('all')) pushCategory('all', 'All Products');
-    if (!displayOrder.includes('Trending')) pushCategory('Trending', 'Trending');
-    if (!displayOrder.includes('BOGO')) pushCategory('BOGO', 'Buy 1 Get 1');
+    if (!displayOrder.includes('Trending')) pushCategory('Trending', globalSettings?.trendingCustomName || 'Trending');
+    if (!displayOrder.includes('BOGO')) pushCategory('BOGO', globalSettings?.bogoCustomName || 'Buy 1 Get 1');
 
     allCategoryNames.forEach(catName => {
       if (!displayOrder.includes(catName)) {
@@ -280,7 +280,7 @@ export function CartProvider({ children }) {
     });
 
     return list;
-  }, [products, dbCategories, globalSettings?.categoryDisplayOrder]);
+  }, [products, dbCategories, globalSettings?.categoryDisplayOrder, globalSettings?.trendingCustomName, globalSettings?.bogoCustomName]);
 
   // Ultra-fast state management with localStorage persistence (starts empty by default)
   const [cartItems, setCartItems] = useState(() => {
