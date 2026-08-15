@@ -39,7 +39,7 @@ export default function CartDrawer() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end items-center sm:p-4">
+    <div className="fixed inset-0 z-[10000] flex justify-end items-center sm:p-4">
       {/* Backdrop overlay */}
       <div
         className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm transition-opacity"
