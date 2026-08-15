@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Heart, ShoppingBag, Star, Plus, Minus, Zap, TrendingUp, Clock, Users, Flame, Gift, Share2 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -8,6 +9,8 @@ export default function ProductCard({ product }) {
   const { cartItems, addToCart, updateQuantity, showToast, setIsCartOpen } = useCart();
   const { currentUser, userProfile, toggleWishlist } = useAuth();
   const { globalSettings } = useSettings();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const theme = globalSettings?.activeTheme || 'normal';
   const isIndependence = theme === 'independence-day';
@@ -216,6 +219,7 @@ export default function ProductCard({ product }) {
               e.stopPropagation();
               if (!currentUser) {
                 showToast('Please sign in to save items to your wishlist!');
+                navigate(`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`);
                 return;
               }
               toggleWishlist(product);
