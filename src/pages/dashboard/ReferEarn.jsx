@@ -93,7 +93,7 @@ export default function ReferEarn() {
       try {
         await navigator.share({
           title: 'The Grocery Hub',
-          text: `Use my code ${referralCode} to get ₹${friendRewardAmount} OFF your first order!`,
+          text: `Use my code ${referralCode} to get ₹${friendRewardAmount} OFF your next order after your first delivery!`,
           url: referralLink,
         });
       } catch (err) {
@@ -131,7 +131,7 @@ export default function ReferEarn() {
           ) : (
             <>
               <p className="text-emerald-50 max-w-md font-medium text-sm">
-                Your friend gets ₹{friendRewardAmount} OFF on their first ₹{minOrderValue}+ order. After their order is successfully delivered, you unlock a Coupon worth ₹{rewardAmount} OFF!
+                After your friend's first ₹{minOrderValue}+ order is successfully delivered, BOTH of you unlock a Reward Coupon worth ₹{rewardAmount} OFF!
               </p>
               
               <div className="pt-4 flex flex-col sm:flex-row items-center gap-3">

@@ -119,28 +119,7 @@ exports.onUserCreated = onDocumentCreated('users/{userId}', async (event) => {
         { referralId, userId: referrerId, referredUserId: newUserId }
       );
 
-      // Generate the reward coupon for the newly referred user (User B)
-      const userBCouponId = `WELCOME-${Date.now().toString().slice(-4)}-${Math.floor(Math.random() * 1000)}`;
-      const validUntil = new Date();
-      validUntil.setDate(validUntil.getDate() + (CONFIG.referredUserReward.couponValidityDays || 30));
-
-      const couponData = {
-        code: userBCouponId,
-        userId: newUserId, // Locked to User B
-        isReferralCoupon: true,
-        discountType: 'flat',
-        discountValue: CONFIG.referredUserReward.amount,
-        minOrderValue: CONFIG.referredUserReward.couponMinOrderValue,
-        maxUses: 1,
-        isActive: true,
-        validUntil: validUntil.toISOString().split('T')[0],
-        sourceReferralId: referralId,
-        createdAt: FieldValue.serverTimestamp()
-      };
-
-      await db.collection('coupons').doc(userBCouponId).set(couponData);
-
-      console.log(`Successfully attributed referral ${referralId} and gave User B coupon ${userBCouponId}`);
+      console.log(`Successfully attributed referral ${referralId}. Rewards will be granted upon first order delivery.`);
       return true;
     } catch (error) {
       console.error('Error processing referral attribution:', error);

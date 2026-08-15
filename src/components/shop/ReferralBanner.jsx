@@ -13,7 +13,7 @@ export default function ReferralBanner() {
   const friendRewardAmount = globalSettings?.referredUserRewardAmount || 30;
 
   const bannerTitle = globalSettings?.referralBannerTitle || 'Refer Friends, Earn Rewards!';
-  const bannerDescRaw = globalSettings?.referralBannerDescription || 'Invite your friends to The Grocery Hub. They get ₹{friendRewardAmount} OFF on their first order, and you earn exciting reward coupons!';
+  const bannerDescRaw = globalSettings?.referralBannerDescription || 'Invite your friends to The Grocery Hub! After their first order is delivered, BOTH of you earn exciting reward coupons!';
   const bannerDesc = bannerDescRaw.replace('{friendRewardAmount}', friendRewardAmount);
   const bannerButton = globalSettings?.referralBannerButton || 'Start Earning';
 

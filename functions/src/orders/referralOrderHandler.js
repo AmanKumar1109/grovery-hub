@@ -36,6 +36,12 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
           couponValidityDays: data.referralCouponValidityDays || CONFIG.referrerReward.couponValidityDays,
           couponMinOrderValue: data.referralCouponMinOrderValue || CONFIG.referrerReward.couponMinOrderValue
         };
+        CONFIG.referredUserReward = {
+          ...CONFIG.referredUserReward,
+          amount: data.referredUserRewardAmount || CONFIG.referredUserReward?.amount || 30,
+          couponMinOrderValue: data.referralCouponMinOrderValue || CONFIG.referredUserReward?.couponMinOrderValue || 100,
+          couponValidityDays: data.referralCouponValidityDays || CONFIG.referredUserReward?.couponValidityDays || 30
+        };
       }
     }
 
@@ -83,7 +89,7 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
         throw new Error(`Referral ${referralId} is no longer REGISTERED.`);
       }
 
-      // Create Coupon Directly (Skipping Scratch Card)
+      // Create Coupon for Referrer
       const newCouponId = `RWD-${Date.now().toString().slice(-4)}-${Math.floor(Math.random() * 10000)}`;
       const validUntil = new Date();
       validUntil.setDate(validUntil.getDate() + CONFIG.referrerReward.couponValidityDays);
@@ -106,6 +112,29 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
 
       transaction.set(couponRef, couponData);
 
+      // Create Coupon for Friend (Referred User)
+      const friendCouponId = `WELCOME-${Date.now().toString().slice(-4)}-${Math.floor(Math.random() * 10000)}`;
+      const friendValidUntil = new Date();
+      friendValidUntil.setDate(friendValidUntil.getDate() + CONFIG.referredUserReward.couponValidityDays);
+      const friendDiscountAmount = CONFIG.referredUserReward.amount;
+
+      const friendCouponRef = db.collection('coupons').doc(friendCouponId);
+      const friendCouponData = {
+        code: friendCouponId,
+        userId: referralData.referredUserId,
+        isReferralCoupon: true,
+        discountType: 'flat',
+        discountValue: friendDiscountAmount,
+        minOrderValue: CONFIG.referredUserReward.couponMinOrderValue,
+        maxUses: 1,
+        isActive: true,
+        validUntil: friendValidUntil.toISOString().split('T')[0],
+        sourceReferralId: referralId,
+        createdAt: FieldValue.serverTimestamp()
+      };
+
+      transaction.set(friendCouponRef, friendCouponData);
+
       // Update Referral Status
       transaction.update(referralDoc.ref, {
         status: 'REWARDED',
@@ -116,12 +145,10 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
         updatedAt: FieldValue.serverTimestamp()
       });
 
-      // Add audit log asynchronously (after transaction)
-      // Note: Transaction shouldn't contain side-effects that can't be rolled back,
-      // but Firestore writes are queued in the transaction.
-      const auditRef = db.collection('auditLogs').doc();
-      transaction.set(auditRef, {
-        id: auditRef.id,
+      // Add audit logs asynchronously (after transaction)
+      const auditRef1 = db.collection('auditLogs').doc();
+      transaction.set(auditRef1, {
+        id: auditRef1.id,
         timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
         action: 'REFERRAL_COUPON_REWARDED',
         actor: 'System (Cloud Function)',
@@ -133,6 +160,22 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
         userId: referralData.referrerId,
         orderId: orderId,
         couponId: newCouponId
+      });
+
+      const auditRef2 = db.collection('auditLogs').doc();
+      transaction.set(auditRef2, {
+        id: auditRef2.id,
+        timestamp: new Date().toISOString().replace('T', ' ').slice(0, 19),
+        action: 'REFERRAL_COUPON_REWARDED',
+        actor: 'System (Cloud Function)',
+        actorType: 'system',
+        category: 'Referrals',
+        details: `Rewarded referred user ${referralData.referredUserId} with coupon ${friendCouponId} for order ${orderId}`,
+        severity: 'success',
+        referralId: referralId,
+        userId: referralData.referredUserId,
+        orderId: orderId,
+        couponId: friendCouponId
       });
 
       return { couponId: newCouponId };
