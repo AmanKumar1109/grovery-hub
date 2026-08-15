@@ -184,7 +184,7 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
       attribution: '&copy; Google Maps'
     }).addTo(map);
 
-    // 5 KM Geofence Circle around Hub - Strong & Accurate Boundary
+    // 7 KM Geofence Circle around Hub - Strong & Accurate Boundary
     const isServiceable = serviceability.isServiceable;
     
     // Create the main solid boundary line
@@ -479,7 +479,7 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
               <div className={`absolute bottom-0 w-3 h-1.5 bg-black/40 rounded-full blur-[1px] transition-all duration-300 ${isMapDragging ? 'scale-75 opacity-20' : 'scale-100 opacity-40'}`}></div>
             </div>
 
-            {/* Live 5 KM Serviceability Badge Overlay on Map */}
+            {/* Live 7 KM Serviceability Badge Overlay on Map */}
             <div className="absolute top-3 left-3 right-3 z-[1000] flex items-center justify-between gap-2 pointer-events-none">
               {serviceability.isServiceable ? (
                 <div className="bg-emerald-500/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 shadow-md">
@@ -489,7 +489,7 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
               ) : (
                 <div className="bg-rose-600/90 backdrop-blur-md text-white px-3 py-1.5 rounded-full text-xs font-black flex items-center gap-1.5 shadow-md">
                   <AlertTriangle className="w-4 h-4" />
-                  <span>🔴 Outside 5 KM Radius Zone ({serviceability.distanceKm} km)</span>
+                  <span>🔴 Outside 7 KM Radius Zone ({serviceability.distanceKm} km)</span>
                 </div>
               )}
 
@@ -638,7 +638,7 @@ export default function LocationPickerModal({ isOpen, onClose, onConfirm, initia
             <span>
               {serviceability.isServiceable
                 ? 'Confirm This Delivery Location'
-                : '🚫 Delivery Unavailable (Out of 5 KM Zone)'}
+                : '🚫 Delivery Unavailable (Out of 7 KM Zone)'}
             </span>
             {serviceability.isServiceable && <CheckCircle2 className="w-4 h-4 stroke-[3]" />}
           </button>

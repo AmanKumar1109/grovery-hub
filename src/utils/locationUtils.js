@@ -10,7 +10,7 @@ export const BAHARAGORA_HUB = {
 };
 
 // Maximum Allowed Delivery Radius Limit (in Kilometers)
-export const MAX_DELIVERY_RADIUS_KM = 5.0;
+export const MAX_DELIVERY_RADIUS_KM = 7.0;
 
 /**
  * Calculates Haversine distance in kilometers between two coordinates
@@ -36,7 +36,7 @@ export function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * Checks if a customer location is within the 5 km Baharagora delivery zone
+ * Checks if a customer location is within the 7 km Baharagora delivery zone
  */
 export function checkDeliveryServiceable(lat, lng) {
   if (!lat || !lng) {
@@ -122,7 +122,7 @@ export function getInitialRiderCoordinates(customerLat, customerLng) {
 }
 
 /**
- * Checks if a typed/selected customer address is serviceable within 5 km of Baharagora
+ * Checks if a typed/selected customer address is serviceable within 7 km of Baharagora
  */
 export function checkAddressServiceability(addressObj) {
   if (!addressObj) {
@@ -160,7 +160,7 @@ export function checkAddressServiceability(addressObj) {
         isServiceable: false,
         distanceKm: town.distance,
         townName: town.name,
-        reason: `🚫 Delivery Unavailable: "${town.name}" is approx ${town.distance} km away from Baharagora Store. We strictly deliver ONLY within a 5 km radius of Baharagora Hub!`
+        reason: `🚫 Delivery Unavailable: "${town.name}" is approx ${town.distance} km away from Baharagora Store. We strictly deliver ONLY within a 7 km radius of Baharagora Hub!`
       };
     }
   }
@@ -173,7 +173,7 @@ export function checkAddressServiceability(addressObj) {
         isServiceable: false,
         distanceKm: 110,
         townName: addressObj.city || 'Out of Town',
-        reason: `🚫 Delivery Unavailable: Pincode ${pincode} is out of our 5 km delivery radius around Baharagora (832101)!`
+        reason: `🚫 Delivery Unavailable: Pincode ${pincode} is out of our 7 km delivery radius around Baharagora (832101)!`
       };
     }
   }

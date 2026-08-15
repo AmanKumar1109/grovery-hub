@@ -161,7 +161,7 @@ export default function CheckoutPage() {
   const activeAddress = addresses.find(a => a.id === activeAddressId) || addresses[0];
   const hasAddress = Boolean(activeAddress);
 
-  // Baharagora 5 KM Delivery Radius Check
+  // Baharagora 7 KM Delivery Radius Check
   const serviceability = checkAddressServiceability(activeAddress || addressForm);
 
   // Time-based Delivery Logic (9:00 AM to 9:00 PM is normal, else Next Morning)
@@ -212,9 +212,9 @@ export default function CheckoutPage() {
       return;
     }
 
-    // STRICT 5 KM BAHARAGORA RADIUS CHECK
+    // STRICT 7 KM BAHARAGORA RADIUS CHECK
     if (!serviceability.isServiceable) {
-      showToast(serviceability.reason || 'Sorry! Delivery unavailable outside 5 km of Baharagora.');
+      showToast(serviceability.reason || 'Sorry! Delivery unavailable outside 7 km of Baharagora.');
       return;
     }
 
@@ -521,18 +521,18 @@ export default function CheckoutPage() {
                     </p>
                   </div>
 
-                  {/* 5 KM Baharagora Radius Unserviceable Warning Banner */}
+                  {/* 7 KM Baharagora Radius Unserviceable Warning Banner */}
                   {!serviceability.isServiceable && (
                     <div className="p-4 rounded-2xl bg-rose-50 border-2 border-rose-300 text-rose-800 space-y-1.5 shadow-sm">
                       <div className="flex items-center gap-2 font-black text-sm text-rose-700">
                         <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
-                        <span>OUT OF 5 KM DELIVERY RADIUS ZONE</span>
+                        <span>OUT OF 7 KM DELIVERY RADIUS ZONE</span>
                       </div>
                       <p className="text-xs font-bold text-rose-700 leading-relaxed">
                         {serviceability.reason}
                       </p>
                       <p className="text-[11px] font-medium text-rose-600 pt-1">
-                        📍 Store Location: Main Market, Baharagora (832301). We only deliver orders within 5 km of Baharagora Hub.
+                        📍 Store Location: Main Market, Baharagora (832301). We only deliver orders within 7 km of Baharagora Hub.
                       </p>
                     </div>
                   )}
@@ -811,7 +811,7 @@ export default function CheckoutPage() {
                   {isProcessing
                     ? 'Processing...'
                     : !serviceability.isServiceable
-                      ? '🚫 Delivery Unavailable (Out of 5 KM Zone)'
+                      ? '🚫 Delivery Unavailable (Out of 7 KM Zone)'
                       : !paymentMethod
                         ? 'Select Payment Method'
                         : paymentMethod === 'ONLINE'
@@ -830,7 +830,7 @@ export default function CheckoutPage() {
 
               {!serviceability.isServiceable && (
                 <p className="text-center text-xs font-extrabold text-rose-600 mt-3">
-                  ⚠️ This address (Bistupur / Jamshedpur / Out of range) is outside our 5 km Baharagora delivery zone!
+                  ⚠️ This address (Bistupur / Jamshedpur / Out of range) is outside our 7 km Baharagora delivery zone!
                 </p>
               )}
 

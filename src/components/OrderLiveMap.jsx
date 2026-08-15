@@ -100,7 +100,7 @@ export default function OrderLiveMap({ order }) {
       attribution: '&copy; Google Maps'
     }).addTo(map);
 
-    // 5 KM Geofence Ring - Strong & Accurate Boundary
+    // 7 KM Geofence Ring - Strong & Accurate Boundary
     L.circle([BAHARAGORA_HUB.lat, BAHARAGORA_HUB.lng], {
       radius: MAX_DELIVERY_RADIUS_KM * 1000,
       color: serviceCheck.isServiceable ? '#059669' : '#e11d48',
