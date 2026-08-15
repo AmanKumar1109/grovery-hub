@@ -287,7 +287,7 @@ export default function ReferEarn() {
                         {coupon.discountType === 'flat' ? `₹${coupon.discountValue} OFF` : `${coupon.discountValue}% OFF`}
                       </p>
                       <p className="text-[10px] text-slate-500 mt-2 font-medium">
-                        Min. Order: ₹{coupon.minOrderValue} &bull; Valid till: {new Date(coupon.validUntil).toLocaleDateString()}
+                        Min. Order: ₹{(coupon.isReferralCoupon && globalSettings?.referralCouponMinOrderValue) ? globalSettings.referralCouponMinOrderValue : coupon.minOrderValue} &bull; Valid till: {new Date(coupon.validUntil).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

@@ -741,7 +741,7 @@ export default function CheckoutPage() {
                             className="shrink-0 border border-emerald-200 bg-emerald-50/50 rounded-lg px-3 py-2 cursor-pointer hover:bg-emerald-50 transition-colors"
                           >
                             <p className="text-xs font-black text-emerald-700">{c.code}</p>
-                            <p className="text-[10px] font-bold text-slate-500 mt-0.5">Min ₹{c.minOrderValue}</p>
+                            <p className="text-[10px] font-bold text-slate-500 mt-0.5">Min ₹{(c.isReferralCoupon && globalSettings?.referralCouponMinOrderValue) ? globalSettings.referralCouponMinOrderValue : c.minOrderValue}</p>
                           </div>
                         ))}
                       </div>

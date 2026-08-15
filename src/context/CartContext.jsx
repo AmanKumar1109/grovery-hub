@@ -459,8 +459,12 @@ export function CartProvider({ children }) {
       return;
     }
 
-    if (cartTotal < coupon.minOrderValue) {
-      setPromoError(`Minimum order value for this code is ₹${coupon.minOrderValue}`);
+    const requiredMin = (coupon.isReferralCoupon && globalSettings?.referralCouponMinOrderValue) 
+      ? globalSettings.referralCouponMinOrderValue 
+      : coupon.minOrderValue;
+
+    if (cartTotal < requiredMin) {
+      setPromoError(`Minimum order value for this code is ₹${requiredMin}`);
       return;
     }
 
@@ -489,11 +493,15 @@ export function CartProvider({ children }) {
       return;
     }
     
+    const requiredMin = (appliedCoupon.isReferralCoupon && globalSettings?.referralCouponMinOrderValue) 
+      ? globalSettings.referralCouponMinOrderValue 
+      : appliedCoupon.minOrderValue;
+
     // If cart falls below min value, remove coupon
-    if (cartTotal < appliedCoupon.minOrderValue) {
+    if (cartTotal < requiredMin) {
       setAppliedCoupon(null);
       setDiscountAmount(0);
-      showToast(`Promo Code removed. Minimum order value is ₹${appliedCoupon.minOrderValue}`);
+      showToast(`Promo Code removed. Minimum order value is ₹${requiredMin}`);
       return;
     }
 
