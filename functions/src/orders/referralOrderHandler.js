@@ -31,16 +31,16 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
         CONFIG.isActive = data.referralCampaignActive;
         CONFIG.referrerReward = {
           ...CONFIG.referrerReward,
-          amount: data.referrerRewardAmount || CONFIG.referrerReward.amount,
-          minOrderValue: data.referralMinOrderValue || CONFIG.referrerReward.minOrderValue,
-          couponValidityDays: data.referralCouponValidityDays || CONFIG.referrerReward.couponValidityDays,
-          couponMinOrderValue: data.referralCouponMinOrderValue || CONFIG.referrerReward.couponMinOrderValue
+          amount: parseInt(data.referrerRewardAmount) || CONFIG.referrerReward.amount,
+          minOrderValue: parseInt(data.referralMinOrderValue) || CONFIG.referrerReward.minOrderValue,
+          couponValidityDays: parseInt(data.referralCouponValidityDays) || CONFIG.referrerReward.couponValidityDays,
+          couponMinOrderValue: parseInt(data.referralCouponMinOrderValue) || CONFIG.referrerReward.couponMinOrderValue
         };
         CONFIG.referredUserReward = {
           ...CONFIG.referredUserReward,
-          amount: data.referredUserRewardAmount || CONFIG.referredUserReward?.amount || 30,
-          couponMinOrderValue: data.referralCouponMinOrderValue || CONFIG.referredUserReward?.couponMinOrderValue || 100,
-          couponValidityDays: data.referralCouponValidityDays || CONFIG.referredUserReward?.couponValidityDays || 30
+          amount: parseInt(data.referredUserRewardAmount) || CONFIG.referredUserReward?.amount || 30,
+          couponMinOrderValue: parseInt(data.referralCouponMinOrderValue) || CONFIG.referredUserReward?.couponMinOrderValue || 100,
+          couponValidityDays: parseInt(data.referralCouponValidityDays) || CONFIG.referredUserReward?.couponValidityDays || 30
         };
       }
     }
