@@ -167,6 +167,7 @@ export default function CheckoutPage() {
   // Time-based Delivery Logic (9:00 AM to 9:00 PM is normal, else Next Morning)
   const currentHour = new Date().getHours();
   const isLateOrder = currentHour >= 21 || currentHour < 9;
+  const deliveryDayText = currentHour >= 21 ? 'Tomorrow Morning' : 'Today Morning';
 
   useEffect(() => {
     if (!currentUser) {
@@ -792,7 +793,7 @@ export default function CheckoutPage() {
                   </div>
                   <p className="text-xs font-bold text-indigo-800 leading-relaxed">
                     Our standard delivery hours are <span className="font-black text-indigo-900 bg-indigo-100 px-1 rounded">9:00 AM - 9:00 PM</span>.<br />
-                    Orders placed now will be delivered fresh <span className="font-black text-emerald-700">Tomorrow Morning</span>!
+                    Orders placed now will be delivered fresh <span className="font-black text-emerald-700">{deliveryDayText}</span>!
                   </p>
                 </div>
               )}
