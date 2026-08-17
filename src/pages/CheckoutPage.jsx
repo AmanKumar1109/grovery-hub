@@ -294,7 +294,7 @@ export default function CheckoutPage() {
         otpFailedAttempts: 0,
         // Delivery Timing Logic
         isNextMorningDelivery: isLateOrder,
-        deliverySlot: isLateOrder ? 'Next Morning (9:00 AM - 12:00 PM)' : 'Standard (As soon as possible)'
+        deliverySlot: isLateOrder ? `${deliveryDayText} (9:00 AM - 12:00 PM)` : 'Standard (As soon as possible)'
       };
 
       const sanitizedOrderData = JSON.parse(JSON.stringify(orderData, (k, v) => v === undefined ? null : v));
