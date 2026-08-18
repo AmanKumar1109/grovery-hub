@@ -300,12 +300,18 @@ export default function CheckoutPage() {
       const sanitizedOrderData = JSON.parse(JSON.stringify(orderData, (k, v) => v === undefined ? null : v));
 
       if (paymentMethod === 'ONLINE') {
-        // Save pending order to localStorage ONLY before payment verification.
-        // DO NOT write to Firestore 'orders' collection until payment is confirmed successful.
-        localStorage.setItem('pendingSubPaisaOrder', JSON.stringify({
+        const pendingOnlineOrder = {
           ...sanitizedOrderData,
+          status: 'Pending Payment',
+          paymentStatus: 'Pending (Online)',
           appliedCouponId: appliedCoupon?.id || null
-        }));
+        };
+
+        // 1. Create order document in Firestore immediately with 'Pending Payment' status
+        await setDoc(doc(db, 'orders', orderId), pendingOnlineOrder);
+
+        // 2. Save pending order to localStorage as quick local recovery cache
+        localStorage.setItem('pendingSubPaisaOrder', JSON.stringify(pendingOnlineOrder));
 
         await initiateSubPaisaPayment({
           orderId: orderId,

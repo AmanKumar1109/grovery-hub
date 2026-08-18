@@ -5,6 +5,7 @@ import { parseSubPaisaResponse } from '../utils/sabpaisa';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc, updateDoc, increment, addDoc, collection, arrayUnion } from 'firebase/firestore';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function PaymentCallbackPage() {
   const [loading, setLoading] = useState(true);
@@ -24,7 +25,7 @@ export default function PaymentCallbackPage() {
         console.log("SubPaisa Response:", response);
         setPaymentData(response);
 
-        const txnId = response.clientTxnId || response.txnId || response.spTxnId;
+        const txnId = response.clientTxnId || response.merchantTxnId || response.txnId || response.orderId || response.spTxnId;
         setOrderId(txnId || '');
 
         const isSuccessful =
@@ -37,155 +38,167 @@ export default function PaymentCallbackPage() {
           );
 
         if (isSuccessful && txnId) {
-          // Read pending order from localStorage or Firestore
+          // Read pending order from localStorage first, then fallback to Firestore
+          let orderData = null;
           const pendingOrderRaw = localStorage.getItem('pendingSubPaisaOrder');
-          let orderData = pendingOrderRaw ? JSON.parse(pendingOrderRaw) : null;
-
-          if (!orderData) {
-            const orderDoc = await getDoc(doc(db, 'orders', txnId));
-            if (orderDoc.exists()) {
-              orderData = orderDoc.data();
+          if (pendingOrderRaw) {
+            try {
+              orderData = JSON.parse(pendingOrderRaw);
+            } catch (e) {
+              console.warn("Failed to parse pendingSubPaisaOrder from localStorage:", e);
             }
           }
 
-          if (orderData) {
-            // Update order status to paid
-            const updatedOrder = {
-              ...orderData,
-              paymentStatus: 'Paid (SubPaisa)',
-              paymentMethod: 'Online Payment (SubPaisa)',
-              status: 'Order Received',
-              sabpaisaTxnId: response.sabpaisaTxnId || response.pgTxnNo || response.spTxnId || '',
-              paymentResponse: response,
-              updatedAt: new Date().toISOString()
-            };
+          if (!orderData) {
+            try {
+              const orderDoc = await getDoc(doc(db, 'orders', txnId));
+              if (orderDoc.exists()) {
+                orderData = orderDoc.data();
+              }
+            } catch (docErr) {
+              console.warn("Failed to fetch order from Firestore:", docErr);
+            }
+          }
 
-            await setDoc(doc(db, 'orders', txnId), updatedOrder, { merge: true });
+          // Update order status in Firestore to paid and order received
+          const updatedOrder = {
+            ...(orderData || {}),
+            id: txnId,
+            orderId: txnId,
+            paymentStatus: 'Paid (SubPaisa)',
+            paymentMethod: 'Online Payment (SubPaisa)',
+            status: 'Order Received',
+            isCurrent: true,
+            sabpaisaTxnId: response.sabpaisaTxnId || response.pgTxnNo || response.spTxnId || '',
+            paymentResponse: response,
+            updatedAt: new Date().toISOString()
+          };
 
-            // Send Confirmation Email
-            if (orderData.customerEmail) {
-              try {
-                const notifDoc = await getDoc(doc(db, 'settings', 'notifications'));
-                let template = null;
+          await setDoc(doc(db, 'orders', txnId), updatedOrder, { merge: true });
 
-                if (notifDoc.exists()) {
-                  template = notifDoc.data().templates?.Pending;
-                }
+          // Send Confirmation Email
+          if (orderData && orderData.customerEmail) {
+            try {
+              const notifDoc = await getDoc(doc(db, 'settings', 'notifications'));
+              let template = null;
 
-                if (template) {
-                  const formatMoney = (amt) => Number(amt).toFixed(2);
-                  const formatAddress = (addr) => typeof addr === 'string' ? addr : (addr ? `${addr.street || ''}, ${addr.locality || ''}, ${addr.city || ''} - ${addr.pincode || ''}` : 'N/A');
-                  const formatTime = (ts) => ts ? new Date(ts).toLocaleString() : 'N/A';
-                  const formatOrderItems = (items, totalAmount, address) => {
-                    if (!items || items.length === 0) return '';
-                    let html = `<table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">`;
-                    html += `<tr><th style="background: #f8fafc; padding: 12px 15px; text-align: left; font-size: 13px; color: #64748b; border-bottom: 2px solid #e2e8f0;">Item</th><th style="background: #f8fafc; padding: 12px 15px; text-align: right; font-size: 13px; color: #64748b; border-bottom: 2px solid #e2e8f0;">Total</th></tr>`;
-                    items.forEach(item => {
-                      const qty = item.quantity || item.qty || 1;
-                      const name = item.name || 'Item';
-                      const price = item.finalPrice || item.price || 0;
-                      const total = (price * qty).toFixed(2);
-                      html += `<tr>
-                        <td style="padding: 12px 15px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px;"><strong>${qty}x</strong> ${name}</td>
-                        <td style="padding: 12px 15px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; text-align: right; font-weight: 600;">₹${total}</td>
-                      </tr>`;
-                    });
+              if (notifDoc.exists()) {
+                template = notifDoc.data().templates?.Pending;
+              }
 
-                    if (totalAmount !== undefined) {
-                      html += `<tr>
-                        <td style="padding: 12px 15px; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-size: 15px; font-weight: 800; text-align: right;">Total</td>
-                        <td style="padding: 12px 15px; border-bottom: 1px solid #e2e8f0; color: #059669; font-size: 16px; text-align: right; font-weight: 800;">₹${parseFloat(totalAmount).toFixed(2)}</td>
-                      </tr>`;
-                    }
+              if (template) {
+                const formatMoney = (amt) => Number(amt).toFixed(2);
+                const formatAddress = (addr) => typeof addr === 'string' ? addr : (addr ? `${addr.street || ''}, ${addr.locality || ''}, ${addr.city || ''} - ${addr.pincode || ''}` : 'N/A');
+                const formatTime = (ts) => ts ? new Date(ts).toLocaleString() : 'N/A';
+                const formatOrderItems = (items, totalAmount, address) => {
+                  if (!items || items.length === 0) return '';
+                  let html = `<table style="width: 100%; border-collapse: collapse; margin: 20px 0; background: #ffffff; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0;">`;
+                  html += `<tr><th style="background: #f8fafc; padding: 12px 15px; text-align: left; font-size: 13px; color: #64748b; border-bottom: 2px solid #e2e8f0;">Item</th><th style="background: #f8fafc; padding: 12px 15px; text-align: right; font-size: 13px; color: #64748b; border-bottom: 2px solid #e2e8f0;">Total</th></tr>`;
+                  items.forEach(item => {
+                    const qty = item.quantity || item.qty || 1;
+                    const name = item.name || 'Item';
+                    const price = item.finalPrice || item.price || 0;
+                    const total = (price * qty).toFixed(2);
+                    html += `<tr>
+                      <td style="padding: 12px 15px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px;"><strong>${qty}x</strong> ${name}</td>
+                      <td style="padding: 12px 15px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; text-align: right; font-weight: 600;">₹${total}</td>
+                    </tr>`;
+                  });
 
-                    if (address) {
-                      html += `<tr>
-                        <td colspan="2" style="padding: 15px; background: #f8fafc; color: #475569; font-size: 13px; line-height: 1.5;">
-                          <strong style="color: #0f172a; display: block; margin-bottom: 4px;">Delivery Address:</strong>
-                          ${address}
-                        </td>
-                      </tr>`;
-                    }
+                  if (totalAmount !== undefined) {
+                    html += `<tr>
+                      <td style="padding: 12px 15px; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-size: 15px; font-weight: 800; text-align: right;">Total</td>
+                      <td style="padding: 12px 15px; border-bottom: 1px solid #e2e8f0; color: #059669; font-size: 16px; text-align: right; font-weight: 800;">₹${parseFloat(totalAmount).toFixed(2)}</td>
+                    </tr>`;
+                  }
 
-                    html += `</table>`;
-                    return html.replace(/\n/g, '');
-                  };
+                  if (address) {
+                    html += `<tr>
+                      <td colspan="2" style="padding: 15px; background: #f8fafc; color: #475569; font-size: 13px; line-height: 1.5;">
+                        <strong style="color: #0f172a; display: block; margin-bottom: 4px;">Delivery Address:</strong>
+                        ${address}
+                      </td>
+                    </tr>`;
+                  }
 
-                  const rawBody = template.body || '';
-                  let replacedHtmlBody = rawBody.replace(/\n/g, '<br>');
-                  replacedHtmlBody = replacedHtmlBody
-                    .replace(/\[Customer Name\]/gi, orderData.customerName || 'Customer')
-                    .replace(/\[Order ID\]/gi, txnId)
-                    .replace(/\[Amount\]/gi, formatMoney(orderData.totalAmount))
-                    .replace(/\[Address\]/gi, formatAddress(orderData.address))
-                    .replace(/\[Time\]/gi, formatTime(orderData.createdAt))
-                    .replace(/\[Cancel Reason\]/gi, 'N/A')
-                    .replace(/\[Order Items?\]/gi, formatOrderItems(orderData.items, orderData.totalAmount, formatAddress(orderData.address)));
+                  html += `</table>`;
+                  return html.replace(/\n/g, '');
+                };
 
-                  const emailSubject = template.subject.replace(/\[Order ID\]/g, txnId);
+                const rawBody = template.body || '';
+                let replacedHtmlBody = rawBody.replace(/\n/g, '<br>');
+                replacedHtmlBody = replacedHtmlBody
+                  .replace(/\[Customer Name\]/gi, orderData.customerName || 'Customer')
+                  .replace(/\[Order ID\]/gi, txnId)
+                  .replace(/\[Amount\]/gi, formatMoney(orderData.totalAmount))
+                  .replace(/\[Address\]/gi, formatAddress(orderData.address))
+                  .replace(/\[Time\]/gi, formatTime(orderData.createdAt))
+                  .replace(/\[Cancel Reason\]/gi, 'N/A')
+                  .replace(/\[Order Items?\]/gi, formatOrderItems(orderData.items, orderData.totalAmount, formatAddress(orderData.address)));
 
-                  const htmlWithWrapper = `
+                const emailSubject = template.subject.replace(/\[Order ID\]/g, txnId);
+
+                const htmlWithWrapper = `
 <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>body{font-family:'Inter',sans-serif;background-color:#f4fdf8;margin:0;padding:0;color:#334155;line-height:1.6;}.container{max-width:600px;margin:40px auto;background:#ffffff;border-radius:20px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1);border:1px solid #e2e8f0;}.header{background:linear-gradient(135deg, #059669 0%, #10b981 100%);padding:30px 20px;text-align:center;}.header h1{color:#ffffff;margin:0;font-size:28px;font-weight:800;}.content{padding:40px 30px;font-size:16px;}.content p{margin-top:0;margin-bottom:20px;}.highlight{background:#ecfdf5;padding:15px 20px;border-radius:12px;border-left:4px solid #10b981;margin-bottom:20px;}.footer{background:#f8fafc;padding:20px;text-align:center;font-size:13px;color:#64748b;border-top:1px solid #f1f5f9;}</style>
 </head><body><div class="container"><div class="header"><h1>The Grocery Hub 🛒</h1></div><div class="content">${replacedHtmlBody}</div><div class="footer"><p>Thank you for shopping with us!<br><strong>The Grocery Hub</strong> - Fresh • Quality • Trust</p></div></div></body></html>`;
 
-                  await addDoc(collection(db, 'mail'), {
-                    to: orderData.customerEmail,
-                    from: '"The Grocery Hub" <ghoshabhijit1295@gmail.com>',
-                    message: {
-                      subject: emailSubject,
-                      html: htmlWithWrapper
-                    }
-                  });
-                }
-              } catch (mailErr) {
-                console.error("Failed to send order email:", mailErr);
+                await addDoc(collection(db, 'mail'), {
+                  to: orderData.customerEmail,
+                  from: '"The Grocery Hub" <ghoshabhijit1295@gmail.com>',
+                  message: {
+                    subject: emailSubject,
+                    html: htmlWithWrapper
+                  }
+                });
               }
+            } catch (mailErr) {
+              console.error("Failed to send order email:", mailErr);
             }
+          }
 
-            // Update recent buyers
-            if (orderData.items && Array.isArray(orderData.items)) {
-              for (const item of orderData.items) {
-                if (item.id) {
-                  try {
-                    const prodRef = doc(db, 'items', item.id);
-                    const prodSnap = await getDoc(prodRef);
-                    if (prodSnap.exists()) {
-                      const data = prodSnap.data();
-                      let updates = { recentBuyers: increment(item.quantity || item.qty || 1) };
-                      if (data.maxQuantity !== undefined && data.maxQuantity !== null && data.maxQuantity !== "") {
-                        let currentMax = parseInt(data.maxQuantity, 10);
-                        if (!isNaN(currentMax)) {
-                          let newMax = currentMax - (item.quantity || item.qty || 1);
-                          if (newMax <= 0) {
-                            updates.maxQuantity = '0';
-                            updates.inStock = false;
-                          } else {
-                            updates.maxQuantity = String(newMax);
-                          }
+          // Update recent buyers
+          if (orderData && orderData.items && Array.isArray(orderData.items)) {
+            for (const item of orderData.items) {
+              if (item.id) {
+                try {
+                  const prodRef = doc(db, 'items', item.id);
+                  const prodSnap = await getDoc(prodRef);
+                  if (prodSnap.exists()) {
+                    const data = prodSnap.data();
+                    let updates = { recentBuyers: increment(item.quantity || item.qty || 1) };
+                    if (data.maxQuantity !== undefined && data.maxQuantity !== null && data.maxQuantity !== "") {
+                      let currentMax = parseInt(data.maxQuantity, 10);
+                      if (!isNaN(currentMax)) {
+                        let newMax = currentMax - (item.quantity || item.qty || 1);
+                        if (newMax <= 0) {
+                          updates.maxQuantity = '0';
+                          updates.inStock = false;
+                        } else {
+                          updates.maxQuantity = String(newMax);
                         }
                       }
-                      await updateDoc(prodRef, updates);
                     }
-                  } catch (err) {
-                    console.error("Error updating recent buyers:", err);
+                    await updateDoc(prodRef, updates);
                   }
+                } catch (err) {
+                  console.error("Error updating recent buyers:", err);
                 }
               }
             }
+          }
 
-            // Deactivate coupon
-            if (orderData.appliedCouponId && orderData.userId && orderData.userId !== 'guest') {
-              try {
-                await updateDoc(doc(db, 'users', orderData.userId), {
-                  usedCoupons: arrayUnion(orderData.appliedCouponId)
-                });
-                if (refreshUserProfile) {
-                  await refreshUserProfile();
-                }
-              } catch (err) {
-                console.error("Error updating used coupons:", err);
+          // Deactivate coupon
+          if (orderData && orderData.appliedCouponId && orderData.userId && orderData.userId !== 'guest') {
+            try {
+              await updateDoc(doc(db, 'users', orderData.userId), {
+                usedCoupons: arrayUnion(orderData.appliedCouponId)
+              });
+              if (refreshUserProfile) {
+                await refreshUserProfile();
               }
+            } catch (err) {
+              console.error("Error updating used coupons:", err);
             }
           }
 
@@ -211,7 +224,7 @@ export default function PaymentCallbackPage() {
             }
           }
 
-          setErrorMessage(response.statusMessage || response.message || 'Payment processing was cancelled or failed.');
+          setErrorMessage(response.statusMessage || response.message || response.error || 'Payment processing was cancelled or failed.');
           setStatus('failed');
         }
 

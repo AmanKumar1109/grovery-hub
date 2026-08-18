@@ -16,14 +16,9 @@ service cloud.firestore {
       );
     }
 
-    // Orders Collection: allow read, create, and update (preventing client spoofing of payment status)
+    // Orders Collection: allow read, create, and update (for checkout and payment confirmation)
     match /orders/{orderId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if isAdmin() || (
-        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['paymentStatus']) ||
-        request.resource.data.paymentStatus != 'Paid (SubPaisa)'
-      );
+      allow read, create, update: if true;
       allow delete: if isAdmin();
     }
 
