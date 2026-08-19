@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSettings } from '../../context/SettingsContext';
 import { CheckCircle2, ShoppingCart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import FloatingReviewsCard from './FloatingReviewsCard';
 import gsap from 'gsap';
 import timeImage from '../../assets/images/time.webp';
 
 export default function HeroContent() {
+  const navigate = useNavigate();
   const { globalSettings } = useSettings();
   const theme = globalSettings?.activeTheme || 'normal';
   const isIndependence = theme === 'independence-day';
@@ -178,10 +180,7 @@ export default function HeroContent() {
           <>
             <button
               type="button"
-              onClick={() => {
-                const el = document.getElementById('shop');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
+              onClick={() => navigate('/catalog')}
               className="flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white text-sm sm:text-base font-extrabold px-8 py-3 rounded-full shadow-lg shadow-emerald-700/30 hover:shadow-xl transform hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 cursor-pointer"
             >
               Shop Now
@@ -215,7 +214,8 @@ export default function HeroContent() {
 
               <button
                 type="button"
-                className="relative flex items-center justify-center gap-3 sm:gap-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-orange-500 text-gray-900 text-sm sm:text-base font-extrabold pl-2 pr-7 sm:pr-9 py-2 sm:py-2.5 rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:translate-y-0.5 transition-all duration-300 shrink-0 border border-amber-300/30"
+                onClick={() => navigate('/catalog')}
+                className="relative flex items-center justify-center gap-3 sm:gap-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-orange-500 text-gray-900 text-sm sm:text-base font-extrabold pl-2 pr-7 sm:pr-9 py-2 sm:py-2.5 rounded-full shadow-lg hover:shadow-xl transform hover:-translate-y-1 active:translate-y-0.5 transition-all duration-300 shrink-0 border border-amber-300/30 cursor-pointer"
               >
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.15)] transform group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300">
                   <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-orange-500 drop-shadow-sm" strokeWidth={2} fill="currentColor" />
