@@ -13,6 +13,7 @@ export default function ShopSection() {
   const { globalSettings } = useSettings();
   const theme = globalSettings?.activeTheme || 'normal';
   const isIndependence = theme === 'independence-day';
+  const isRaksha = theme === 'raksha-bandhan';
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState(null);
 
@@ -110,7 +111,11 @@ export default function ShopSection() {
               placeholder="Search items in shop..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl text-xs font-bold text-slate-800 focus:outline-none focus:bg-white focus:border-amber-400 focus:ring-4 focus:ring-amber-400/20 transition-all"
+              className={`w-full pl-10 pr-4 py-2 sm:py-2.5 bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl text-xs font-bold text-slate-800 focus:outline-none focus:bg-white transition-all ${
+                isRaksha
+                  ? 'focus:border-rose-400 focus:ring-4 focus:ring-rose-400/20'
+                  : 'focus:border-amber-400 focus:ring-4 focus:ring-amber-400/20'
+              }`}
             />
           </div>
 
@@ -121,11 +126,13 @@ export default function ShopSection() {
             </span>
 
             <div className="flex items-center gap-2">
-              <SlidersHorizontal className="w-4 h-4 text-amber-500" />
+              <SlidersHorizontal className={`w-4 h-4 ${isRaksha ? 'text-[#C41E56]' : 'text-amber-500'}`} />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl px-3 py-1.5 sm:py-2 text-xs font-extrabold text-slate-800 focus:outline-none focus:border-amber-400 cursor-pointer"
+                className={`bg-slate-50 border border-slate-200 rounded-xl sm:rounded-2xl px-3 py-1.5 sm:py-2 text-xs font-extrabold text-slate-800 focus:outline-none cursor-pointer ${
+                  isRaksha ? 'focus:border-rose-400' : 'focus:border-amber-400'
+                }`}
               >
                 <option value="featured">Featured Items</option>
                 <option value="price-low">Price: Low to High</option>
@@ -158,6 +165,8 @@ export default function ShopSection() {
                 className={`inline-flex items-center gap-2.5 px-8 py-3.5 font-black text-xs sm:text-sm rounded-full shadow-lg hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer group ${
                   isIndependence
                     ? 'bg-gradient-to-r from-orange-500 via-emerald-600 to-green-700 hover:from-orange-600 hover:to-green-800 text-white shadow-emerald-700/30'
+                    : isRaksha
+                    ? 'bg-gradient-to-r from-[#C41E56] to-[#e63370] hover:from-[#a51845] hover:to-[#d42a63] text-white shadow-rose-600/30'
                     : 'bg-amber-400 hover:bg-amber-500 text-slate-950 shadow-amber-300/40 hover:shadow-amber-400/50'
                 }`}
               >
@@ -178,7 +187,11 @@ export default function ShopSection() {
                 setSearchQuery('');
                 setSelectedCategory('all');
               }}
-              className="px-5 py-2.5 bg-amber-400 text-slate-950 font-extrabold text-xs rounded-xl shadow-sm cursor-pointer"
+              className={`px-5 py-2.5 font-extrabold text-xs rounded-xl shadow-sm cursor-pointer ${
+                isRaksha
+                  ? 'bg-[#C41E56] text-white'
+                  : 'bg-amber-400 text-slate-950'
+              }`}
             >
               Reset Filters
             </button>

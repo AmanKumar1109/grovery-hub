@@ -14,6 +14,7 @@ export default function ProductCard({ product }) {
 
   const theme = globalSettings?.activeTheme || 'normal';
   const isIndependence = theme === 'independence-day';
+  const isRaksha = theme === 'raksha-bandhan';
 
   const isWishlisted = userProfile?.wishlist?.some(item => item.id === product.id) || false;
 
@@ -321,6 +322,8 @@ export default function ProductCard({ product }) {
             <div className={`flex-1 flex items-center justify-between p-1 sm:p-1.5 rounded-xl sm:rounded-2xl shadow-lg ${
               isIndependence
                 ? 'bg-gradient-to-r from-orange-500 via-emerald-600 to-green-700 text-white shadow-emerald-700/30'
+                : isRaksha
+                ? 'bg-gradient-to-r from-[#C41E56] to-[#e63370] text-white shadow-rose-600/30'
                 : 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-amber-400/25'
             }`}>
               <button
@@ -355,6 +358,8 @@ export default function ProductCard({ product }) {
             className={`w-full py-2.5 sm:py-3 font-extrabold text-[11px] sm:text-xs rounded-xl sm:rounded-2xl flex items-center justify-center gap-1.5 shadow-lg transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] cursor-pointer tracking-wide ${
               isIndependence
                 ? 'bg-gradient-to-r from-orange-500 via-emerald-600 to-green-700 hover:from-orange-600 hover:to-green-800 text-white shadow-emerald-700/25 border border-orange-400/30'
+                : isRaksha
+                ? 'bg-gradient-to-r from-[#C41E56] to-[#e63370] hover:from-[#a51845] hover:to-[#d42a63] text-white shadow-rose-600/25 border border-rose-400/30'
                 : 'bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 shadow-amber-400/25'
             }`}
           >

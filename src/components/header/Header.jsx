@@ -10,6 +10,7 @@ export default function Header() {
 
   const isIndependence = theme === 'independence-day';
   const isDiwali = theme === 'diwali';
+  const isRaksha = theme === 'raksha-bandhan';
 
   return (
     <header className={`sticky top-0 z-50 w-full shadow-md backdrop-blur-2xl border-b transition-all duration-300 ${
@@ -17,14 +18,24 @@ export default function Header() {
         ? 'bg-[#f6f5ea] border-[#e5e4d3] text-slate-900' 
         : isDiwali 
         ? 'bg-[#3b150a] border-[#5c2413] text-amber-50' 
+        : isRaksha
+        ? 'bg-[#FFF8F0]/95 border-[#f0d5c0] text-slate-900'
         : 'bg-white/90 border-slate-200/50 text-slate-800'
     }`}>
       {/* Animated Glowing Mesh Background for Header */}
-      {!isIndependence && (
+      {!isIndependence && !isRaksha && (
         <div className="absolute inset-0 z-0 pointer-events-none opacity-40 overflow-hidden">
           <div className="absolute top-[-50%] left-[-5%] w-[400px] h-[400px] rounded-full bg-emerald-400/30 blur-[60px]" style={{ transformOrigin: 'center center', animation: 'spin 15s linear infinite' }} />
           <div className="absolute top-[-20%] right-[5%] w-[300px] h-[300px] rounded-full bg-amber-400/30 blur-[50px]" style={{ transformOrigin: '20% 50%', animation: 'spin 20s linear infinite reverse' }} />
           <div className="absolute bottom-[-50%] left-[30%] w-[350px] h-[350px] rounded-full bg-lime-400/20 blur-[60px] animate-pulse" style={{ animationDuration: '6s' }} />
+        </div>
+      )}
+      {/* Raksha Bandhan warm rose/gold gradient blobs */}
+      {isRaksha && (
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-35 overflow-hidden">
+          <div className="absolute top-[-50%] left-[-5%] w-[400px] h-[400px] rounded-full bg-rose-300/30 blur-[60px]" style={{ transformOrigin: 'center center', animation: 'spin 15s linear infinite' }} />
+          <div className="absolute top-[-20%] right-[5%] w-[300px] h-[300px] rounded-full bg-amber-300/25 blur-[50px]" style={{ transformOrigin: '20% 50%', animation: 'spin 20s linear infinite reverse' }} />
+          <div className="absolute bottom-[-50%] left-[30%] w-[350px] h-[350px] rounded-full bg-pink-300/20 blur-[60px] animate-pulse" style={{ animationDuration: '6s' }} />
         </div>
       )}
 

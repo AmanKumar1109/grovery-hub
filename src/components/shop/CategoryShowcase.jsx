@@ -31,6 +31,8 @@ export const initialCategoriesList = [
 export default function CategoryShowcase({ selectedCategory, onSelectCategory, selectedSubcategory, onSelectSubcategory }) {
   const { categoriesList: dynamicCategories, categoryDocs } = useCart();
   const { globalSettings } = useSettings() || {};
+  const theme = (globalSettings?.activeTheme || 'normal');
+  const isRaksha = theme === 'raksha-bandhan';
   const listToRender = dynamicCategories && dynamicCategories.length > 0 ? dynamicCategories : initialCategoriesList;
 
   const currentCatDoc = categoryDocs?.find(c => c.name === selectedCategory);
@@ -40,7 +42,7 @@ export default function CategoryShowcase({ selectedCategory, onSelectCategory, s
     <div className="w-full py-4 space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
         <div>
-          <span className="text-xs font-black text-amber-500 uppercase tracking-widest">{globalSettings?.categorySectionSubtitle || 'Explore Categories'}</span>
+          <span className={`text-xs font-black uppercase tracking-widest ${isRaksha ? 'text-[#C41E56]' : 'text-amber-500'}`}>{globalSettings?.categorySectionSubtitle || 'Explore Categories'}</span>
           <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-0.5">
             {globalSettings?.categorySectionTitle || 'Shop Fresh Organic Produce'}
           </h2>
@@ -49,7 +51,11 @@ export default function CategoryShowcase({ selectedCategory, onSelectCategory, s
         {/* Explore More Button */}
         <Link
           to="/catalog"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-amber-400 hover:bg-amber-500 text-slate-950 font-extrabold text-xs rounded-2xl shadow-md shadow-amber-300/40 transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer self-start sm:self-auto group"
+          className={`inline-flex items-center gap-2 px-5 py-2.5 font-extrabold text-xs rounded-2xl shadow-md transition-all hover:-translate-y-0.5 active:translate-y-0 cursor-pointer self-start sm:self-auto group ${
+            isRaksha
+              ? 'bg-gradient-to-r from-[#C41E56] to-[#e63370] hover:from-[#a51845] hover:to-[#d42a63] text-white shadow-rose-400/30'
+              : 'bg-amber-400 hover:bg-amber-500 text-slate-950 shadow-amber-300/40'
+          }`}
         >
           <span>Explore More Catalogue</span>
           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -68,11 +74,15 @@ export default function CategoryShowcase({ selectedCategory, onSelectCategory, s
               onClick={() => onSelectCategory(cat.id)}
               className={`snap-start flex items-center gap-3 px-5 py-3 rounded-2xl font-extrabold text-xs whitespace-nowrap transition-all duration-200 cursor-pointer flex-shrink-0 ${
                 isActive
-                  ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-300/40 scale-100'
-                  : 'bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-100 hover:border-amber-300 scale-95 hover:scale-100'
+                  ? isRaksha
+                    ? 'bg-gradient-to-r from-[#C41E56] to-[#e63370] text-white shadow-lg shadow-rose-400/30 scale-100'
+                    : 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-300/40 scale-100'
+                  : isRaksha
+                    ? 'bg-white text-slate-700 border border-slate-200/80 hover:bg-rose-50 hover:border-rose-300 scale-95 hover:scale-100'
+                    : 'bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-100 hover:border-amber-300 scale-95 hover:scale-100'
               }`}
             >
-              <div className={`p-1.5 rounded-xl ${isActive ? 'bg-slate-950/10' : 'bg-amber-50 text-amber-600'}`}>
+              <div className={`p-1.5 rounded-xl ${isActive ? (isRaksha ? 'bg-white/20' : 'bg-slate-950/10') : (isRaksha ? 'bg-rose-50 text-rose-600' : 'bg-amber-50 text-amber-600')}`}>
                 <Icon className="w-4 h-4" />
               </div>
               <div className="text-left">
@@ -93,7 +103,9 @@ export default function CategoryShowcase({ selectedCategory, onSelectCategory, s
             onClick={() => onSelectSubcategory(null)}
             className={`snap-start px-3 py-1.5 rounded-xl font-bold text-[10px] whitespace-nowrap transition-all duration-200 cursor-pointer flex-shrink-0 ${
               !selectedSubcategory
-                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                ? isRaksha
+                  ? 'bg-rose-100 text-rose-900 border border-rose-300'
+                  : 'bg-amber-100 text-amber-900 border border-amber-300'
                 : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'
             }`}
           >
@@ -105,8 +117,12 @@ export default function CategoryShowcase({ selectedCategory, onSelectCategory, s
               onClick={() => onSelectSubcategory(sub)}
               className={`snap-start px-3 py-1.5 rounded-xl font-bold text-[10px] whitespace-nowrap transition-all duration-200 cursor-pointer flex-shrink-0 ${
                 selectedSubcategory === sub
-                  ? 'bg-amber-400 text-slate-900 border border-amber-400'
-                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:border-amber-300'
+                  ? isRaksha
+                    ? 'bg-[#C41E56] text-white border border-[#C41E56]'
+                    : 'bg-amber-400 text-slate-900 border border-amber-400'
+                  : isRaksha
+                    ? 'bg-white text-slate-600 border border-slate-200 hover:bg-rose-50 hover:border-rose-300'
+                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:border-amber-300'
               }`}
             >
               {sub}

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import FloatingReviewsCard from './FloatingReviewsCard';
 import gsap from 'gsap';
 import timeImage from '../../assets/images/time.webp';
+import rakhiImage from '../../assets/images/rakhi.jpg';
 
 export default function HeroContent() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export default function HeroContent() {
   const theme = globalSettings?.activeTheme || 'normal';
   const isIndependence = theme === 'independence-day';
   const isDiwali = theme === 'diwali';
+  const isRaksha = theme === 'raksha-bandhan';
 
   const textRaw = globalSettings?.heroRotatingTexts || "Fresh Fruits\nFarm Veggies\nDaily Dairy\nHealthy Snacks\nDaily Needs";
   const words = textRaw.split('\n').filter(line => line.trim() !== '');
@@ -61,7 +63,7 @@ export default function HeroContent() {
 
   return (
     <div className="relative z-10 flex flex-col justify-center px-6 lg:px-16 pt-8 pb-12 lg:py-16 max-w-xl">
-      {/* Background Indian Flag & Ashoka Chakra Watermark for Independence Day Theme */}
+      {/* Background Watermarks by Theme */}
       {isIndependence ? (
         <div className="absolute top-1/2 left-[45%] -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] sm:w-[420px] sm:h-[420px] lg:w-[520px] lg:h-[520px] opacity-[0.14] pointer-events-none z-0">
           <svg viewBox="0 0 300 300" fill="none" className="w-full h-full">
@@ -81,6 +83,49 @@ export default function HeroContent() {
             })}
           </svg>
         </div>
+      ) : isRaksha ? (
+        /* 🎀 Raksha Bandhan — Ornate Rakhi Mandala Watermark */
+        <div className="absolute top-1/2 left-[45%] -translate-x-1/2 -translate-y-1/2 w-[340px] h-[340px] sm:w-[420px] sm:h-[420px] lg:w-[520px] lg:h-[520px] opacity-[0.12] pointer-events-none z-0" style={{ animation: 'spin 50s linear infinite' }}>
+          <svg viewBox="0 0 300 300" fill="none" className="w-full h-full">
+            {/* Outer golden decorative ring */}
+            <circle cx="150" cy="150" r="140" stroke="#D4A017" strokeWidth="2" strokeDasharray="10 5 3 5" />
+            <circle cx="150" cy="150" r="130" stroke="#C41E56" strokeWidth="1.5" strokeDasharray="6 6" />
+            {/* Rakhi petal ring — 16 petals */}
+            {[...Array(16)].map((_, i) => {
+              const angle = (i * 360) / 16;
+              const rad = (angle * Math.PI) / 180;
+              const cx = 150 + 110 * Math.cos(rad);
+              const cy = 150 + 110 * Math.sin(rad);
+              return (
+                <g key={`petal-${i}`}>
+                  <ellipse cx={cx} cy={cy} rx="14" ry="8" fill="none" stroke="#C41E56" strokeWidth="1.2" transform={`rotate(${angle}, ${cx}, ${cy})`} />
+                  <ellipse cx={cx} cy={cy} rx="8" ry="4" fill="#C41E56" fillOpacity="0.1" stroke="none" transform={`rotate(${angle}, ${cx}, ${cy})`} />
+                </g>
+              );
+            })}
+            {/* Inner decorative ring — 12 golden dots */}
+            {[...Array(12)].map((_, i) => {
+              const angle = (i * 360) / 12;
+              const rad = (angle * Math.PI) / 180;
+              const cx = 150 + 80 * Math.cos(rad);
+              const cy = 150 + 80 * Math.sin(rad);
+              return <circle key={`dot-${i}`} cx={cx} cy={cy} r="5" fill="#D4A017" fillOpacity="0.25" stroke="#D4A017" strokeWidth="0.8" />;
+            })}
+            {/* Rakhi thread lines — radial from center */}
+            {[...Array(24)].map((_, i) => {
+              const angle = (i * 360) / 24;
+              const rad = (angle * Math.PI) / 180;
+              const x2 = 150 + 65 * Math.cos(rad);
+              const y2 = 150 + 65 * Math.sin(rad);
+              return <line key={`thread-${i}`} x1="150" y1="150" x2={x2} y2={y2} stroke={i % 2 === 0 ? '#C41E56' : '#D4A017'} strokeWidth="0.7" />;
+            })}
+            {/* Center Rakhi jewel */}
+            <circle cx="150" cy="150" r="35" stroke="#C41E56" strokeWidth="2.5" />
+            <circle cx="150" cy="150" r="25" stroke="#D4A017" strokeWidth="1.5" />
+            <circle cx="150" cy="150" r="14" fill="#C41E56" fillOpacity="0.2" stroke="#C41E56" strokeWidth="1" />
+            <circle cx="150" cy="150" r="6" fill="#D4A017" fillOpacity="0.4" />
+          </svg>
+        </div>
       ) : (
         <div className="absolute top-0 left-4 w-28 h-28 opacity-10 pointer-events-none">
           <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" className="text-gray-800 w-full h-full">
@@ -94,12 +139,21 @@ export default function HeroContent() {
       {/* Tagline Badge */}
       <div ref={taglineRef} className="flex items-center gap-2 mb-4">
         <div className="flex flex-col gap-1">
-          <div className="w-5 h-[3px] bg-amber-500 rounded-full"></div>
-          <div className="w-3 h-[3px] bg-amber-500 rounded-full"></div>
+          <div className={`w-5 h-[3px] rounded-full ${isRaksha ? 'bg-[#C41E56]' : 'bg-amber-500'}`}></div>
+          <div className={`w-3 h-[3px] rounded-full ${isRaksha ? 'bg-[#D4A017]' : 'bg-amber-500'}`}></div>
         </div>
         <div className="text-xs lg:text-sm font-bold tracking-tight">
-          <span className="text-gray-900 mr-1.5">Fresh Grocery</span>
-          <span className="text-red-600 font-extrabold">Online Delivery Shop</span>
+          {isRaksha ? (
+            <>
+              <span className="text-[#C41E56] mr-1.5">🎀 Raksha Bandhan</span>
+              <span className="text-[#D4A017] font-extrabold">Special Festive Sale</span>
+            </>
+          ) : (
+            <>
+              <span className="text-gray-900 mr-1.5">Fresh Grocery</span>
+              <span className="text-red-600 font-extrabold">Online Delivery Shop</span>
+            </>
+          )}
         </div>
       </div>
 
@@ -112,12 +166,12 @@ export default function HeroContent() {
           >
             <span className="text-[#f25c05]">Happy 80th</span> <br />
             <span className="text-[#0c7a2b] inline-flex items-center gap-3 transition-colors duration-500">
-              Independence Day 
-              <img 
-                src="https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg" 
-                alt="Indian Flag" 
+              Independence Day
+              <img
+                src="https://upload.wikimedia.org/wikipedia/en/4/41/Flag_of_India.svg"
+                alt="Indian Flag"
                 className="w-12 sm:w-16 h-auto drop-shadow-lg rounded-sm"
-                style={{ animation: 'flagWave 1.5s ease-in-out infinite', transformOrigin: 'bottom left' }} 
+                style={{ animation: 'flagWave 1.5s ease-in-out infinite', transformOrigin: 'bottom left' }}
               />
               <style>{`
                 @keyframes flagWave {
@@ -127,6 +181,45 @@ export default function HeroContent() {
               `}</style>
             </span> <br />
             <span className="text-[#112918] text-3xl sm:text-4xl font-extrabold mt-2 inline-block">Celebrating 79 Years of Freedom!</span>
+          </h1>
+        ) : isRaksha ? (
+          /* 🎀 Raksha Bandhan Festive Headline */
+          <h1
+            ref={titleRef}
+            className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.08] tracking-tight mb-5 min-h-[140px] sm:min-h-[160px] lg:min-h-[190px] relative z-10"
+          >
+            <span className="text-[#C41E56]">Happy</span> <br />
+            <span className="inline-flex items-center gap-3 transition-colors duration-500 flex-wrap sm:flex-nowrap">
+              <span className="raksha-shimmer-text whitespace-nowrap" style={{ fontFamily: "'Pacifico', cursive", fontWeight: 'normal', fontSize: '1em' }}>Raksha Bandhan</span>
+              {/* Animated Rakhi Photo */}
+              <img
+                src={rakhiImage}
+                alt="Beautiful Rakhi"
+                className="w-14 h-14 sm:w-16 sm:h-16 object-contain drop-shadow-xl rounded-full border-2 border-[#D4A017]/40"
+                style={{ animation: 'rakhiSwing 2.5s ease-in-out infinite', transformOrigin: 'top center' }}
+              />
+              <style>{`
+                @keyframes rakhiSwing {
+                  0%, 100% { transform: rotate(-6deg) translateY(0); }
+                  25% { transform: rotate(8deg) translateY(-3px); }
+                  50% { transform: rotate(-4deg) translateY(1px); }
+                  75% { transform: rotate(6deg) translateY(-2px); }
+                }
+                @keyframes shimmerGold {
+                  0% { background-position: -200% center; }
+                  100% { background-position: 200% center; }
+                }
+                .raksha-shimmer-text {
+                  background: linear-gradient(90deg, #D4A017 0%, #F5C542 25%, #C41E56 50%, #F5C542 75%, #D4A017 100%);
+                  background-size: 200% auto;
+                  -webkit-background-clip: text;
+                  -webkit-text-fill-color: transparent;
+                  background-clip: text;
+                  animation: shimmerGold 3s linear infinite;
+                }
+              `}</style>
+            </span> <br />
+            <span className="text-[#6b2140] text-3xl sm:text-4xl font-extrabold mt-2 inline-block">Celebrate the Bond of Love! 🎀</span>
           </h1>
         ) : (
           <h1
@@ -141,7 +234,7 @@ export default function HeroContent() {
           </h1>
         )}
 
-        {/* Celebrating Freedom Badge (Independence Day) or Floating Time Icon */}
+        {/* Floating Badge (right side) — Theme specific */}
         {isIndependence ? (
           <div className="absolute right-0 top-[15%] translate-x-2 sm:translate-x-12 lg:translate-x-32 z-20 pointer-events-none hidden sm:flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-md border border-slate-200/80">
             <div className="w-7 h-7 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs">
@@ -151,6 +244,23 @@ export default function HeroContent() {
               Celebrating Freedom <br />
               <span className="text-emerald-700 font-extrabold">with Fast Delivery!</span>
             </span>
+          </div>
+        ) : isRaksha ? (
+          /* 🎀 Raksha Bandhan Floating Gift Badge */
+          <div className="absolute right-0 top-[15%] translate-x-2 sm:translate-x-12 lg:translate-x-32 z-20 pointer-events-none hidden sm:flex items-center gap-2 bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-md border border-rose-200/80" style={{ animation: 'floatBadge 3s ease-in-out infinite' }}>
+            <div className="w-7 h-7 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-xs">
+              🎁
+            </div>
+            <span className="text-xs font-black text-slate-800 leading-tight">
+              Rakhi Gift Delivery <br />
+              <span className="text-[#C41E56] font-extrabold">Express in 15 Mins!</span>
+            </span>
+            <style>{`
+              @keyframes floatBadge {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-6px); }
+              }
+            `}</style>
           </div>
         ) : (
           <div className="absolute right-0 top-[5%] sm:top-[10%] lg:top-[5%] translate-x-4 sm:translate-x-20 lg:translate-x-48 z-20 pointer-events-none">
@@ -169,9 +279,11 @@ export default function HeroContent() {
         ref={descRef}
         className="text-xs sm:text-sm text-gray-600 font-medium leading-relaxed max-w-md mb-8"
       >
-        {isIndependence 
+        {isIndependence
           ? "The Grocery Hub celebrates freedom with you! Shop your favorite groceries, snacks, and daily essentials with our special Independence Day offers."
-          : subtitleText}
+          : isRaksha
+            ? "The Grocery Hub celebrates Raksha Bandhan with you! Send sweets, dry fruits & gift hampers to your siblings with express delivery."
+            : subtitleText}
       </p>
 
       {/* CTA and Buttons */}
@@ -189,6 +301,44 @@ export default function HeroContent() {
             <div ref={featureRef}>
               <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-white/50 overflow-hidden">
                 <div className="w-6 h-6 shrink-0 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                </div>
+                <div className="relative h-5 flex items-center min-w-[120px]">
+                  {features.map((feature, idx) => (
+                    <span
+                      key={idx}
+                      className={`absolute inset-0 flex items-center text-[11px] sm:text-xs font-bold text-slate-700 transition-all duration-500 ${idx === (currentFeature % features.length)
+                        ? 'opacity-100 translate-y-0'
+                        : 'opacity-0 translate-y-3'
+                        }`}
+                    >
+                      {feature}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        ) : isRaksha ? (
+          /* 🎀 Raksha Bandhan CTA — Crimson-Gold gradient */
+          <>
+            <div ref={buttonRef} className="relative group inline-block">
+              <div className="absolute -inset-1 bg-gradient-to-r from-rose-400 to-amber-400 rounded-full blur-md opacity-50 group-hover:opacity-80 transition duration-300"></div>
+              <button
+                type="button"
+                onClick={() => navigate('/catalog')}
+                className="relative flex items-center justify-center gap-3 sm:gap-4 bg-gradient-to-r from-[#C41E56] to-[#e63370] hover:from-[#a51845] hover:to-[#d42a63] text-white text-sm sm:text-base font-extrabold pl-2 pr-7 sm:pr-9 py-2 sm:py-2.5 rounded-full shadow-lg shadow-rose-600/30 hover:shadow-xl transform hover:-translate-y-1 active:translate-y-0.5 transition-all duration-300 shrink-0 border border-rose-400/30 cursor-pointer"
+              >
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.15)] transform group-hover:scale-110 group-hover:-rotate-12 transition-all duration-300">
+                  <span className="text-xl">🎁</span>
+                </div>
+                <span className="tracking-wide pr-2">Send Gifts</span>
+              </button>
+            </div>
+            {/* Features Banner */}
+            <div ref={featureRef}>
+              <div className="inline-flex items-center gap-2 bg-white/60 backdrop-blur-md px-3 py-1.5 rounded-full shadow-sm border border-rose-200/50 overflow-hidden">
+                <div className="w-6 h-6 shrink-0 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shadow-sm">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                 </div>
                 <div className="relative h-5 flex items-center min-w-[120px]">
@@ -254,14 +404,43 @@ export default function HeroContent() {
         <FloatingReviewsCard />
       </div>
 
-      {/* Bottom Background Sketched Bicycle Line Art */}
-      <div className="absolute -bottom-4 right-10 w-32 h-20 opacity-10 pointer-events-none hidden sm:block">
-        <svg viewBox="0 0 100 60" fill="none" stroke="currentColor" className="text-gray-700 w-full h-full">
-          <circle cx="25" cy="40" r="15" strokeWidth="1.5" />
-          <circle cx="75" cy="40" r="15" strokeWidth="1.5" />
-          <path d="M25 40 L45 40 L60 20 L75 40 M45 40 L55 20 M35 20 L55 20" strokeWidth="1.5" />
-        </svg>
-      </div>
+      {/* Bottom Background Sketched Art */}
+      {isRaksha ? (
+        /* 🎀 Raksha Bandhan — Festive Rakhi thread & bead line art */
+        <div className="absolute -bottom-4 right-6 w-40 h-20 opacity-[0.12] pointer-events-none hidden sm:block">
+          <svg viewBox="0 0 160 60" fill="none" className="w-full h-full">
+            {/* Thread line */}
+            <line x1="0" y1="30" x2="50" y2="30" stroke="#C41E56" strokeWidth="2" strokeLinecap="round" />
+            <line x1="110" y1="30" x2="160" y2="30" stroke="#C41E56" strokeWidth="2" strokeLinecap="round" />
+            {/* Central Rakhi mandala */}
+            <circle cx="80" cy="30" r="25" stroke="#D4A017" strokeWidth="1.5" fill="none" />
+            <circle cx="80" cy="30" r="18" stroke="#C41E56" strokeWidth="1" fill="none" />
+            <circle cx="80" cy="30" r="8" fill="#C41E56" fillOpacity="0.15" />
+            <circle cx="80" cy="30" r="3" fill="#D4A017" fillOpacity="0.3" />
+            {/* Decorative beads */}
+            <circle cx="20" cy="30" r="4" fill="#D4A017" fillOpacity="0.3" />
+            <circle cx="35" cy="30" r="3" fill="#C41E56" fillOpacity="0.25" />
+            <circle cx="125" cy="30" r="4" fill="#D4A017" fillOpacity="0.3" />
+            <circle cx="140" cy="30" r="3" fill="#C41E56" fillOpacity="0.25" />
+            {/* Small petal dots around mandala */}
+            {[...Array(8)].map((_, i) => {
+              const angle = (i * 360) / 8;
+              const rad = (angle * Math.PI) / 180;
+              const cx = 80 + 22 * Math.cos(rad);
+              const cy = 30 + 22 * Math.sin(rad);
+              return <circle key={`bd-${i}`} cx={cx} cy={cy} r="2" fill={i % 2 === 0 ? '#C41E56' : '#D4A017'} fillOpacity="0.3" />;
+            })}
+          </svg>
+        </div>
+      ) : (
+        <div className="absolute -bottom-4 right-10 w-32 h-20 opacity-10 pointer-events-none hidden sm:block">
+          <svg viewBox="0 0 100 60" fill="none" stroke="currentColor" className="text-gray-700 w-full h-full">
+            <circle cx="25" cy="40" r="15" strokeWidth="1.5" />
+            <circle cx="75" cy="40" r="15" strokeWidth="1.5" />
+            <path d="M25 40 L45 40 L60 20 L75 40 M45 40 L55 20 M35 20 L55 20" strokeWidth="1.5" />
+          </svg>
+        </div>
+      )}
     </div>
   );
 }

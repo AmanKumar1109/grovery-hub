@@ -8,6 +8,7 @@ export default function HeroVisual() {
   const { globalSettings } = useSettings();
   const theme = globalSettings?.activeTheme || 'normal';
   const isIndependence = theme === 'independence-day';
+  const isRaksha = theme === 'raksha-bandhan';
 
   const farmerRef = useRef(null);
   const backdropRef = useRef(null);
@@ -32,7 +33,7 @@ export default function HeroVisual() {
       <div
         ref={backdropRef}
         className={`absolute inset-0 z-0 transition-colors duration-500 ${
-          isIndependence ? 'bg-[#0a5423]' : 'bg-[#3b5e11]'
+          isIndependence ? 'bg-[#0a5423]' : isRaksha ? 'bg-[#9e1b47]' : 'bg-[#3b5e11]'
         }`}
         style={{
           clipPath: 'polygon(35% 0, 100% 0, 100% 100%, 18% 100%)',
@@ -44,6 +45,8 @@ export default function HeroVisual() {
             className={`font-black tracking-widest leading-none uppercase ${
               isIndependence
                 ? 'text-4xl sm:text-6xl lg:text-[90px] text-[#0f6d2f]/70'
+                : isRaksha
+                ? 'text-4xl sm:text-6xl lg:text-[90px] text-[#c4306a]/60'
                 : 'text-6xl sm:text-7xl lg:text-[105px] text-[#4d7817]/50'
             }`}
             style={{
@@ -52,7 +55,7 @@ export default function HeroVisual() {
               transform: 'rotate(180deg)',
             }}
           >
-            {isIndependence ? 'FREEDOM DEALS' : 'GROCERY'}
+            {isIndependence ? 'FREEDOM DEALS' : isRaksha ? 'RAKHI GIFTS' : 'GROCERY'}
           </span>
         </div>
       </div>
@@ -80,11 +83,17 @@ export default function HeroVisual() {
             className="w-auto h-[460px] sm:h-[560px] lg:h-[680px] object-contain object-bottom transition-all duration-500 hover:scale-[1.03] hover:-translate-y-2 filter drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] drop-shadow-[0_30px_40px_rgba(0,0,0,0.45)]"
           />
 
-          {/* Indian Flag Badge on Delivery Rider chest for Independence Day */}
+          {/* Theme-specific badges on Delivery Rider */}
           {isIndependence && (
             <div className="absolute top-[48%] left-[45%] z-20 bg-white/95 px-2 py-1 rounded-md shadow-md border border-slate-200 flex items-center gap-1.5 transform -rotate-3 scale-90 sm:scale-100">
               <span className="text-xs">🇮🇳</span>
               <span className="text-[10px] font-black text-slate-800 tracking-wider uppercase">JAI HIND</span>
+            </div>
+          )}
+          {isRaksha && (
+            <div className="absolute top-[48%] left-[45%] z-20 bg-white/95 px-2 py-1 rounded-md shadow-md border border-rose-200 flex items-center gap-1.5 transform rotate-2 scale-90 sm:scale-100">
+              <span className="text-xs">🎀</span>
+              <span className="text-[10px] font-black text-[#C41E56] tracking-wider uppercase">RAKHI SPECIAL</span>
             </div>
           )}
         </div>
