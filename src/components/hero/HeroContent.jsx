@@ -6,6 +6,7 @@ import FloatingReviewsCard from './FloatingReviewsCard';
 import gsap from 'gsap';
 import timeImage from '../../assets/images/time.webp';
 import rakhiImage from '../../assets/images/rakhi.jpg';
+import photoroomImage from '../../assets/images/Photoroom.png';
 
 export default function HeroContent() {
   const navigate = useNavigate();
@@ -400,14 +401,26 @@ export default function HeroContent() {
       </div>
 
       {/* Bottom Floating Reviews Card */}
-      <div className="mt-auto pt-2">
+      <div className="mt-auto pt-2 relative z-20">
         <FloatingReviewsCard />
       </div>
+
+      {/* 🎀 Raksha Bandhan Photoroom Image */}
+      {isRaksha && (
+        <div className="absolute bottom-28 sm:-bottom-6 right-0 sm:-right-8 lg:-right-16 w-44 h-44 sm:w-56 sm:h-56 lg:w-72 lg:h-72 z-10 pointer-events-none drop-shadow-2xl opacity-95 transition-transform duration-700 hover:scale-105">
+          <img 
+            src={photoroomImage} 
+            alt="Raksha Bandhan Sweets and Decor" 
+            className="w-full h-full object-contain"
+            style={{ animation: 'floatBadge 4s ease-in-out infinite' }}
+          />
+        </div>
+      )}
 
       {/* Bottom Background Sketched Art */}
       {isRaksha ? (
         /* 🎀 Raksha Bandhan — Festive Rakhi thread & bead line art */
-        <div className="absolute -bottom-4 right-6 w-40 h-20 opacity-[0.12] pointer-events-none hidden sm:block">
+        <div className="absolute -bottom-4 right-6 w-40 h-20 opacity-[0.12] pointer-events-none hidden sm:block z-0">
           <svg viewBox="0 0 160 60" fill="none" className="w-full h-full">
             {/* Thread line */}
             <line x1="0" y1="30" x2="50" y2="30" stroke="#C41E56" strokeWidth="2" strokeLinecap="round" />
