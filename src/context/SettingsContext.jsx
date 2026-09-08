@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 
+import { getStoreStatus } from '../utils/storeStatusUtils';
+
 const SettingsContext = createContext();
 
 export function useSettings() {
@@ -21,7 +23,12 @@ const DEFAULT_SETTINGS = {
   taxPercentage: 0,
   categorySectionSubtitle: 'Explore Categories',
   categorySectionTitle: 'Shop Fresh Organic Produce',
-  activeTheme: 'normal'
+  activeTheme: 'normal',
+  isAcceptingOrders: true,
+  isScheduledPause: false,
+  pauseStartDateTime: '',
+  pauseEndDateTime: '',
+  orderPauseMessage: 'Online ordering is temporarily paused. You can still browse our products and prices!'
 };
 
 const getInitialSettingsCache = () => {
@@ -83,10 +90,23 @@ export function SettingsProvider({ children }) {
     };
   }, []);
 
+  // Periodic tick (every 15 seconds) to automatically evaluate scheduled pause windows
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(Date.now()), 15000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const storeStatus = React.useMemo(() => {
+    return getStoreStatus(globalSettings);
+  }, [globalSettings, currentTime]);
+
   const value = {
     globalSettings,
     banners,
-    settingsLoading
+    settingsLoading,
+    storeStatus,
+    isStoreAcceptingOrders: storeStatus.isAccepting
   };
 
   return (

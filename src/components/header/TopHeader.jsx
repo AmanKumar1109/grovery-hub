@@ -11,7 +11,66 @@ import { useSettings } from '../../context/SettingsContext';
 import gsap from 'gsap';
 
 const UrgencyBanner = React.memo(() => {
-  const { globalSettings } = useSettings();
+  const { globalSettings, storeStatus, isStoreAcceptingOrders } = useSettings();
+
+  // If ordering is paused (manual or scheduled), show prominent Store Paused announcement bar
+  if (isStoreAcceptingOrders === false) {
+    return (
+      <div className="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white py-1.5 sm:py-2.5 px-2.5 sm:px-6 shadow-md z-50 border-b border-amber-400/30 animate-in fade-in duration-300">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-3 text-center sm:text-left">
+          
+          {/* Left: Status & Notice */}
+          <div className="flex items-center gap-2 max-w-full">
+            <span className="relative flex h-2 w-2 sm:h-2.5 sm:w-2.5 shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-amber-200"></span>
+            </span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs">
+              <span className="bg-black/30 text-amber-200 px-2 py-0.5 rounded-md font-black text-[9px] sm:text-xs uppercase tracking-wider border border-white/15 shrink-0">
+                ⏸️ Orders Paused
+              </span>
+              <span className="font-bold text-white text-[11px] sm:text-xs leading-none">
+                {storeStatus?.pauseMessage || 'Ordering is paused. You can still browse products!'}
+              </span>
+            </div>
+          </div>
+
+          {/* Right: DATE BADGE (Compact on Mobile, Spacious on Desktop) */}
+          {storeStatus?.isScheduled && (storeStatus?.startFormatted || storeStatus?.reopenFormatted) ? (
+            <div className="bg-black/35 backdrop-blur-md px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-xl border border-white/20 flex items-center gap-1.5 text-white shrink-0 shadow-inner">
+              <span className="text-xs">📅</span>
+              <div className="flex items-center gap-1 text-[10px] sm:text-xs leading-none">
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-amber-300 font-extrabold hidden md:inline">
+                  Band Rehne Ka Samay:
+                </span>
+                <span className="font-black text-white tracking-tight sm:tracking-wide">
+                  {storeStatus.startFormatted} <span className="text-amber-300 font-bold mx-0.5 sm:mx-1">➔</span> {storeStatus.reopenFormatted}
+                </span>
+              </div>
+            </div>
+          ) : storeStatus?.reopenFormatted ? (
+            <div className="bg-black/35 backdrop-blur-md px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-xl border border-white/20 flex items-center gap-1.5 text-white shrink-0 shadow-inner">
+              <span className="text-xs">⏰</span>
+              <div className="flex items-center gap-1 text-[10px] sm:text-xs leading-none">
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-wider text-amber-300 font-extrabold hidden sm:inline">
+                  Reopening:
+                </span>
+                <span className="font-black text-white tracking-tight sm:tracking-wide">
+                  {storeStatus.reopenFormatted}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <span className="text-[9px] sm:text-[11px] font-bold bg-black/25 px-2 py-0.5 rounded-full text-amber-100 border border-white/10 shrink-0 hidden sm:inline-block">
+              👀 Catalog Browsing Available
+            </span>
+          )}
+
+        </div>
+      </div>
+    );
+  }
+
   const isActive = globalSettings?.isUrgencyBannerActive ?? true;
   const bannerTextRaw = globalSettings?.urgencyBannerText || 'High Demand | Order in next {timer} to get it by {time}';
   const rotationInterval = globalSettings?.urgencyBannerInterval || 3;

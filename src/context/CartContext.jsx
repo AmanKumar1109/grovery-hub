@@ -232,7 +232,7 @@ export function CartProvider({ children }) {
     }
   }, [hasMore, isLoadingMore, lastDoc]);
 
-  const { globalSettings } = useSettings();
+  const { globalSettings, storeStatus, isStoreAcceptingOrders } = useSettings();
 
   // Compute dynamic categories list with product counts
   const categoriesList = useMemo(() => {
@@ -319,6 +319,11 @@ export function CartProvider({ children }) {
   };
 
   const addToCart = (product, quantity = 1) => {
+    if (storeStatus && !storeStatus.isAccepting) {
+      const reopenNotice = storeStatus.reopenFormatted ? ` (Reopening ${storeStatus.reopenFormatted})` : '';
+      showToast(storeStatus.pauseMessage || `Online ordering is paused${reopenNotice}. You can still browse products! ⚠️`);
+      return;
+    }
     if (product.inStock === false) {
       showToast(`Sorry, "${product.name}" is currently Out of Stock! ⚠️`);
       return;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, CheckCircle2, Tag } from 'lucide-react';
+import { X, Plus, Minus, ShoppingBag, Trash2, ArrowRight, CheckCircle2, Tag, Clock } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -12,7 +12,7 @@ export default function CartDrawer() {
     discountAmount, deliveryFee, finalTotal, handleApplyPromo, handleRemovePromo 
   } = useCart();
   const { currentUser, userProfile } = useAuth();
-  const { globalSettings } = useSettings();
+  const { globalSettings, storeStatus, isStoreAcceptingOrders } = useSettings();
   const navigate = useNavigate();
 
   if (!isCartOpen) {
@@ -23,6 +23,11 @@ export default function CartDrawer() {
   const isBelowMin = cartTotal > 0 && cartTotal < minOrderAmount;
 
   const handleCheckout = () => {
+    if (isStoreAcceptingOrders === false) {
+      const reopenNotice = storeStatus?.reopenFormatted ? ` (Reopening ${storeStatus.reopenFormatted})` : '';
+      showToast(storeStatus?.pauseMessage || `Online ordering is paused${reopenNotice}. ⚠️`);
+      return;
+    }
     if (isBelowMin) {
       showToast(`Minimum order amount is ₹${minOrderAmount}. Please add more items.`);
       return;
@@ -225,63 +230,101 @@ export default function CartDrawer() {
 
             {/* Checkout Action */}
             <div className="relative">
-              {isBelowMin && (
-                <div className="absolute -top-12 left-0 right-0 flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <span className="bg-slate-900 text-white text-[11px] font-bold px-4 py-1.5 rounded-full shadow-lg">
-                    Add ₹{(minOrderAmount - cartTotal).toFixed(2)} more to checkout
-                  </span>
-                </div>
-              )}
-
-              <button
-                onClick={handleCheckout}
-                disabled={isBelowMin}
-                className={`group relative w-full h-[68px] rounded-[1.25rem] overflow-hidden flex items-center transition-all duration-300 ${
-                  isBelowMin 
-                    ? 'bg-slate-200 cursor-not-allowed' 
-                    : 'bg-slate-900 shadow-xl shadow-slate-900/20 active:scale-[0.98] cursor-pointer hover:shadow-slate-900/40'
-                }`}
-              >
-                {/* Tech lines (Mecha vibe) */}
-                {!isBelowMin && (
-                  <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                    <div className="absolute top-0 left-10 w-16 h-[1px] bg-white/30"></div>
-                    <div className="absolute bottom-0 right-10 w-16 h-[1px] bg-white/30"></div>
+              {isStoreAcceptingOrders === false ? (
+                <div className="w-full p-4 rounded-[1.25rem] bg-amber-50 border border-amber-300 shadow-sm text-center animate-in fade-in duration-300">
+                  <div className="flex items-center justify-center gap-1.5 text-amber-950 font-black text-xs uppercase tracking-wider">
+                    <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Online Ordering Paused</span>
                   </div>
-                )}
-                
-                {/* Left Block - Price Terminal */}
-                <div className={`h-full flex flex-col justify-center px-5 border-r min-w-[120px] transition-colors ${
-                  isBelowMin ? 'border-slate-300 bg-slate-300/30' : 'border-slate-700/60 bg-black/30'
-                }`}>
-                  <span className={`text-[9px] font-mono uppercase tracking-[0.25em] mb-0.5 ${isBelowMin ? 'text-slate-500' : 'text-slate-400'}`}>Amount</span>
-                  <span className={`text-lg font-black font-mono tracking-tighter ${isBelowMin ? 'text-slate-600' : 'text-white'}`}>₹{finalTotal}</span>
-                </div>
+                  <p className="text-[11px] text-amber-800 font-semibold mt-1 leading-relaxed">
+                    {storeStatus?.pauseMessage || 'We are temporarily not taking orders.'}
+                  </p>
 
-                {/* Right Block - Action */}
-                <div className="flex-1 flex items-center justify-between px-6">
-                  <span className={`text-[13px] font-black uppercase tracking-[0.2em] ${isBelowMin ? 'text-slate-500' : 'text-white'}`}>
-                    {isBelowMin ? 'Add More' : 'Checkout'}
-                  </span>
-                  
-                  {/* Mecha Icon Block */}
-                  {!isBelowMin && (
-                    <div className="relative flex items-center justify-center w-9 h-9 rounded-full border border-slate-700 overflow-hidden group-hover:border-slate-500 transition-colors">
-                      <div className="absolute inset-0 border-t-2 border-slate-500 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-spin"></div>
-                      <ArrowRight className="w-4 h-4 text-white relative z-10 group-hover:translate-x-0.5 transition-transform" />
+                  {storeStatus?.isScheduled && (storeStatus?.startFormatted || storeStatus?.reopenFormatted) ? (
+                    <div className="mt-2.5 bg-amber-100/90 border border-amber-300/80 rounded-xl p-2 text-left">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 block">
+                        🗓️ Band Rehne Ka Samay:
+                      </span>
+                      <span className="text-xs sm:text-sm font-black text-amber-950 block mt-0.5">
+                        {storeStatus.startFormatted} <span className="text-amber-700 font-bold mx-0.5">➔</span> {storeStatus.reopenFormatted}
+                      </span>
+                    </div>
+                  ) : storeStatus?.reopenFormatted ? (
+                    <div className="mt-2.5 bg-amber-100/90 border border-amber-300/80 rounded-xl py-1.5 px-2.5 text-center">
+                      <span className="text-xs sm:text-sm font-black text-amber-950">
+                        ⏰ Orders Resume: {storeStatus.reopenFormatted}
+                      </span>
+                    </div>
+                  ) : null}
+
+                  <button
+                    disabled
+                    className="mt-3 w-full py-3 bg-amber-200/80 text-amber-900 font-black rounded-xl text-xs cursor-not-allowed uppercase tracking-wider flex items-center justify-center gap-2"
+                  >
+                    <Clock className="w-3.5 h-3.5" /> Checkout Currently Paused
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {isBelowMin && (
+                    <div className="absolute -top-12 left-0 right-0 flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <span className="bg-slate-900 text-white text-[11px] font-bold px-4 py-1.5 rounded-full shadow-lg">
+                        Add ₹{(minOrderAmount - cartTotal).toFixed(2)} more to checkout
+                      </span>
                     </div>
                   )}
-                </div>
 
-                {/* Status indicators */}
-                {!isBelowMin && (
-                  <div className="absolute top-2.5 right-3.5 flex gap-1">
-                    <div className="w-1 h-1 rounded-sm bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,1)] animate-pulse"></div>
-                    <div className="w-1 h-1 rounded-sm bg-slate-600"></div>
-                    <div className="w-1 h-1 rounded-sm bg-slate-600"></div>
-                  </div>
-                )}
-              </button>
+                  <button
+                    onClick={handleCheckout}
+                    disabled={isBelowMin}
+                    className={`group relative w-full h-[68px] rounded-[1.25rem] overflow-hidden flex items-center transition-all duration-300 ${
+                      isBelowMin 
+                        ? 'bg-slate-200 cursor-not-allowed' 
+                        : 'bg-slate-900 shadow-xl shadow-slate-900/20 active:scale-[0.98] cursor-pointer hover:shadow-slate-900/40'
+                    }`}
+                  >
+                    {/* Tech lines (Mecha vibe) */}
+                    {!isBelowMin && (
+                      <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                        <div className="absolute top-0 left-10 w-16 h-[1px] bg-white/30"></div>
+                        <div className="absolute bottom-0 right-10 w-16 h-[1px] bg-white/30"></div>
+                      </div>
+                    )}
+                    
+                    {/* Left Block - Price Terminal */}
+                    <div className={`h-full flex flex-col justify-center px-5 border-r min-w-[120px] transition-colors ${
+                      isBelowMin ? 'border-slate-300 bg-slate-300/30' : 'border-slate-700/60 bg-black/30'
+                    }`}>
+                      <span className={`text-[9px] font-mono uppercase tracking-[0.25em] mb-0.5 ${isBelowMin ? 'text-slate-500' : 'text-slate-400'}`}>Amount</span>
+                      <span className={`text-lg font-black font-mono tracking-tighter ${isBelowMin ? 'text-slate-600' : 'text-white'}`}>₹{finalTotal}</span>
+                    </div>
+
+                    {/* Right Block - Action */}
+                    <div className="flex-1 flex items-center justify-between px-6">
+                      <span className={`text-[13px] font-black uppercase tracking-[0.2em] ${isBelowMin ? 'text-slate-500' : 'text-white'}`}>
+                        {isBelowMin ? 'Add More' : 'Checkout'}
+                      </span>
+                      
+                      {/* Mecha Icon Block */}
+                      {!isBelowMin && (
+                        <div className="relative flex items-center justify-center w-9 h-9 rounded-full border border-slate-700 overflow-hidden group-hover:border-slate-500 transition-colors">
+                          <div className="absolute inset-0 border-t-2 border-slate-500 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-spin"></div>
+                          <ArrowRight className="w-4 h-4 text-white relative z-10 group-hover:translate-x-0.5 transition-transform" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Status indicators */}
+                    {!isBelowMin && (
+                      <div className="absolute top-2.5 right-3.5 flex gap-1">
+                        <div className="w-1 h-1 rounded-sm bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,1)] animate-pulse"></div>
+                        <div className="w-1 h-1 rounded-sm bg-slate-600"></div>
+                        <div className="w-1 h-1 rounded-sm bg-slate-600"></div>
+                      </div>
+                    )}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         )}

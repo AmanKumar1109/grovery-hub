@@ -9,7 +9,7 @@ import rakhiAddToCartImg from '../../assets/images/add-to-cart.png';
 export default function ProductCard({ product }) {
   const { cartItems, addToCart, updateQuantity, showToast, setIsCartOpen } = useCart();
   const { currentUser, userProfile, toggleWishlist } = useAuth();
-  const { globalSettings } = useSettings();
+  const { globalSettings, storeStatus, isStoreAcceptingOrders } = useSettings();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -321,7 +321,31 @@ export default function ProductCard({ product }) {
 
 
 
-        {product.inStock === false ? (
+        {!isStoreAcceptingOrders ? (
+          <button
+            type="button"
+            onClick={() => {
+              const dateNotice = storeStatus?.dateRangeFormatted 
+                ? ` (Closed: ${storeStatus.dateRangeFormatted})`
+                : storeStatus?.reopenFormatted
+                ? ` (Reopening: ${storeStatus.reopenFormatted})`
+                : '';
+              showToast(storeStatus?.pauseMessage || `Online ordering is paused${dateNotice}. You can browse our products! ⚠️`);
+            }}
+            className="w-full py-2 sm:py-2.5 bg-amber-50 hover:bg-amber-100/90 text-amber-900 font-extrabold text-[11px] sm:text-xs rounded-xl sm:rounded-2xl flex flex-col items-center justify-center border border-amber-300 tracking-wide transition-all cursor-pointer shadow-sm active:scale-[0.98]"
+            title={storeStatus?.dateRangeFormatted || storeStatus?.reopenFormatted || 'Ordering paused'}
+          >
+            <div className="flex items-center gap-1.5 leading-none">
+              <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <span className="font-black text-amber-950">Orders Paused</span>
+            </div>
+            {storeStatus?.reopenFormatted && (
+              <span className="text-[10px] text-amber-700 font-extrabold mt-0.5">
+                Resumes: {storeStatus.reopenFormatted}
+              </span>
+            )}
+          </button>
+        ) : product.inStock === false ? (
           <button
             type="button"
             disabled

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useSettings } from '../context/SettingsContext';
-import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft, Tag, X, AlertTriangle, ShieldAlert, Navigation, Moon } from 'lucide-react';
+import { CheckCircle2, ArrowRight, MapPin, CreditCard, ChevronLeft, Tag, X, AlertTriangle, ShieldAlert, Navigation, Moon, Clock } from 'lucide-react';
 import { db, auth } from '../firebase';
 import { collection, addDoc, doc, setDoc, serverTimestamp, getDocs, updateDoc, increment, getDoc, arrayUnion } from 'firebase/firestore';
 import { checkAddressServiceability } from '../utils/locationUtils';
@@ -13,7 +13,7 @@ import { initiateSubPaisaPayment } from '../utils/sabpaisa';
 
 export default function CheckoutPage() {
   const { currentUser, userProfile, refreshUserProfile, addAddress } = useAuth();
-  const { globalSettings } = useSettings();
+  const { globalSettings, storeStatus, isStoreAcceptingOrders } = useSettings();
   const {
     cartItems,
     cartTotal,
@@ -203,6 +203,12 @@ export default function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
+    if (isStoreAcceptingOrders === false) {
+      const reopenNotice = storeStatus?.reopenFormatted ? ` (Reopening ${storeStatus.reopenFormatted})` : '';
+      showToast(storeStatus?.pauseMessage || `Online ordering is temporarily paused${reopenNotice}. ⚠️`);
+      return;
+    }
+
     if (!hasAddress || isProcessing) {
       if (!hasAddress) showToast('Please provide a delivery address first.');
       return;
@@ -498,6 +504,39 @@ export default function CheckoutPage() {
         </button>
 
         <h1 className="text-3xl font-black text-slate-900 mb-8">Checkout</h1>
+
+        {isStoreAcceptingOrders === false && (
+          <div className="mb-8 bg-amber-50 border-2 border-amber-300 rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row items-start gap-4 animate-in fade-in duration-300">
+            <div className="w-12 h-12 rounded-2xl bg-amber-200/80 flex items-center justify-center text-amber-800 shrink-0">
+              <Clock className="w-6 h-6" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-base sm:text-lg font-black text-amber-950">
+                  Online Ordering is Currently Paused
+                </h3>
+              </div>
+              <p className="text-xs sm:text-sm font-semibold text-amber-800 mt-1">
+                {storeStatus?.pauseMessage || 'We are temporarily not taking orders. You can keep items in your cart to order when we reopen!'}
+              </p>
+
+              {storeStatus?.isScheduled && (storeStatus?.startFormatted || storeStatus?.reopenFormatted) ? (
+                <div className="mt-3 bg-amber-100/90 border border-amber-300 rounded-2xl p-3 inline-block">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-amber-800 block">
+                    🗓️ Band Rehne Ka Samay:
+                  </span>
+                  <span className="text-sm sm:text-base font-black text-amber-950 block mt-0.5">
+                    {storeStatus.startFormatted} <span className="text-amber-700 font-bold mx-1">➔</span> {storeStatus.reopenFormatted}
+                  </span>
+                </div>
+              ) : storeStatus?.reopenFormatted && (
+                <div className="mt-3 bg-amber-200/90 text-amber-950 px-4 py-2 rounded-2xl text-xs sm:text-sm font-black inline-block">
+                  <span>⏰ Orders Resume: {storeStatus.reopenFormatted}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Address and Payment */}
@@ -806,8 +845,11 @@ export default function CheckoutPage() {
 
               <button
                 onClick={handlePlaceOrder}
-                disabled={isProcessing || !hasAddress || !serviceability.isServiceable}
-                className={`mt-6 w-full py-4 font-extrabold text-sm rounded-2xl flex items-center justify-center gap-2 transition-all ${!serviceability.isServiceable
+                disabled={isProcessing || !hasAddress || !serviceability.isServiceable || isStoreAcceptingOrders === false}
+                className={`mt-6 w-full py-4 font-extrabold text-sm rounded-2xl flex items-center justify-center gap-2 transition-all ${
+                  isStoreAcceptingOrders === false
+                    ? 'bg-amber-100 text-amber-800 border-2 border-amber-300 cursor-not-allowed opacity-90'
+                    : !serviceability.isServiceable
                     ? 'bg-rose-100 text-rose-700 border-2 border-rose-300 opacity-80 cursor-not-allowed'
                     : (!hasAddress || isProcessing)
                       ? 'bg-amber-400 opacity-50 cursor-not-allowed text-slate-950'
@@ -817,16 +859,18 @@ export default function CheckoutPage() {
                 <span>
                   {isProcessing
                     ? 'Processing...'
-                    : !serviceability.isServiceable
-                      ? '🚫 Delivery Unavailable (Out of 7 KM Zone)'
-                      : !paymentMethod
-                        ? 'Select Payment Method'
-                        : paymentMethod === 'ONLINE'
-                          ? 'Proceed to Online Payment'
-                          : 'Place Order'}
+                    : isStoreAcceptingOrders === false
+                      ? `⏸️ Orders Paused ${storeStatus?.reopenFormatted ? `(Resumes ${storeStatus.reopenFormatted})` : ''}`
+                      : !serviceability.isServiceable
+                        ? '🚫 Delivery Unavailable (Out of 7 KM Zone)'
+                        : !paymentMethod
+                          ? 'Select Payment Method'
+                          : paymentMethod === 'ONLINE'
+                            ? 'Proceed to Online Payment'
+                            : 'Place Order'}
                 </span>
 
-                {!isProcessing && serviceability.isServiceable && <ArrowRight className="w-5 h-5" />}
+                {!isProcessing && isStoreAcceptingOrders !== false && serviceability.isServiceable && <ArrowRight className="w-5 h-5" />}
               </button>
 
               {!paymentMethod && hasAddress && serviceability.isServiceable && (

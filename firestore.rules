@@ -16,19 +16,60 @@ service cloud.firestore {
       );
     }
 
-    // Orders Collection: allow read, create, and update (for checkout and payment confirmation)
-    match /orders/{orderId} {
-      allow read, create, update: if true;
-      allow delete: if isAdmin();
+    // 1. Users can only access their own profile data. Admins can access all.
+    match /users/{userId} {
+      allow read, write: if isOwner(userId) || isAdmin();
     }
 
-    // Default: allow read/write for now to not break existing app, 
-    // EXCEPT for the new secure collections.
-    // In a real production app, all other collections should be locked down.
-    match /{collection}/{document=**} {
-      allow read, write: if collection != 'referrals' 
-                         && collection != 'scratchCards' 
-                         && collection != 'coupons';
+    // 2. Orders: Customers can only read/create their own orders. Admin controls everything.
+    match /orders/{orderId} {
+      allow read: if isOwner(resource.data.userId) || isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Normal user cannot update status (like to Paid) from client side
+      allow update, delete: if isAdmin();
+    }
+
+    // 3. Mail Collection: Used by the frontend to trigger welcome emails
+    match /mail/{mailId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAdmin();
+    }
+
+    // 4. Public Read Data: Anyone can view these, but ONLY Admin can edit/delete them.
+    match /items/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /categories/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /settings/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /banners/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /pages/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /staff/{document=**} {
+      allow read, write: if isAdmin();
+    }
+    match /auditLogs/{document=**} {
+      allow read, write: if isAdmin();
+    }
+    match /complaints/{document=**} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAdmin();
+    }
+    match /customer_reviews/{document=**} {
+      // Anyone can submit a review, and everyone can read them
+      allow create, read: if true;
+      allow update, delete: if isAdmin();
     }
 
     match /referrals/{referralId} {
