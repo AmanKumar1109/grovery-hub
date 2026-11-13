@@ -241,3 +241,4 @@ exports.onOrderStatusUpdated = onDocumentUpdated('orders/{orderId}', async (even
 
   return result;
 });
+
