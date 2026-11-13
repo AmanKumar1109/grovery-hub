@@ -52,6 +52,25 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+    match /app_banners/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /app_category_covers/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /app_home_sections/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /fcm_tokens/{tokenId} {
+      allow create, update: if true;
+      allow read, delete: if isAdmin();
+    }
+    match /broadcast_notifications/{document=**} {
+      allow read, write: if isAdmin();
+    }
     match /pages/{document=**} {
       allow read: if true;
       allow write: if isAdmin();
