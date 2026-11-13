@@ -12,9 +12,15 @@ const {
   onBroadcastNotificationCreated,
   sendBroadcastNotification
 } = require('./notifications/broadcastNotification');
+const {
+  onOrderCreated,
+  onOrderStatusUpdated
+} = require('./notifications/orderNotifications');
 
 exports.onUserCreated = processSignup.onUserCreated;
 exports.onOrderUpdated = referralOrderHandler.onOrderUpdated;
+exports.onOrderCreated = onOrderCreated;
+exports.onOrderStatusUpdated = onOrderStatusUpdated;
 exports.initiateSabPaisaPayment = initiateSabPaisaPayment;
 exports.verifySabPaisaPayment = verifySabPaisaPayment;
 exports.onBroadcastNotificationCreated = onBroadcastNotificationCreated;
