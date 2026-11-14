@@ -2,6 +2,7 @@ const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const { getMessaging } = require('firebase-admin/messaging');
 const { addAuditLog } = require('../utils/auditLogger');
 
 /**
@@ -11,7 +12,7 @@ const { addAuditLog } = require('../utils/auditLogger');
  */
 async function dispatchPushNotification(data, notificationId) {
   const db = getFirestore();
-  const messaging = admin.messaging();
+  const messaging = getMessaging();
 
   const title = (data.title || 'GroceryHub Alert').trim();
   const body = (data.body || '').trim();

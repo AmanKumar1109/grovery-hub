@@ -1,5 +1,5 @@
 const { setGlobalOptions } = require('firebase-functions/v2');
-setGlobalOptions({ region: 'asia-south1' });
+setGlobalOptions({ region: 'asia-south1', maxInstances: 20 });
 
 const admin = require('firebase-admin');
 admin.initializeApp();

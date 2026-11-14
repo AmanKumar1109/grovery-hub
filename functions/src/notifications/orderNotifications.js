@@ -1,6 +1,7 @@
 const { onDocumentCreated, onDocumentUpdated } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const { getMessaging } = require('firebase-admin/messaging');
 const { addAuditLog } = require('../utils/auditLogger');
 
 /**
@@ -66,7 +67,7 @@ async function sendPushToTokens(tokens, { title, body, data, orderId }) {
     return { successCount: 0, failureCount: 0 };
   }
 
-  const messaging = admin.messaging();
+  const messaging = getMessaging();
   const payload = {
     tokens,
     notification: {
