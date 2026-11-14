@@ -155,6 +155,32 @@ exports.onOrderCreated = onDocumentCreated('orders/{orderId}', async (event) => 
     orderId: displayId,
   });
 
+  // Store in customer's in-app notifications
+  if (userId) {
+    try {
+      await db
+        .collection('users')
+        .doc(userId)
+        .collection('notifications')
+        .doc(`order_${displayId}_created`)
+        .set(
+          {
+            title,
+            body,
+            type: 'order',
+            orderId: String(displayId),
+            status: orderData.status || 'Order Received',
+            route: '/orders',
+            isRead: false,
+            createdAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        );
+    } catch (saveErr) {
+      console.warn(`[OrderNotification] Failed to save notification doc for ${userId}:`, saveErr.message);
+    }
+  }
+
   // Record audit log
   await addAuditLog(
     'NOTIFICATION_ORDER_CREATED',
@@ -231,6 +257,33 @@ exports.onOrderStatusUpdated = onDocumentUpdated('orders/{orderId}', async (even
     data: notificationData,
     orderId: displayId,
   });
+
+  // Store in customer's in-app notifications
+  if (userId) {
+    try {
+      const notifDocId = `order_${displayId}_${normalizedStatus.replace(/\s+/g, '_')}`;
+      await db
+        .collection('users')
+        .doc(userId)
+        .collection('notifications')
+        .doc(notifDocId)
+        .set(
+          {
+            title,
+            body,
+            type: 'order',
+            orderId: String(displayId),
+            status: statusAfter,
+            route: '/orders',
+            isRead: false,
+            createdAt: FieldValue.serverTimestamp(),
+          },
+          { merge: true }
+        );
+    } catch (saveErr) {
+      console.warn(`[OrderNotification] Failed to save notification doc for ${userId}:`, saveErr.message);
+    }
+  }
 
   // Record audit log
   await addAuditLog(

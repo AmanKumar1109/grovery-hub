@@ -135,6 +135,37 @@ exports.onOrderUpdated = onDocumentUpdated('orders/{orderId}', async (event) => 
 
       transaction.set(friendCouponRef, friendCouponData);
 
+      // In-app notifications for both users
+      const referrerNotifRef = db
+        .collection('users')
+        .doc(referralData.referrerId)
+        .collection('notifications')
+        .doc(`referral_${referralId}_referrer`);
+      transaction.set(referrerNotifRef, {
+        title: '🎁 Referral Reward Unlocked!',
+        body: `Your friend completed their first order! You earned ₹${discountAmount} OFF coupon: ${newCouponId}`,
+        type: 'referral',
+        couponCode: newCouponId,
+        route: '/coupons',
+        isRead: false,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+
+      const friendNotifRef = db
+        .collection('users')
+        .doc(referralData.referredUserId)
+        .collection('notifications')
+        .doc(`referral_${referralId}_friend`);
+      transaction.set(friendNotifRef, {
+        title: '🎁 First Order Referral Reward!',
+        body: `Congratulations! Use your reward coupon ${friendCouponId} for ₹${friendDiscountAmount} OFF on your next grocery order.`,
+        type: 'referral',
+        couponCode: friendCouponId,
+        route: '/coupons',
+        isRead: false,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+
       // Update Referral Status
       transaction.update(referralDoc.ref, {
         status: 'REWARDED',
