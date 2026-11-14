@@ -70,7 +70,33 @@ async function dispatchPushNotification(data, notificationId) {
     topicError = err.message;
   }
 
-  // 2. Fetch active tokens from 'fcm_tokens' collection for direct multicast & token hygiene
+  // 2. Count registered devices for dashboard analytics
+  let totalRegisteredDevices = 0;
+  try {
+    const countSnap = await db.collection('fcm_tokens').where('isActive', '==', true).count().get();
+    totalRegisteredDevices = countSnap.data().count;
+  } catch (_) {
+    try {
+      const snap = await db.collection('fcm_tokens').get();
+      totalRegisteredDevices = snap.size;
+    } catch (_) {}
+  }
+
+  // IMPORTANT: If topic broadcast succeeded, DO NOT also multicast to the same devices!
+  // Sending to both topic AND individual tokens causes every phone to receive DUPLICATE notifications.
+  if (topicSuccess) {
+    return {
+      topicSuccess: true,
+      topicMessageId,
+      topicError: null,
+      totalRegisteredDevices,
+      multicastSuccessCount: totalRegisteredDevices,
+      multicastFailureCount: 0,
+      staleTokensRemoved: 0
+    };
+  }
+
+  // 3. Fallback: Only if topic broadcast failed, send direct multicast to individual devices
   let tokenDocsSnapshot;
   try {
     tokenDocsSnapshot = await db.collection('fcm_tokens').where('isActive', '==', true).get();
@@ -87,7 +113,7 @@ async function dispatchPushNotification(data, notificationId) {
     }
   });
 
-  const totalRegisteredDevices = tokenDocPairs.length;
+  totalRegisteredDevices = tokenDocPairs.length;
   let multicastSuccessCount = 0;
   let multicastFailureCount = 0;
   const staleDocIdsToDelete = [];
